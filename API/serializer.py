@@ -16,3 +16,13 @@ class DailyEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyEntry
         fields = '__all__'
+
+class CustomerPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerPayment
+        fields = '__all__'
+
+class CustomerAccountSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerAccount
+        fields = '__all__'

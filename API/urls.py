@@ -11,4 +11,6 @@ urlpatterns = [
     path('customer-count/',views.Customer_Count,name="customer-coount"),
     path('daily-entry/',views.add_daily_entry,name="daily-entry"),
     path('daily-entry-count/',views.daily_count,name="daily-entry-count"),
+    path('customer-payment/',views.customer_payment,name="customer-payment"),
+    path('customer-account/<str:pk>/',views.customer_account,name="customer-account"),
 ]

@@ -5,3 +5,5 @@ from .models import *
 admin.site.register(Customer)
 admin.site.register(Route)
 admin.site.register(DailyEntry)
+admin.site.register(CustomerPayment)
+admin.site.register(CustomerAccount)
