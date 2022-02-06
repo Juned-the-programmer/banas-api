@@ -18,25 +18,27 @@ def login(request):
 
 @api_view(['POST'])
 def add_route(request):
-    route_data = request.data
-    route_serializer = RouteSerializer(data=route_data)
+    if request.method == 'POST':
+        route_data = request.data
+        route_serializer = RouteSerializer(data=route_data)
 
-    if route_serializer.is_valid():
-        route_serializer.save()
-        return Response(route_serializer.data)
+        if route_serializer.is_valid():
+            route_serializer.save()
+            return Response(route_serializer.data)
 
-    return Response(route_serializer.errors)
+        return Response(route_serializer.errors)
 
 @api_view(['POST'])
 def add_customer(request):
-    customer_data = request.data
-    customer_serializer = CustomerSerializer(data=customer_data)
+    if request.method == 'POST':
+        customer_data = request.data
+        customer_serializer = CustomerSerializer(data=customer_data)
 
-    if customer_serializer.is_valid():
-        customer_serializer.save()
-        return Response(customer_serializer.data)
+        if customer_serializer.is_valid():
+            customer_serializer.save()
+            return Response(customer_serializer.data)
 
-    return Response(customer_serializer.errors)
+        return Response(customer_serializer.errors)
 
 @api_view(['PUT'])
 def update_customer(request,pk):
@@ -96,3 +98,32 @@ def daily_count(request):
         coolers_total = coolers['cooler__sum']
 
         return JsonResponse({'customer_count' : customer_count , 'coolers_total' : coolers_total})
+
+@api_view(['POST'])
+def customer_payment(request):
+    if request.method == 'POST':
+        serializer = CustomerPaymentSerializer(data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+def customer_account(request , pk):
+
+    try:
+        customer = Customer.objects.get(pk=pk)
+    except Customer.DoesNotExist:
+        return Response(status=status.HTTP_404_NOT_FOUND)
+
+    if request.method == 'PUT':
+        serializer = CustomerAccountSerializer(customer , data = request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=status.HTTP_201_CREATED)
+
+        return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+
+# @api_view(['GET'])
+# def customer_account_due(request):
