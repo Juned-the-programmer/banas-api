@@ -26,3 +26,9 @@ class CustomerAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerAccount
         fields = '__all__'
+
+
+class GenerateBillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerBill
+        fields = '__all__'
