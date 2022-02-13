@@ -11,6 +11,7 @@ from .serializer import *
 from datetime import date, timedelta
 
 from django.db.models import Sum,Min,Max,Avg
+from django.forms.models import model_to_dict
 # Create your views here.
 @api_view(['GET'])
 def login(request):
@@ -85,7 +86,6 @@ def add_daily_entry(request):
         serializer = DailyEntrySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
-
             return Response(status=status.HTTP_201_CREATED)
 
         return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
