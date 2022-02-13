@@ -13,7 +13,5 @@ urlpatterns = [
     path('daily-entry-count/',views.daily_count,name="daily-entry-count"),
     path('customer-payment/',views.customer_payment,name="customer-payment"),
     path('customer-account/<str:pk>/',views.customer_account,name="customer-account"),
-    path('get-bill-data/<str:pk>/',views.get_bill_data,name="get-bill-data"),
-    path('generate-bill/',views.generate_bill,name="generate-bill"),
     path('due-list/<str:pk>/',views.due_list, name="due_list"),
 ]
