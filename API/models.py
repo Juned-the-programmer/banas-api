@@ -60,6 +60,7 @@ class CustomerBill(models.Model):
     Advanced_amount = models.IntegerField(default=0, null=True , blank=True)
     Total = models.IntegerField(default=0, null=True , blank=True)
     date = models.DateField(auto_now_add=True)
+    paid = models.BooleanField(default=False, null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
