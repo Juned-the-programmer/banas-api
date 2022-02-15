@@ -14,4 +14,7 @@ urlpatterns = [
     path('customer-payment/',views.customer_payment,name="customer-payment"),
     path('customer-account/<str:pk>/',views.customer_account,name="customer-account"),
     path('due-list/<str:pk>/',views.due_list, name="due_list"),
-]
+    path('customer-due/<str:pk>/',views.due_customer,name="customer-due"),
+    path('customer-detail/<str:pk>/',views.customer_detail,name="customer-detail"),
+    path('bill-detail/<str:pk>/',views.bill_detail,name="bill-detail")
+]   

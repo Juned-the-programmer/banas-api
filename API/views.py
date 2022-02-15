@@ -247,3 +247,61 @@ def due_list(request,pk):
         return Response(serializer.data , status=status.HTTP_200_OK)
 
     return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def due_customer(request , pk):
+    if request.method == 'GET':
+        try:
+            customer = CustomerAccount.objects.get(customer_name=pk)
+        except:
+            return Response("Customer Not Found",status=status.HTTP_400_BAD_REQUEST)
+
+        customer_due = customer.due
+        return JsonResponse(customer_due , safe=False)
+    return Response("Invalid Request",status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def customer_detail(request , pk):
+    today_date = datetime.datetime.now()
+    first_day_of_month = today_date.replace(day=1)
+
+    if request.method == 'GET':
+        try:
+            customer = Customer.objects.get(id=pk)
+        except:
+            return Response("Customer Not Found",status=status.HTTP_400_BAD_REQUEST)
+
+        customer_detail = customer
+        detail_serializer = CustomerSerializer(customer_detail)
+        
+        customer_bills = CustomerBill.objects.filter(customer_name = customer.id)
+        bill_serializer = GenerateBillSerializer(customer_bills , many=True)
+
+        customer_daily_entry = DailyEntry.objects.filter(date__gte=first_day_of_month)
+        daily_entry_serializer = DailyEntrySerializer(customer_daily_entry , many=True)
+
+        return JsonResponse({
+            'detail' : detail_serializer.data,
+            'bills' : bill_serializer.data,
+            'daily_entry' : daily_entry_serializer.data
+        })
+
+    return Response("Invalid Request",status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def bill_detail(request , pk):
+    if request.method == 'GET':
+        try:
+            bill = CustomerBill.objects.get(pk=pk)
+        except CustomerBill.DoesNotExist:
+            return Response("Bill Not Found" , status=status.HTTP_400_BAD_REQUEST)
+
+        customer_bill = GenerateBillSerializer(bill)
+        daily_entry = DailyEntry.objects.filter(date__gte=bill.from_date , date__lte=bill.to_date)
+        daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
+
+        return JsonResponse({
+            'bill' : customer_bill.data,
+            'daily_entry' : daily_entry_serializer.data
+        })
+    return Response("Invalid Request" , status=status.HTTP_400_BAD_REQUEST)
