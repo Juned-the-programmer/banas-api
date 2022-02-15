@@ -37,12 +37,26 @@ def add_route(request):
 @api_view(['POST'])
 def add_customer(request):
     if request.method == 'POST':
-        customer_data = request.data
-        customer_serializer = CustomerSerializer(data=customer_data)
+        data = request.data
+        data_values = list(data.values())
+        pk = data_values[0]
 
+        customer_data = {
+            "name" : data_values[0],
+            "route" : data_values[1],
+            "rate" : data_values[2]
+        }
+
+        customer_serializer = CustomerSerializer(data=customer_data)
+    
         if customer_serializer.is_valid():
             customer_serializer.save()
+            customeraccount = CustomerAccount.objects.get(customer_name = Customer.objects.get(name=data_values[0]).id)
+            customeraccount.due = data_values[3]
+            customeraccount.save()
+            
             return Response(customer_serializer.data , status=status.HTTP_200_OK)
+
 
         return Response(customer_serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
