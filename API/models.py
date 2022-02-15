@@ -16,6 +16,7 @@ class Customer(models.Model):
     route = models.ForeignKey(Route, on_delete= models.SET_NULL , null=True, blank=True , related_name="customer_route")
     rate = models.IntegerField()
     date = models.DateField(auto_now_add=True)
+    time = models.TimeField(auto_now_add=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
@@ -37,7 +38,7 @@ class CustomerAccount(models.Model):
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
-        return str(self.customer_name.name)
+        return str(self.customer_name)  
 
 class CustomerPayment(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True)
