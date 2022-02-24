@@ -78,11 +78,22 @@ WSGI_APPLICATION = 'banas.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
+        'default': {
+            'ENGINE': 'djongo',
+            'NAME': 'BanasWater_2022',
+            'ENFORCE_SCHEMA': False,
+            'CLIENT': {
+                'host': 'mongodb+srv://Banas:wVU9x3fFItZQmjFG@banaswater.8a7bb.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+            }  
+        }
 }
 
 
