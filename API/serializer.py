@@ -8,6 +8,7 @@ class RouteSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 class CustomerSerializer(serializers.ModelSerializer):    
+    route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(),many=False)
     class Meta:
         model = Customer
         fields ='__all__'

@@ -13,7 +13,7 @@ class Route(models.Model):
 
 class Customer(models.Model):
     name = models.CharField(max_length=200)
-    route = models.ForeignKey(Route, on_delete= models.SET_NULL , null=True, blank=True , related_name="customer_route")
+    route = models.ForeignKey(Route, on_delete=models.CASCADE , null=True, blank=True , related_name="customer_route")
     rate = models.IntegerField()
     date = models.DateField(auto_now_add=True)
     time = models.TimeField(auto_now_add=True)

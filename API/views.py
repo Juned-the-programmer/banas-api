@@ -1,30 +1,25 @@
 from django.shortcuts import render
 from .models import *
-
 from rest_framework.decorators import api_view , permission_classes
 from rest_framework.permissions import IsAuthenticated , IsAdminUser
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.core import serializers
 from rest_framework import status
-
 from .serializer import *
 from datetime import date, timedelta
 import datetime
 import calendar
-
 from django.db.models import Sum,Min,Max,Avg
-# Create your views here.
-@api_view(['GET'])
-def login(request):
-    return JsonResponse("Login Page" , safe=False)
 
+# Create your views here.
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def dashboard(request):
     return JsonResponse("Dashboard" , safe=False)
 
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def add_route(request):
     if request.method == 'POST':
         route_data = request.data
@@ -35,8 +30,9 @@ def add_route(request):
             return Response(route_serializer.data , status=status.HTTP_200_OK)
 
         return Response(route_serializer.errors , status=status.HTTP_400_BAD_REQUEST)
-
+        
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def add_customer(request):
     if request.method == 'POST':
         data = request.data
@@ -63,6 +59,7 @@ def add_customer(request):
         return Response(customer_serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
+@permission_classes([IsAdminUser])
 def update_customer(request,pk):
     
     try:
@@ -79,6 +76,7 @@ def update_customer(request,pk):
         return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAdminUser])
 def list_route(request):
     if request.method == 'GET':
         routes = Route.objects.all()
@@ -89,6 +87,7 @@ def list_route(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAdminUser])
 def list_customer(request):
     if request.method == 'GET':
         customers = Customer.objects.all()
@@ -98,6 +97,7 @@ def list_customer(request):
     return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def add_daily_entry(request):
     today_date = datetime.datetime.now()
     year = today_date.year
@@ -166,6 +166,7 @@ def add_daily_entry(request):
     return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAdminUser])
 def daily_count(request):
     if request.method == 'GET':
         customer_count = DailyEntry.objects.distinct().filter(date=date.today()).count()
@@ -179,6 +180,7 @@ def daily_count(request):
         return JsonResponse({'customer_count' : customer_count , 'coolers_total' : coolers_total})
 
 @api_view(['POST'])
+@permission_classes([IsAdminUser])
 def customer_payment(request):
     if request.method == 'POST':
         serializer = CustomerPaymentSerializer(data = request.data)
@@ -212,6 +214,7 @@ def customer_payment(request):
         return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
+@permission_classes([IsAdminUser])
 def customer_account(request , pk):
 
     try:
@@ -228,6 +231,7 @@ def customer_account(request , pk):
         return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAdminUser])
 def due_list(request,pk):
     if request.method == 'GET':
 
@@ -251,6 +255,7 @@ def due_list(request,pk):
     return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAdminUser])
 def due_customer(request , pk):
     if request.method == 'GET':
         try:
@@ -263,6 +268,7 @@ def due_customer(request , pk):
     return Response("Invalid Request",status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAdminUser])
 def customer_detail(request , pk):
     today_date = datetime.datetime.now()
     first_day_of_month = today_date.replace(day=1)
@@ -291,6 +297,7 @@ def customer_detail(request , pk):
     return Response("Invalid Request",status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
+@permission_classes([IsAdminUser()])
 def bill_detail(request , pk):
     if request.method == 'GET':
         try:
