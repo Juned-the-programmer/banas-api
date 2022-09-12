@@ -104,17 +104,6 @@ DATABASES = {
 #         }
 # }
 
-# DATABASES = {
-#         'default': {
-#             'ENGINE': 'djongo',
-#             'NAME': 'BanasWater_2022',
-#             'ENFORCE_SCHEMA': False,
-#             'CLIENT': {
-#                 'host': 'mongodb+srv://Banas:wVU9x3fFItZQmjFG@banaswater.8a7bb.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-#             }  
-#         }
-# }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators

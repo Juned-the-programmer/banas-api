@@ -49,9 +49,10 @@ def add_customer(request):
     
         if customer_serializer.is_valid():
             customer_serializer.save()
-            customeraccount = CustomerAccount.objects.get(customer_name = Customer.objects.get(name=data_values[0]).id)
-            customeraccount.due = data_values[3]
-            customeraccount.save()
+            if(len(data_values) > 3):
+                customeraccount = CustomerAccount.objects.get(customer_name = Customer.objects.get(name=data_values[0]).id)
+                customeraccount.due = data_values[3]
+                customeraccount.save()
             
             return Response(customer_serializer.data , status=status.HTTP_200_OK)
 
@@ -91,7 +92,7 @@ def list_route(request):
 def list_customer(request):
     if request.method == 'GET':
         customers = Customer.objects.all()
-        serializer = CustomerSerializer(customers ,many=True)
+        serializer = CustomerSerializerGET(customers ,many=True)
         return Response(serializer.data , status=status.HTTP_200_OK)
 
     return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)

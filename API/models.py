@@ -5,7 +5,8 @@ from django.db.models.signals import post_save
 # Create your models here.
 class Route(models.Model):
     route_name = models.CharField(max_length=100)
-    date = models.DateField(auto_now_add=True)
+    date_added = models.DateField(auto_now_add=True)
+    date_updated = models.DateField(auto_now=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
@@ -15,8 +16,8 @@ class Customer(models.Model):
     name = models.CharField(max_length=200)
     route = models.ForeignKey(Route, on_delete=models.CASCADE , null=True, blank=True , related_name="customer_route")
     rate = models.IntegerField()
-    date = models.DateField(auto_now_add=True)
-    time = models.TimeField(auto_now_add=True)
+    date_added = models.DateField(auto_now_add=True)
+    date_updated = models.DateField(auto_now_add=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
@@ -32,7 +33,7 @@ class DailyEntry(models.Model):
         return str(self.customer_name)
 
 class CustomerAccount(models.Model):
-    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True , default=0)
+    customer_name = models.ForeignKey(Customer, on_delete = models.CASCADE , null=True, blank=True , default=0)
     due = models.IntegerField(default=0)
     date = models.DateField(auto_now_add=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
