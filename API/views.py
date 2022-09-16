@@ -162,8 +162,8 @@ def add_daily_entry(request):
                     customer.due = data_values[6]
                     customer.save()
 
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(status=status.HTTP_201_CREATED)
+            return Response(serializer.data,status=status.HTTP_201_CREATED)
+        return Response(serializer.data , status=HTTP_201_CREATED)
     return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])

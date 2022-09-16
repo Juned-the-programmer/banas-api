@@ -23,15 +23,6 @@ class Customer(models.Model):
     def __str__(self):
         return str(self.name)
 
-class DailyEntry(models.Model):
-    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True)
-    cooler = models.IntegerField()
-    date = models.DateField(auto_now_add=True)
-    id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
-
-    def __str__(self):
-        return str(self.customer_name)
-
 class CustomerAccount(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.CASCADE , null=True, blank=True , default=0)
     due = models.IntegerField(default=0)
@@ -50,6 +41,15 @@ class CustomerPayment(models.Model):
 
     def __str__(self):
         return str(self.customer_name.name)
+
+class DailyEntry(models.Model):
+    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True)
+    cooler = models.IntegerField()
+    date = models.DateField(auto_now_add=True)
+    id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
+
+    def __str__(self):
+        return str(self.customer_name)
 
 class CustomerBill(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True)
