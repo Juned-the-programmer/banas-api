@@ -14,6 +14,7 @@ urlpatterns = [
 
     path('add-route/',views.add_route,name="add-route"),
     path('list-route/',views.list_route,name="list-route"),
+    path('update-route/<str:pk>/',views.update_route,name="update-route"),
     
     path('add-customer/',views.add_customer,name="add-customer"),
     path('update-customer/<str:pk>/',views.update_customer,name="update-customer"),

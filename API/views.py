@@ -25,6 +25,7 @@ def get_profile(request):
     user = User.objects.get(username=request.user.username)
 
     return JsonResponse({
+        'status' : 200,
         'username': user.username, 
         'first_name' : user.first_name, 
         'last_name' : user.last_name, 
@@ -38,20 +39,55 @@ def add_route(request):
         route_serializer = RouteSerializer(data=route_data)
 
         if route_serializer.is_valid():
-            route_serializer.save()
-            return Response(route_serializer.data , status=status.HTTP_200_OK)
+            route_serializer.save(addedby=request.user.username)
+            
+            return JsonResponse({
+                'status' : 200,
+                'data' : route_serializer.data} , status=status.HTTP_200_OK)
 
-        return Response(route_serializer.errors , status=status.HTTP_400_BAD_REQUEST)
-        
+        return JsonResponse({
+            'status' : 400,
+            'data': route_serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsAdminUser])
+def update_route(request,pk):
+    try:
+        route = Route.objects.get(pk=pk)
+    except Route.DoesNotExist:
+        return JsonResponse({
+            'status' : 400,
+            'data' : "Route Not Found"
+        },status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'PUT':
+        serializer = RouteSerializer(route , data=request.data)
+        if serializer.is_valid():
+            serializer.save(updatedby=request.user.username)
+            return JsonResponse({
+                'status' : 200,
+                'data' : serializer.data
+            }, status=status.HTTP_200_OK)
+
+    return JsonResponse({
+        'status' : 400,
+        'data' : serializer.errors
+    } ,status=status.HTTP_400_BAD_REQUEST)
+
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def list_route(request):
     if request.method == 'GET':
         routes = Route.objects.all()
         serializer = RouteSerializer(routes ,many=True)
-        return Response(serializer.data , status=status.HTTP_200_OK)
+        return JsonResponse({
+            'status' : 200,
+            'data' : serializer.data} , status=status.HTTP_200_OK)
 
-    return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse({
+        'status' : 400,
+        'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -70,16 +106,20 @@ def add_customer(request):
         customer_serializer = CustomerSerializer(data=customer_data)
     
         if customer_serializer.is_valid():
-            customer_serializer.save()
+            customer_serializer.save(addedby=request.user.username)
             if(len(data_values) > 3):
                 customeraccount = CustomerAccount.objects.get(customer_name = Customer.objects.get(name=data_values[0]).id)
                 customeraccount.due = data_values[3]
-                customeraccount.save()
+                customeraccount.save(addedby=request.user.username)
             
-            return Response(customer_serializer.data , status=status.HTTP_200_OK)
+            return JsonResponse({
+                'status' : 201,
+                'data' : customer_serializer.data} , status=status.HTTP_201_CREATED)
 
 
-        return Response(customer_serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({
+            'status' : 400,
+            'data' : customer_serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
 @permission_classes([IsAdminUser])
@@ -93,10 +133,14 @@ def update_customer(request,pk):
     if request.method == 'PUT':
         serializer = CustomerSerializer(customer , data=request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data , status=status.HTTP_201_CREATED)
+            serializer.save(updatedby=request.user.username)
+            return JsonResponse({
+                'status' : 201,
+                'data' : serializer.data} , status=status.HTTP_201_CREATED)
         
-        return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({
+            'status' : 400,
+            'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -104,9 +148,13 @@ def list_customer(request):
     if request.method == 'GET':
         customers = Customer.objects.all()
         serializer = CustomerSerializerGET(customers ,many=True)
-        return Response(serializer.data , status=status.HTTP_200_OK)
+        return JsonResponse({
+            'status' : 200,
+            'data' : serializer.data} , status=status.HTTP_200_OK)
 
-    return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse({
+        'status' : 400,
+        'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -114,14 +162,21 @@ def get_customer_detail(request, pk):
     try:
         customer = Customer.objects.get(pk=pk)
     except Customer.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({
+            'status' : 404,
+            'data' : "Customer Not Found"
+        } , status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
         customer = Customer.objects.get(pk=pk)
         serializer = CustomerSerializerGET(customer)
-        return Response(serializer.data , status=status.HTTP_200_OK)
+        return JsonResponse({
+            'status' : 200,
+            'data' : serializer.data} , status=status.HTTP_200_OK)
     
-    return Response(serializer.errors, status=status.HTTP_404_NOT_FOUND)
+    return JsonResponse({
+        'status' : 400,
+        'data' : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -141,7 +196,7 @@ def add_daily_entry(request):
         serializer = DailyEntrySerializer(data=request.data)
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(addedby=request.user.username)
 
             if day == last_date:
         
@@ -183,14 +238,22 @@ def add_daily_entry(request):
 
                 bill_serializer = GenerateBillSerializer(data = bill_data)
                 if bill_serializer.is_valid():
-                    bill_serializer.save()
+                    bill_serializer.save(addedby=request.user.username)
                     customer = CustomerAccount.objects.get(customer_name=pk)
                     customer.due = data_values[6]
-                    customer.save()
+                    customer.save(updatedby=request.user.username)
 
-            return Response(serializer.data,status=status.HTTP_201_CREATED)
-        return Response(serializer.data , status=HTTP_201_CREATED)
-    return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({
+                'status' : 201,
+                'data' : serializer.data},status=status.HTTP_201_CREATED)
+
+        return JsonResponse({
+            'status' : 201,
+            'data' : serializer.data} , status=HTTP_201_CREATED)
+
+    return JsonResponse({
+        'status' : 400,
+        'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -204,7 +267,7 @@ def daily_count(request):
         if coolers_total == None:   
             coolers_total = 0
 
-        return JsonResponse({'customer_count' : customer_count , 'coolers_total' : coolers_total})
+        return JsonResponse({'status' : 200 , 'customer_count' : customer_count , 'coolers_total' : coolers_total}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -226,21 +289,24 @@ def customer_payment(request):
         start_day = start_day_of_prev_month.strftime("%Y-%m-%d")
 
         if serializer.is_valid():
-            serializer.save()
+            serializer.save(addedby=request.user.username)
             customer = CustomerAccount.objects.get(customer_name = pk)
             customer.due = int(customer.due) - int(data_values[2])
-            customer.save()
+            customer.save(updatedby=request.user.username)
             
             customer_bill = CustomerBill.objects.filter(customer_name = pk).filter(paid=False).get(from_date=start_day)
             customer_bill.paid = True
-            customer_bill.save()
+            customer_bill.save(updatedby=request.user.username)
 
             return JsonResponse({
+                'status' : 200,
                 'detail' : "Bill Paid and Customer Account Updated"
             } , status=status.HTTP_201_CREATED)
 
 
-        return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+        return Response({
+            'status' : 400,
+            'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['PUT'])
 @permission_classes([IsAdminUser])
@@ -249,15 +315,23 @@ def customer_account(request , pk):
     try:
         customer = CustomerAccount.objects.get(customer_name = pk)
     except Customer.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({
+            'status' : 400,
+            'data' : "Customer Not Found"
+        },status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'PUT':
         serializer = CustomerAccountSerializer(customer , data = request.data)
         if serializer.is_valid():
-            serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
+            serializer.save(updatedby=request.user.username)
+            return JsonResponse({
+                'status' : 200,
+                'data' : serializer.data
+            }, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+        return JsonResponse({
+            'status' : 400,
+            'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -267,7 +341,10 @@ def due_list_route(request,pk):
         try:
             route = Route.objects.get(pk=pk)
         except Customer.DoesNotExist:
-            return Response("Customer Route Not Found" , status=status.HTTP_404_NOT_FOUND)
+            return JsonResponse({
+                'status' : 400,
+                'data' : "Customer Not Found"
+            } , status=status.HTTP_404_NOT_FOUND)
 
         last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
         start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
@@ -282,10 +359,13 @@ def due_list_route(request,pk):
         customer_due_list_total = customer_due_list_filter['due__sum']
 
         return JsonResponse({
+            'status' : 200,
             'duelist_data' : serializer.data ,
             'due_total' : customer_due_list_total} , status=status.HTTP_200_OK)
 
-    return Response(serializer.errors , status=status.HTTP_400_BAD_REQUEST)
+    return Response({
+        'status' : 400,
+        'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -298,6 +378,7 @@ def due_list(request):
         customer_due_list_total = customer_due_list['due__sum']
 
         return JsonResponse({
+            'status' : 200,
             'duelist_data' : serializer.data,
             'due_total' : customer_due_list_total
         } , status=status.HTTP_200_OK)
@@ -309,13 +390,21 @@ def due_customer(request , pk):
         try:
             customer = CustomerAccount.objects.get(customer_name=pk)
         except:
-            return Response("Customer Not Found",status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({
+                'status' : 400,
+                'data' : "Customer Not Found"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         customer_due = customer.due
         return JsonResponse({
+            'status' : 200,
             'customer_name' : customer.customer_name.name,
-            'due' : customer_due} , safe=False)
-    return Response("Invalid Request",status=status.HTTP_400_BAD_REQUEST)
+            'due' : customer_due} , status=status.HTTP_200_OK)
+
+    return JsonResponse({
+        'status' : 400,
+        'data' : "Something went wrong"
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -327,7 +416,10 @@ def customer_detail(request , pk):
         try:
             customer = Customer.objects.get(id=pk)
         except:
-            return Response("Customer Not Found",status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({
+                'status' : 400,
+                'data' : "Customer Not Found"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         customer_detail = customer
         detail_serializer = CustomerSerializerGET(customer_detail)
@@ -339,12 +431,16 @@ def customer_detail(request , pk):
         daily_entry_serializer = DailyEntrySerializer(customer_daily_entry , many=True)
 
         return JsonResponse({
+            'status' : 200,
             'customer_detail' : detail_serializer.data,
             'bills' : bill_serializer.data,
             'daily_entry' : daily_entry_serializer.data
-        })
+        }, status=status.HTTP_200_OK)
 
-    return Response("Invalid Request",status=status.HTTP_400_BAD_REQUEST)
+    return JsonResponse({
+        'status' : 400,
+        'data' : "Something Went Wrong"
+    }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -353,14 +449,22 @@ def bill_detail(request , pk):
         try:
             bill = CustomerBill.objects.get(pk=pk)
         except CustomerBill.DoesNotExist:
-            return Response("Bill Not Found" , status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse({
+                'status' : 400,
+                'data' : "Bill Not Found"
+            } , status=status.HTTP_400_BAD_REQUEST)
 
         customer_bill = GenerateBillSerializerGET(bill)
         daily_entry = DailyEntry.objects.filter(date__gte=bill.from_date , date__lte=bill.to_date)
         daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
 
         return JsonResponse({
+            'status' : 200,
             'bill' : customer_bill.data,
             'daily_entry' : daily_entry_serializer.data
-        })
-    return Response("Invalid Request" , status=status.HTTP_400_BAD_REQUEST)
+        }, status=status.HTTP_200_OK)
+
+    return JsonResponse({
+        'status' : 400,
+        'data' : "Something went wrong"
+    } , status=status.HTTP_400_BAD_REQUEST)

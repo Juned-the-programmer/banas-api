@@ -23,4 +23,3 @@
 /generate-bill/ -> POST -> Generate the bill based on the data from previous API {customer_name : "customerid" , from_data : "" , to_date : "" , coolers : "" , Rate : "" , Amount : "" , Pending_amount : "" , Advanced_amount : "" , Total : "" }
 
 /due-list/<routeid>/ -> GET -> Filter the customers due payment based on the route 
-
