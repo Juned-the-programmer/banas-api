@@ -20,7 +20,7 @@ class Customer(models.Model):
     rate = models.IntegerField()
     date_added = models.DateField(auto_now_add=True)
     date_updated = models.DateField(auto_now_add=True)
-    addedby = models.CharField(max_length=100)
+    addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
@@ -31,7 +31,7 @@ class CustomerAccount(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.CASCADE , null=True, blank=True , default=0)
     due = models.IntegerField(default=0)
     date = models.DateField(auto_now_add=True)
-    addedby = models.CharField(max_length=100)
+    addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
@@ -43,7 +43,7 @@ class CustomerPayment(models.Model):
     pending_amount = models.IntegerField()
     paid_amount = models.IntegerField()
     date = models.DateField(auto_now_add=True)
-    addedby = models.CharField(max_length=100)
+    addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
@@ -54,7 +54,7 @@ class DailyEntry(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True)
     cooler = models.IntegerField()
     date = models.DateField(auto_now_add=True)
-    addedby = models.CharField(max_length=100)
+    addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
@@ -73,7 +73,7 @@ class CustomerBill(models.Model):
     Total = models.IntegerField(default=0, null=True , blank=True)
     date = models.DateField(auto_now_add=True)
     paid = models.BooleanField(default=False, null=True, blank=True)
-    addedby = models.CharField(max_length=100)
+    addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
