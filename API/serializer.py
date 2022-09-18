@@ -31,13 +31,31 @@ class CustomerPaymentSerializer(serializers.ModelSerializer):
         model = CustomerPayment
         fields = '__all__'
 
+class CustomerPaymentSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerPayment
+        fields = '__all__'
+        depth = 1
+
 class CustomerAccountSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerAccount
         fields = '__all__'
+
+class CustomerAccountSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerAccount
+        fields = '__all__'
+        depth = 1
 
 
 class GenerateBillSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerBill
         fields = '__all__'
+
+class GenerateBillSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerBill
+        fields = '__all__'
+        depth = 1
