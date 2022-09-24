@@ -110,7 +110,8 @@ def add_customer(request):
             if(len(data_values) > 3):
                 customeraccount = CustomerAccount.objects.get(customer_name = Customer.objects.get(name=data_values[0]).id)
                 customeraccount.due = data_values[3]
-                customeraccount.save(addedby=request.user.username)
+                customeraccount.updatedby = request.user.username
+                customeraccount.save()
             
             return JsonResponse({
                 'status' : 201,
@@ -241,7 +242,8 @@ def add_daily_entry(request):
                     bill_serializer.save(addedby=request.user.username)
                     customer = CustomerAccount.objects.get(customer_name=pk)
                     customer.due = data_values[6]
-                    customer.save(updatedby=request.user.username)
+                    customer.updatedby = request.user.username
+                    customer.save()
 
             return JsonResponse({
                 'status' : 201,
@@ -292,11 +294,13 @@ def customer_payment(request):
             serializer.save(addedby=request.user.username)
             customer = CustomerAccount.objects.get(customer_name = pk)
             customer.due = int(customer.due) - int(data_values[2])
-            customer.save(updatedby=request.user.username)
+            customer.updatedby = request.user.username
+            customer.save()
             
             customer_bill = CustomerBill.objects.filter(customer_name = pk).filter(paid=False).get(from_date=start_day)
             customer_bill.paid = True
-            customer_bill.save(updatedby=request.user.username)
+            customer_bill.updatedby = request.user.username
+            customer_bill.save()
 
             return JsonResponse({
                 'status' : 200,
@@ -427,7 +431,7 @@ def customer_detail(request , pk):
         customer_bills = CustomerBill.objects.filter(customer_name = customer.id)
         bill_serializer = GenerateBillSerializer(customer_bills , many=True)
 
-        customer_daily_entry = DailyEntry.objects.filter(date__gte=first_day_of_month)
+        customer_daily_entry = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(customer_name=customer.id)
         daily_entry_serializer = DailyEntrySerializer(customer_daily_entry , many=True)
 
         return JsonResponse({
