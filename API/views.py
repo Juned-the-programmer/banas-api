@@ -17,7 +17,35 @@ from django.db.models import Sum,Min,Max,Avg
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
 def dashboard(request):
-    return JsonResponse("Dashboard" , safe=False)
+
+    if request.method == 'GET':
+        today_date = datetime.now()
+        previous_date = now - timedelta(days=7)
+        
+        daily_entry = DailyEntry.objects.filter(date__gte = previous_date , date__lte = today_date)
+        daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
+
+        return JsonResponse({
+            'status': '200',
+            'data' : daily_entry_serializer.data
+        }, status = status.HTTP_200_OK)
+
+    if request.method == 'POST':
+        date_data = request.data
+        data_values = list(data.values())
+
+        daily_entry = DailyEntry.objects.filter(date__gte = data_values[0], date__lte = data_values[1])
+        daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
+
+        return JsonResponse({
+            'status': '200',
+            'data' : daily_entry_serializer.data
+        }, status = status.HTTP_200_OK)
+
+    return JsonResponse({
+        'status': '400',
+        'data' : daily_entry_serializer.errors
+    }, status = status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser])
@@ -292,15 +320,22 @@ def customer_payment(request):
 
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
-            customer = CustomerAccount.objects.get(customer_name = pk)
-            customer.due = int(customer.due) - int(data_values[2])
-            customer.updatedby = request.user.username
-            customer.save()
-            
-            customer_bill = CustomerBill.objects.filter(customer_name = pk).filter(paid=False).get(from_date=start_day)
-            customer_bill.paid = True
-            customer_bill.updatedby = request.user.username
-            customer_bill.save()
+            try:
+                customer_data = Customer.objects.filter(route = Route.objects.get(id = data_values[1])).get(id = pk).id
+                customer = CustomerAccount.objects.get(customer_name = customer_data)
+                customer.due = int(customer.due) - int(data_values[2])
+                customer.updatedby = request.user.username
+                customer.save()
+                
+                customer_bill = CustomerBill.objects.filter(customer_name = pk).filter(paid=False).get(from_date=start_day)
+                customer_bill.paid = True
+                customer_bill.updatedby = request.user.username
+                customer_bill.save()
+            except:
+                return JsonResponse({
+                    'status' : 400,
+                    'detail' : "Customer is not this route"
+                },status = status.HTTP_400_BAD_REQUEST)
 
             return JsonResponse({
                 'status' : 200,
