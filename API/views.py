@@ -14,13 +14,14 @@ import calendar
 from django.db.models import Sum,Min,Max,Avg
 
 # Create your views here.
-@api_view(['GET'])
+@api_view(['GET','POST'])
 @permission_classes([IsAdminUser])
 def dashboard(request):
 
     if request.method == 'GET':
-        today_date = datetime.now()
-        previous_date = now - timedelta(days=7)
+        today_date = datetime.date.today()
+        print(today_date)
+        previous_date = today_date - timedelta(days=7)
         
         daily_entry = DailyEntry.objects.filter(date__gte = previous_date , date__lte = today_date)
         daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
@@ -32,7 +33,7 @@ def dashboard(request):
 
     if request.method == 'POST':
         date_data = request.data
-        data_values = list(data.values())
+        data_values = list(date_data.values())
 
         daily_entry = DailyEntry.objects.filter(date__gte = data_values[0], date__lte = data_values[1])
         daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
