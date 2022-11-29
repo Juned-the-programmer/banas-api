@@ -26,6 +26,11 @@ class DailyEntrySerializer(serializers.ModelSerializer):
         model = DailyEntry
         fields = '__all__'
 
+class DialyEntrySerializerGETDashboard(serializers.ModelSerializer):
+    class Meta:
+        model = DailyEntry
+        fields = ['cooler','date']
+
 class CustomerPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomerPayment

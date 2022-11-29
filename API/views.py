@@ -24,7 +24,7 @@ def dashboard(request):
         previous_date = today_date - timedelta(days=7)
         
         daily_entry = DailyEntry.objects.filter(date__gte = previous_date , date__lte = today_date)
-        daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
+        daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry , many=True)
 
         return JsonResponse({
             'status': '200',
@@ -36,7 +36,7 @@ def dashboard(request):
         data_values = list(date_data.values())
 
         daily_entry = DailyEntry.objects.filter(date__gte = data_values[0], date__lte = data_values[1])
-        daily_entry_serializer = DailyEntrySerializer(daily_entry , many=True)
+        daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry , many=True)
 
         return JsonResponse({
             'status': '200',
