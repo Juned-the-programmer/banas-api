@@ -12,8 +12,15 @@ from datetime import date, timedelta
 import datetime
 import calendar
 from django.db.models import Sum,Min,Max,Avg
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 # Create your views here.
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+
+  serializer_class = CustomTokenObtainPairSerializer
+  token_obtain_pair = TokenObtainPairView.as_view()
+
 @api_view(['GET','POST'])
 @permission_classes([IsAdminUser])
 def dashboard(request):
@@ -55,9 +62,12 @@ def get_profile(request):
 
     return JsonResponse({
         'status' : 200,
-        'username': user.username, 
-        'first_name' : user.first_name, 
-        'last_name' : user.last_name, 
+        'username': user.username,
+        'id': user.id,
+        'first_name' : user.first_name,
+        'last_name' : user.last_name,
+        'full_name' : user.first_name + ' ' + user.last_name,
+        'is_superuser' : user.is_superuser,
         'email' : user.email} , status=status.HTTP_200_OK)
 
 @api_view(['POST'])
