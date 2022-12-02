@@ -50,7 +50,7 @@ class CustomerAccountSerializer(serializers.ModelSerializer):
 class CustomerAccountSerializerGET(serializers.ModelSerializer):
     class Meta:
         model = CustomerAccount
-        fields = '__all__'
+        fields = ['customer_name','due']
         depth = 1
 
 
@@ -64,6 +64,12 @@ class GenerateBillSerializerGET(serializers.ModelSerializer):
         model = CustomerBill
         fields = '__all__'
         depth = 1
+
+class DetailBillSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerBill
+        fields = ['from_date','to_date','coolers','Total','paid']
+
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
   def validate(self, attrs):
