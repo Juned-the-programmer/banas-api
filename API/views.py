@@ -8,11 +8,12 @@ from django.http import JsonResponse
 from django.core import serializers
 from rest_framework import status
 from .serializer import *
-from datetime import date, timedelta
+from datetime import date, timedelta 
 import datetime
 import calendar
 from django.db.models import Sum,Min,Max,Avg
 from rest_framework_simplejwt.views import TokenObtainPairView
+import json
 
 # Create your views here.
 
@@ -27,27 +28,50 @@ def dashboard(request):
 
     if request.method == 'GET':
         today_date = datetime.date.today()
-        print(today_date)
-        previous_date = today_date - timedelta(days=7)
-        
-        daily_entry = DailyEntry.objects.filter(date__gte = previous_date , date__lte = today_date)
-        daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry , many=True)
+
+        data_list = []
+
+        for i in range(0,7):
+            daily_entry = DailyEntry.objects.filter(date=today_date - timedelta(days=i)).aggregate(Sum('cooler'))
+            coolers_total = daily_entry['cooler__sum']
+
+            if coolers_total is None:
+                coolers = 0
+            else:
+                coolers = coolers_total
+
+            data_list.append({"date" : str(today_date - timedelta(days=i)) , "coolers" : coolers})
 
         return JsonResponse({
             'status': '200',
-            'data' : daily_entry_serializer.data
+            'data' : data_list
         }, status = status.HTTP_200_OK)
 
     if request.method == 'POST':
         date_data = request.data
         data_values = list(date_data.values())
 
-        daily_entry = DailyEntry.objects.filter(date__gte = data_values[0], date__lte = data_values[1])
-        daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry , many=True)
+        #Configuring date
+        from_date = datetime.datetime.strptime(data_values[0], "%Y-%m-%d")
+        to_date = datetime.datetime.strptime(data_values[1], "%Y-%m-%d")
+        days = to_date - from_date
+
+        data_list = []
+
+        for i in range(0,int(days.days)):
+            daily_entry = DailyEntry.objects.filter(date=to_date - timedelta(days=i)).aggregate(Sum('cooler'))
+            coolers_total = daily_entry['cooler__sum']
+
+            if coolers_total is None:
+                coolers = 0
+            else:
+                coolers = coolers_total
+
+            data_list.append({"date" : str(to_date - timedelta(days=i)) , "coolers" : coolers})
 
         return JsonResponse({
             'status': '200',
-            'data' : daily_entry_serializer.data
+            'data' : data_list
         }, status = status.HTTP_200_OK)
 
     return JsonResponse({
