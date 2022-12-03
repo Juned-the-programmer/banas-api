@@ -248,7 +248,7 @@ def add_daily_entry(request):
     data = request.data
     data_values = list(data.values())
     pk = data_values[0]
-    
+
     today_date = datetime.datetime.now()
 
     #Last day of month
@@ -337,10 +337,15 @@ def daily_count(request):
         coolers = DailyEntry.objects.distinct().filter(date=date.today()).aggregate(Sum('cooler'))
         coolers_total = coolers['cooler__sum']
         
-        if coolers_total == None:   
-            coolers_total = 0
+        if coolers_total is None:   
+            total = 0
+        else: 
+            total = coolers_total
 
-        return JsonResponse({'status' : 200 , 'customer_count' : customer_count , 'coolers_total' : coolers_total}, status=status.HTTP_200_OK)
+        return JsonResponse(
+            {'status' : 200 , 
+            'customer_count' : customer_count ,
+            'coolers_total' : total}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
@@ -444,10 +449,15 @@ def due_list_route(request,pk):
         customer_due_list_filter = CustomerAccount.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk)).aggregate(Sum('due'))
         customer_due_list_total = customer_due_list_filter['due__sum']
 
+        if customer_due_list_total is None:
+            total = 0
+        else:
+            total = customer_due_list_total
+
         return JsonResponse({
             'status' : 200,
             'duelist_data' : data_list ,
-            'due_total' : customer_due_list_total} , status=status.HTTP_200_OK)
+            'due_total' : total} , status=status.HTTP_200_OK)
 
     return Response({
         'status' : 400,
@@ -468,10 +478,15 @@ def due_list(request):
         customer_due_list = CustomerAccount.objects.all().aggregate(Sum('due'))
         customer_due_list_total = customer_due_list['due__sum']
 
+        if customer_due_list_total is None:
+            total = 0
+        else:
+            total = customer_due_list_total
+
         return JsonResponse({
             'status' : 200,
             'duelist_data' : data_list,
-            'due_total' : customer_due_list_total
+            'due_total' : total
         } , status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -524,12 +539,17 @@ def customer_detail(request , pk):
         customer_daily_entry_total = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(customer_name=customer.id).aggregate(Sum("cooler"))
         total_coolers = customer_daily_entry_total['cooler__sum']
 
+        if total_coolers is None:
+            total = 0
+        else:
+            total = total_coolers
+
         return JsonResponse({
             'status' : 200,
             'customer_detail' : detail_serializer.data,
             'bills' : bill_serializer.data,
             'daily_entry' : daily_entry_serializer.data,
-            'total_coolers' : total_coolers
+            'total_coolers' : total
         }, status=status.HTTP_200_OK)
 
     return JsonResponse({
@@ -584,10 +604,15 @@ def cutomer_payment_list(request,pk):
         customer_payment_total = CustomerPayment.objects.filter(customer_name= customer.id).aggregate(Sum('paid_amount'))
         total_paid_amount = customer_payment_total['paid_amount__sum']
 
+        if total_paid_amount is None:
+            total = 0
+        else:
+            total = total_paid_amount
+
         return JsonResponse({
             'status' : 200,
             'data' : customer_payment_serializer.data,
-            'total paid amount' : total_paid_amount
+            'total paid amount' : total
         }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -611,10 +636,15 @@ def customer_payment_current_month(request):
         customer_payment_total = CustomerPayment.objects.filter(date__gte=first_date , date__lte=last_date.date()).aggregate(Sum('paid_amount'))
         total_paid_amount = customer_payment_total['paid_amount__sum']
 
+        if total_paid_amount is None:
+            total = 0
+        else:
+            total = total_paid_amount
+
         return JsonResponse({
             'status' : 200,
             'data' : customer_payment_serializer.data,
-            'total paid amount' : total_paid_amount
+            'total paid amount' : total
         }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
@@ -645,6 +675,11 @@ def payment_list_route(request,pk):
 
         customer_payment_total = CustomerPayment.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk)).filter(date__gte=first_date).filter(date__lte=last_date.date()).aggregate(Sum('paid_amount'))
         total_paid_amount = customer_payment_total['paid_amount__sum']
+
+        if total_paid_amount is None:
+            total = 0
+        else:
+            total = total_paid_amount
 
         return JsonResponse({
             'status' : 200,
