@@ -24,6 +24,9 @@ urlpatterns = [
     path('customer-account/<str:pk>/',views.customer_account,name="customer-account"),
     path('customer-due/<str:pk>/',views.due_customer,name="customer-due"),
     path('customer-detail/<str:pk>/',views.customer_detail,name="customer-detail"),
+    path('customer-payment-list/<str:pk>/',views.cutomer_payment_list,name="customer-payment-list"),
+    path('customer-payment-current-month/',views.customer_payment_current_month,name="customer-payment-current-month"),
+    path('payment-list-route/<str:pk>/',views.payment_list_route,name="payment-list-route"),
 
     path('daily-entry/',views.add_daily_entry,name="daily-entry"),
     path('daily-entry-count/',views.daily_count,name="daily-entry-count"),

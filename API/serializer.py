@@ -39,8 +39,7 @@ class CustomerPaymentSerializer(serializers.ModelSerializer):
 class CustomerPaymentSerializerGET(serializers.ModelSerializer):
     class Meta:
         model = CustomerPayment
-        fields = '__all__'
-        depth = 1
+        fields = ['pending_amount','paid_amount','date','addedby']
 
 class CustomerAccountSerializer(serializers.ModelSerializer):
     class Meta:

@@ -245,16 +245,20 @@ def get_customer_detail(request, pk):
 @api_view(['POST'])
 @permission_classes([IsAdminUser])
 def add_daily_entry(request):
-    today_date = datetime.datetime.now()
-    year = today_date.year
-    month = today_date.month
-    day = today_date.day
-    last_date = calendar.monthrange(year, month)[0]
-
     data = request.data
     data_values = list(data.values())
     pk = data_values[0]
-    # print(list(data.keys()))
+    
+    today_date = datetime.datetime.now()
+
+    #Last day of month
+    next_month = today_date.replace(day=28) + timedelta(days=4)
+    last_date = next_month - timedelta(days=next_month.day)
+    # print(last_date.date())
+
+    #First day of month
+    first_date = datetime.datetime.today().replace(day=1).date()
+    # print(first_date)
 
     if request.method == 'POST':
         serializer = DailyEntrySerializer(data=request.data)
@@ -262,7 +266,7 @@ def add_daily_entry(request):
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
 
-            if day == last_date:
+            if datetime.date.today() == last_date.date():
         
                 customer_name = Customer.objects.get(pk=pk).id
 
@@ -273,32 +277,36 @@ def add_daily_entry(request):
                 start_day = start_day_of_prev_month.strftime("%Y-%m-%d")
 
 
-                total_cooler = DailyEntry.objects.filter(date__gte=start_day_of_prev_month , date__lte=last_day_of_prev_month).aggregate(Sum('cooler'))
+                total_cooler = DailyEntry.objects.filter(date__gte=start_day , date__lte=last_day).aggregate(Sum('cooler'))
                 coolers_total = total_cooler['cooler__sum']
                 
-                if coolers_total == None:   
-                    coolers_total = 0
+                if coolers_total is None:   
+                    coolers = 0
+                else: 
+                    coolers = int(coolers_total)
 
 
                 last_month_due_amount = CustomerAccount.objects.get(customer_name = pk).due
                 rate = Customer.objects.get(pk=pk).rate
 
-                total = (int(coolers_total) * int(rate)) + int(last_month_due_amount)
+                total = (int(coolers) * int(rate)) + int(last_month_due_amount)
+
+                amount = int(coolers) * int(rate)
 
                 bill_data = {
                     'customer_name' : pk ,
                     'to_date' : last_day ,
                     'from_date' : start_day ,
-                    'coolers' : coolers_total ,
+                    'coolers' : coolers ,
                     'Pending_amount' : last_month_due_amount ,
                     'Rate' : rate , 
-                    'Total' : total
+                    'Total' : total,
+                    'Amount': amount
                 }
                 print(bill_data)
                 data = bill_data
                 data_values = list(data.values())
                 pk = data_values[0]
-                # print(list(data.keys()))
 
                 bill_serializer = GenerateBillSerializer(data = bill_data)
                 if bill_serializer.is_valid():
@@ -344,7 +352,6 @@ def customer_payment(request):
         data = request.data
         data_values = list(data.values())
         pk = data_values[0]
-        print(list(data.keys()))
         # Ends here
         
         last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
@@ -356,21 +363,29 @@ def customer_payment(request):
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
             try:
-                customer_data = Customer.objects.filter(route = Route.objects.get(id = data_values[1])).get(id = pk).id
-                customer = CustomerAccount.objects.get(customer_name = customer_data)
+                customer = CustomerAccount.objects.get(customer_name__id__in = Customer.objects.filter(route=data_values[1]))
                 customer.due = int(customer.due) - int(data_values[2])
                 customer.updatedby = request.user.username
-                customer.save()
-                
-                customer_bill = CustomerBill.objects.filter(customer_name = pk).filter(paid=False).get(from_date=start_day)
-                customer_bill.paid = True
-                customer_bill.updatedby = request.user.username
-                customer_bill.save()
             except:
                 return JsonResponse({
                     'status' : 400,
                     'detail' : "Customer is not this route"
                 },status = status.HTTP_400_BAD_REQUEST)
+                
+            
+            try:
+                customer_bill = CustomerBill.objects.filter(customer_name = pk).filter(paid=False).get(from_date=start_day)
+                customer_bill.paid = True
+                customer_bill.updatedby = request.user.username
+                customer_bill.save()
+                customer.save()
+            except:
+                return JsonResponse({
+                    'status' : 400,
+                    'detail' : "Customer has not a Bill, First Generate Bill then try again!"
+                },status = status.HTTP_400_BAD_REQUEST)
+                
+            
 
             return JsonResponse({
                 'status' : 200,
@@ -420,15 +435,18 @@ def due_list_route(request,pk):
                 'data' : "Route Not Found"
             } , status=status.HTTP_404_NOT_FOUND)
 
+        data_list = []
         customer_due_list = CustomerAccount.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk))
-        serializer = CustomerAccountSerializerGET(customer_due_list , many=True)
+        
+        for i in customer_due_list:
+            data_list.append({"customer_name" : i.customer_name.name , "due" : i.due})
 
         customer_due_list_filter = CustomerAccount.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk)).aggregate(Sum('due'))
         customer_due_list_total = customer_due_list_filter['due__sum']
 
         return JsonResponse({
             'status' : 200,
-            'duelist_data' : serializer.data ,
+            'duelist_data' : data_list ,
             'due_total' : customer_due_list_total} , status=status.HTTP_200_OK)
 
     return Response({
@@ -441,14 +459,18 @@ def due_list(request):
     if request.method == 'GET':
 
         customerdue = CustomerAccount.objects.all()
-        serializer = CustomerAccountSerializerGET(customerdue , many=True)
+
+        data_list = []
+        for i in customerdue:
+            data_list.append({"customer_name" : i.customer_name.name , "due" : i.due})
+            print(data_list)
 
         customer_due_list = CustomerAccount.objects.all().aggregate(Sum('due'))
         customer_due_list_total = customer_due_list['due__sum']
 
         return JsonResponse({
             'status' : 200,
-            'duelist_data' : serializer.data,
+            'duelist_data' : data_list,
             'due_total' : customer_due_list_total
         } , status=status.HTTP_200_OK)
 
@@ -499,11 +521,15 @@ def customer_detail(request , pk):
         customer_daily_entry = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(customer_name=customer.id)
         daily_entry_serializer = DialyEntrySerializerGETDashboard(customer_daily_entry , many=True)
 
+        customer_daily_entry_total = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(customer_name=customer.id).aggregate(Sum("cooler"))
+        total_coolers = customer_daily_entry_total['cooler__sum']
+
         return JsonResponse({
             'status' : 200,
             'customer_detail' : detail_serializer.data,
             'bills' : bill_serializer.data,
-            'daily_entry' : daily_entry_serializer.data
+            'daily_entry' : daily_entry_serializer.data,
+            'total_coolers' : total_coolers
         }, status=status.HTTP_200_OK)
 
     return JsonResponse({
@@ -539,3 +565,89 @@ def bill_detail(request , pk):
         'status' : 400,
         'data' : "Something went wrong"
     } , status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def cutomer_payment_list(request,pk):
+    if request.method == 'GET':
+        try:
+            customer = Customer.objects.get(pk=pk)
+        except Customer.DoesNotExist:
+            return JsonResponse({
+                'status' : 400,
+                'data' : "Customer Not Found"
+            } , status=status.HTTP_400_BAD_REQUES)
+
+        customer_payment = CustomerPayment.objects.filter(customer_name= customer.id)
+        customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment , many=True)
+
+        customer_payment_total = CustomerPayment.objects.filter(customer_name= customer.id).aggregate(Sum('paid_amount'))
+        total_paid_amount = customer_payment_total['paid_amount__sum']
+
+        return JsonResponse({
+            'status' : 200,
+            'data' : customer_payment_serializer.data,
+            'total paid amount' : total_paid_amount
+        }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def customer_payment_current_month(request):
+    if request.method == 'GET':
+        today_date = datetime.datetime.now()
+
+        #Last day of month
+        next_month = today_date.replace(day=28) + timedelta(days=4)
+        last_date = next_month - timedelta(days=next_month.day)
+        print(last_date.date())
+
+        #First day of month
+        first_date = datetime.datetime.today().replace(day=1).date()
+        print(first_date)
+
+        customer_payment = CustomerPayment.objects.filter(date__gte=first_date , date__lte=last_date.date())
+        customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment , many=True)
+
+        customer_payment_total = CustomerPayment.objects.filter(date__gte=first_date , date__lte=last_date.date()).aggregate(Sum('paid_amount'))
+        total_paid_amount = customer_payment_total['paid_amount__sum']
+
+        return JsonResponse({
+            'status' : 200,
+            'data' : customer_payment_serializer.data,
+            'total paid amount' : total_paid_amount
+        }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def payment_list_route(request,pk):
+    if request.method == 'GET':
+        today_date = datetime.datetime.now()
+
+        #Last day of month
+        next_month = today_date.replace(day=28) + timedelta(days=4)
+        last_date = next_month - timedelta(days=next_month.day)
+        print(last_date.date())
+
+        #First day of month
+        first_date = datetime.datetime.today().replace(day=1).date()
+        print(first_date)
+
+        try:
+            route = Route.objects.get(pk=pk)
+        except Route.DoesNotExist:
+            return JsonResponse({
+                'status' : 400,
+                'data' : "Route DoesNot Exists"
+            })
+        
+        customer_payment_list = CustomerPayment.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk)).filter(date__gte=first_date).filter(date__lte=last_date.date())
+        customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment_list, many=True)
+
+        customer_payment_total = CustomerPayment.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk)).filter(date__gte=first_date).filter(date__lte=last_date.date()).aggregate(Sum('paid_amount'))
+        total_paid_amount = customer_payment_total['paid_amount__sum']
+
+        return JsonResponse({
+            'status' : 200,
+            'data' : customer_payment_serializer.data,
+            'total paid amount' : total_paid_amount
+        })
