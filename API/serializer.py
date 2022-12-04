@@ -26,6 +26,12 @@ class DailyEntrySerializer(serializers.ModelSerializer):
         model = DailyEntry
         fields = '__all__'
 
+class DailyEntrySerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = DailyEntry
+        fields = ['customer_name', 'cooler' , 'date']
+        depth = 1
+
 class DialyEntrySerializerGETDashboard(serializers.ModelSerializer):
     class Meta:
         model = DailyEntry
