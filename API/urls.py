@@ -14,11 +14,11 @@ urlpatterns = [
 
     path('route/',views.route,name="add-route"),
     path('update-route/<str:pk>/',views.update_route,name="update-route"),
-    
+
     path('customer/',views.customer,name="add-customer"),
     path('customer/route/<str:pk>/',views.list_customer_by_route,name="list-customer-route"),
     path('update-customer/<str:pk>/',views.update_customer,name="update-customer"),
-    path('customer/info/<str:pk>/',views.get_customer_detail,name="customer-info"),
+    path('customer/<str:pk>/',views.get_customer_detail,name="customer-info"),
     path('customer/account/<str:pk>/',views.customer_account,name="customer-account"),
     path('customer/due/<str:pk>/',views.due_customer,name="customer-due"),
     path('customer/detail/<str:pk>/',views.customer_detail,name="customer-detail"),
@@ -31,4 +31,5 @@ urlpatterns = [
     path('bill/<str:pk>/',views.bill_detail,name="bill-detail"),
 
     path('daily-entry/',views.daily_entry,name="daily-entry"),
-]   
+    path('daily-entry-count/',views.daily_entry_count,name="daily-entry-count"),
+]

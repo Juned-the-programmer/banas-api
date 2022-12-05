@@ -8,7 +8,7 @@ from django.http import JsonResponse
 from django.core import serializers
 from rest_framework import status
 from .serializer import *
-from datetime import date, timedelta 
+from datetime import date, timedelta
 import datetime
 import calendar
 from django.db.models import Sum,Min,Max,Avg
@@ -103,7 +103,7 @@ def route(request):
 
         if route_serializer.is_valid():
             route_serializer.save(addedby=request.user.username)
-            
+
             return JsonResponse({
                 'status' : 200,
                 'data' : route_serializer.data} , status=status.HTTP_200_OK)
@@ -111,7 +111,7 @@ def route(request):
         return JsonResponse({
             'status' : 400,
             'data': route_serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
-    
+
     if request.method == 'GET':
         routes = Route.objects.all()
         serializer = RouteSerializer(routes ,many=True)
@@ -164,7 +164,7 @@ def customer(request):
         }
 
         customer_serializer = CustomerSerializer(data=customer_data)
-    
+
         if customer_serializer.is_valid():
             customer_serializer.save(addedby=request.user.username)
             if(len(data_values) > 3):
@@ -172,7 +172,7 @@ def customer(request):
                 customeraccount.due = data_values[3]
                 customeraccount.updatedby = request.user.username
                 customeraccount.save()
-            
+
             return JsonResponse({
                 'status' : 201,
                 'data' : customer_serializer.data} , status=status.HTTP_201_CREATED)
@@ -181,7 +181,7 @@ def customer(request):
         return JsonResponse({
             'status' : 400,
             'data' : customer_serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
-    
+
     if request.method == 'GET':
         customers = Customer.objects.all()
         serializer = CustomerSerializerGET(customers ,many=True)
@@ -206,7 +206,7 @@ def list_customer_by_route(request, pk):
 @api_view(['PUT'])
 @permission_classes([IsAdminUser])
 def update_customer(request,pk):
-    
+
     try:
         customer = Customer.objects.get(pk=pk)
     except Customer.DoesNotExist:
@@ -219,7 +219,7 @@ def update_customer(request,pk):
             return JsonResponse({
                 'status' : 201,
                 'data' : serializer.data} , status=status.HTTP_201_CREATED)
-        
+
         return JsonResponse({
             'status' : 400,
             'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
@@ -241,10 +241,38 @@ def get_customer_detail(request, pk):
         return JsonResponse({
             'status' : 200,
             'data' : serializer.data} , status=status.HTTP_200_OK)
-    
+
     return JsonResponse({
         'status' : 400,
         'data' : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def daily_entry_count(request):
+    if request.method == 'GET':
+        customer_count = DailyEntry.objects.distinct().filter(date=date.today()).count()
+
+        coolers = DailyEntry.objects.distinct().filter(date=date.today()).aggregate(Sum('cooler'))
+        coolers_total = coolers['cooler__sum']
+
+        today_coolers = DailyEntry.objects.filter(date=date.today())
+        today_coolers_serializer = DailyEntrySerializerGET(today_coolers , many=True)
+
+        if coolers_total is None:
+            total = 0
+        else:
+            total = coolers_total
+
+        return JsonResponse(
+            {'status' : 200 ,
+            'data' : today_coolers_serializer.data,
+            'customer_count' : customer_count ,
+            'coolers_total' : total}, status=status.HTTP_200_OK)
+
+    return JsonResponse({
+        'status' : 400,
+        'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['POST','GET'])
 @permission_classes([IsAdminUser])
@@ -271,7 +299,7 @@ def daily_entry(request):
             serializer.save(addedby=request.user.username)
 
             if datetime.date.today() == last_date.date():
-        
+
                 customer_name = Customer.objects.get(pk=pk).id
 
                 last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
@@ -283,10 +311,10 @@ def daily_entry(request):
 
                 total_cooler = DailyEntry.objects.filter(date__gte=start_day , date__lte=last_day).aggregate(Sum('cooler'))
                 coolers_total = total_cooler['cooler__sum']
-                
-                if coolers_total is None:   
+
+                if coolers_total is None:
                     coolers = 0
-                else: 
+                else:
                     coolers = int(coolers_total)
 
 
@@ -303,7 +331,7 @@ def daily_entry(request):
                     'from_date' : start_day ,
                     'coolers' : coolers ,
                     'Pending_amount' : last_month_due_amount ,
-                    'Rate' : rate , 
+                    'Rate' : rate ,
                     'Total' : total,
                     'Amount': amount
                 }
@@ -329,41 +357,29 @@ def daily_entry(request):
             'data' : serializer.data} , status=HTTP_201_CREATED)
 
     if request.method == 'GET':
-        customer_count = DailyEntry.objects.distinct().filter(date=date.today()).count()
-        
-        coolers = DailyEntry.objects.distinct().filter(date=date.today()).aggregate(Sum('cooler'))
-        coolers_total = coolers['cooler__sum']
+        dailyEntry = DailyEntry.objects.all()
+        serializer = DailyEntrySerializerGET(dailyEntry ,many=True)
+        return JsonResponse({
+                'status' : 200,
+                'data' : serializer.data} , status=status.HTTP_200_OK)
 
-        today_coolers = DailyEntry.objects.filter(date=date.today())
-        today_coolers_serializer = DailyEntrySerializerGET(today_coolers , many=True)
-        
-        if coolers_total is None:   
-            total = 0
-        else: 
-            total = coolers_total
+        return JsonResponse({
+                'status' : 400,
+                'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
-        return JsonResponse(
-            {'status' : 200 , 
-            'data' : today_coolers_serializer.data,
-            'customer_count' : customer_count ,
-            'coolers_total' : total}, status=status.HTTP_200_OK)
-
-    return JsonResponse({
-        'status' : 400,
-        'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST','GET'])
 @permission_classes([IsAdminUser])
 def payment(request):
     if request.method == 'POST':
         serializer = CustomerPaymentSerializer(data = request.data)
-        
+
         # Conver the data to the list to get the each and every element from that data
         data = request.data
         data_values = list(data.values())
         pk = data_values[0]
         # Ends here
-        
+
         last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
         start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
 
@@ -381,8 +397,8 @@ def payment(request):
                     'status' : 400,
                     'detail' : "Customer is not this route"
                 },status = status.HTTP_400_BAD_REQUEST)
-                
-            
+
+
             try:
                 customer_bill = CustomerBill.objects.filter(customer_name = pk).filter(paid=False).get(from_date=start_day)
                 customer_bill.paid = True
@@ -394,8 +410,8 @@ def payment(request):
                     'status' : 400,
                     'detail' : "Customer has not a Bill, First Generate Bill then try again!"
                 },status = status.HTTP_400_BAD_REQUEST)
-                
-            
+
+
 
             return JsonResponse({
                 'status' : 200,
@@ -476,7 +492,7 @@ def due_list_route(request,pk):
 
         data_list = []
         customer_due_list = CustomerAccount.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk))
-        
+
         for i in customer_due_list:
             data_list.append({"customer_name" : i.customer_name.name , "due" : i.due})
 
@@ -563,7 +579,7 @@ def customer_detail(request , pk):
 
         customer_detail = customer
         detail_serializer = CustomerSerializerGET(customer_detail)
-        
+
         customer_bills = CustomerBill.objects.filter(customer_name = customer.id)
         bill_serializer = DetailBillSerializer(customer_bills , many=True)
 
@@ -671,7 +687,7 @@ def payment_list_route(request,pk):
                 'status' : 400,
                 'data' : "Route DoesNot Exists"
             })
-        
+
         customer_payment_list = CustomerPayment.objects.filter(customer_name__id__in = Customer.objects.filter(route=pk)).filter(date__gte=first_date).filter(date__lte=last_date.date())
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment_list, many=True)
 
