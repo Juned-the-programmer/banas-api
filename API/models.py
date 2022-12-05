@@ -18,6 +18,7 @@ class Customer(models.Model):
     name = models.CharField(max_length=200)
     route = models.ForeignKey(Route, on_delete=models.CASCADE , null=True, blank=True , related_name="customer_route")
     rate = models.IntegerField()
+    expanded = models.BooleanField(default=False, null=True, blank=True)
     date_added = models.DateField(auto_now_add=True)
     date_updated = models.DateField(auto_now_add=True)
     addedby = models.CharField(max_length=100,null=True, blank=True)
