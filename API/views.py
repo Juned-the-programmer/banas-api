@@ -23,7 +23,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
   token_obtain_pair = TokenObtainPairView.as_view()
 
 @api_view(['GET','POST'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def dashboard(request):
 
     if request.method == 'GET':
@@ -80,7 +80,7 @@ def dashboard(request):
     }, status = status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def get_profile(request):
     user = User.objects.get(username=request.user.username)
 
@@ -95,7 +95,7 @@ def get_profile(request):
         'email' : user.email} , status=status.HTTP_200_OK)
 
 @api_view(['POST','GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def route(request):
     if request.method == 'POST':
         route_data = request.data
@@ -125,7 +125,7 @@ def route(request):
 
 
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def update_route(request,pk):
     try:
         route = Route.objects.get(pk=pk)
@@ -150,7 +150,7 @@ def update_route(request,pk):
     } ,status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST','GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def customer(request):
     if request.method == 'POST':
         data = request.data
@@ -204,7 +204,7 @@ def list_customer_by_route(request, pk):
         })
 
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def update_customer(request,pk):
 
     try:
@@ -225,7 +225,7 @@ def update_customer(request,pk):
             'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def get_customer_detail(request, pk):
     try:
         customer = Customer.objects.get(pk=pk)
@@ -247,7 +247,7 @@ def get_customer_detail(request, pk):
         'data' : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def daily_entry_count(request):
     if request.method == 'GET':
         customer_count = DailyEntry.objects.distinct().filter(date=date.today()).count()
@@ -275,7 +275,7 @@ def daily_entry_count(request):
 
 
 @api_view(['POST','GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def daily_entry(request):
     if request.method == 'POST':
         data = request.data
@@ -369,7 +369,7 @@ def daily_entry(request):
 
 
 @api_view(['POST','GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def payment(request):
     if request.method == 'POST':
         serializer = CustomerPaymentSerializer(data = request.data)
@@ -453,7 +453,7 @@ def payment(request):
         }, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def customer_account(request , pk):
 
     try:
@@ -478,7 +478,7 @@ def customer_account(request , pk):
             'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def due_list_route(request,pk):
     if request.method == 'GET':
 
@@ -514,7 +514,7 @@ def due_list_route(request,pk):
         'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def due_list(request):
     if request.method == 'GET':
 
@@ -540,7 +540,7 @@ def due_list(request):
         } , status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def due_customer(request , pk):
     if request.method == 'GET':
         try:
@@ -563,7 +563,7 @@ def due_customer(request , pk):
     }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def customer_detail(request , pk):
     today_date = datetime.datetime.now()
     first_day_of_month = today_date.replace(day=1)
@@ -608,7 +608,7 @@ def customer_detail(request , pk):
     }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def bill_detail(request , pk):
     if request.method == 'GET':
         try:
@@ -637,7 +637,7 @@ def bill_detail(request , pk):
     } , status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def cutomer_payment_list(request,pk):
     if request.method == 'GET':
         try:
@@ -666,7 +666,7 @@ def cutomer_payment_list(request,pk):
         }, status=status.HTTP_200_OK)
 
 @api_view(['GET'])
-@permission_classes([IsAdminUser])
+@permission_classes([IsAdminUser,IsAuthenticated])
 def payment_list_route(request,pk):
     if request.method == 'GET':
         today_date = datetime.datetime.now()
