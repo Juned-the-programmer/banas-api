@@ -7,6 +7,13 @@ class RouteSerializer(serializers.ModelSerializer):
         model = Route
         fields = '__all__'
 
+class RouteSerializerGET(serializers.ModelSerializer):
+    class Meta:
+        model = Route
+        fields = '__all__'
+#         fields = ['id', 'customer_name', 'cooler' , 'date']
+        depth = 1
+
 class CustomerSerializer(serializers.ModelSerializer):
     route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(),many=False)
     # route = RouteSerializer(read_only=True)
@@ -15,7 +22,7 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields ='__all__'
 
 class CustomerSerializerGET(serializers.ModelSerializer):
-    route = RouteSerializer(read_only=True)
+#     route = RouteSerializer(read_only=True)
     class Meta:
         model = Customer
         fields = '__all__'
@@ -30,7 +37,7 @@ class DailyEntrySerializerGET(serializers.ModelSerializer):
     class Meta:
         model = DailyEntry
         fields = '__all__'
-#         fields = ['id', 'customer_name', 'cooler' , 'date']
+#         fields = ['id','cooler','date','addedby','updatedby']
         depth = 1
 
 class DialyEntrySerializerGETDashboard(serializers.ModelSerializer):

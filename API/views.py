@@ -2,7 +2,7 @@ from django.shortcuts import render
 from .models import *
 from rest_framework.decorators import api_view , permission_classes
 from django.contrib.auth.models import User
-from rest_framework.permissions import IsAuthenticated , IsAdminUser
+from rest_framework.permissions import IsAuthenticated , IsAdminUser,IsAuthenticated
 from rest_framework.response import Response
 from django.http import JsonResponse
 from django.core import serializers
@@ -123,31 +123,46 @@ def route(request):
         'status' : 400,
         'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
-
-@api_view(['PUT'])
+@api_view(['PUT','GET','DELETE'])
 @permission_classes([IsAdminUser,IsAuthenticated])
-def update_route(request,pk):
+def view_update_delete_route(request,pk):
+
     try:
         route = Route.objects.get(pk=pk)
     except Route.DoesNotExist:
         return JsonResponse({
-            'status' : 400,
-            'data' : "Route Not Found"
-        },status=status.HTTP_400_BAD_REQUEST)
+            'status' : 404,
+            'data' : 'Route not found.'},status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'PUT':
         serializer = RouteSerializer(route , data=request.data)
         if serializer.is_valid():
             serializer.save(updatedby=request.user.username)
             return JsonResponse({
-                'status' : 200,
-                'data' : serializer.data
-            }, status=status.HTTP_200_OK)
+                'status' : 201,
+                'data' : serializer.data} , status=status.HTTP_201_CREATED)
 
+        return JsonResponse({
+            'status' : 400,
+            'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        route = Route.objects.get(pk=pk)
+        serializer = RouteSerializerGET(route)
+        return JsonResponse({
+            'status' : 200,
+            'data' : serializer.data} , status=status.HTTP_200_OK)
+    if request.method == 'DELETE':
+        route = Route.objects.get(pk=pk)
+        serializer = RouteSerializerGET(route)
+        route.delete()
+        return JsonResponse({
+            'status' : 200,
+            'message' : 'Route deleted successfully','data' : serializer.data} , status=status.HTTP_200_OK)
     return JsonResponse({
         'status' : 400,
-        'data' : serializer.errors
-    } ,status=status.HTTP_400_BAD_REQUEST)
+        'data' : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 @api_view(['POST','GET'])
 @permission_classes([IsAdminUser,IsAuthenticated])
@@ -203,14 +218,16 @@ def list_customer_by_route(request, pk):
             'data' : customer_route_serializer.data
         })
 
-@api_view(['PUT'])
+@api_view(['PUT','GET','DELETE'])
 @permission_classes([IsAdminUser,IsAuthenticated])
-def update_customer(request,pk):
+def view_update_delete_customer(request,pk):
 
     try:
         customer = Customer.objects.get(pk=pk)
     except Customer.DoesNotExist:
-        return Response(status=status.HTTP_404_NOT_FOUND)
+        return JsonResponse({
+                    'status' : 404,
+                    'data' : 'Customer not found.'},status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'PUT':
         serializer = CustomerSerializer(customer , data=request.data)
@@ -223,28 +240,24 @@ def update_customer(request,pk):
         return JsonResponse({
             'status' : 400,
             'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-@permission_classes([IsAdminUser,IsAuthenticated])
-def get_customer_detail(request, pk):
-    try:
-        customer = Customer.objects.get(pk=pk)
-    except Customer.DoesNotExist:
-        return JsonResponse({
-            'status' : 404,
-            'data' : "Customer Not Found"
-        } , status=status.HTTP_404_NOT_FOUND)
-
     if request.method == 'GET':
         customer = Customer.objects.get(pk=pk)
         serializer = CustomerSerializerGET(customer)
         return JsonResponse({
             'status' : 200,
             'data' : serializer.data} , status=status.HTTP_200_OK)
+    if request.method == 'DELETE':
+        customer = Customer.objects.get(pk=pk)
+        serializer = CustomerSerializerGET(customer)
+        customer.delete()
+        return JsonResponse({
+            'status' : 200,
+            'message' : 'Customer deleted successfully','data' : serializer.data} , status=status.HTTP_200_OK)
 
     return JsonResponse({
         'status' : 400,
         'data' : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser,IsAuthenticated])
@@ -273,10 +286,46 @@ def daily_entry_count(request):
         'status' : 400,
         'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET','DELETE'])
+@permission_classes([IsAdminUser,IsAuthenticated])
+def view_delete_daily_entry(request,pk):
+    try:
+        dailyEntry = DailyEntry.objects.get(pk=pk)
+    except DailyEntry.DoesNotExist:
+        return JsonResponse({
+            'status' : 404,
+            'data' : 'DailyEntry not found.'},status=status.HTTP_404_NOT_FOUND)
+    if request.method == 'DELETE':
+        dailyEntry = DailyEntry.objects.get(pk=pk)
+        serializer = DailyEntrySerializerGET(dailyEntry)
+        dailyEntry.delete()
+        return JsonResponse({
+            'status' : 200,
+            'message' : 'DailyEntry deleted successfully'} , status=status.HTTP_200_OK)
 
-@api_view(['POST','GET'])
+        return JsonResponse({
+            'status' : 400,
+            'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
+    if request.method == 'GET':
+        dailyEntry = DailyEntry.objects.get(pk=pk)
+        serializer = DailyEntrySerializerGET(dailyEntry)
+        return JsonResponse({
+            'status' : 200,
+            'data' : serializer.data} , status=status.HTTP_200_OK)
+
+        return JsonResponse({
+            'status' : 400,
+            'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST','GET','DELETE'])
 @permission_classes([IsAdminUser,IsAuthenticated])
 def daily_entry(request):
+    if request.method == 'GET':
+        dailyEntry = DailyEntry.objects.all()
+        serializer = DailyEntrySerializerGET(dailyEntry ,many=True)
+        return JsonResponse({
+              'status' : 200,
+              'data' : serializer.data} , status=status.HTTP_200_OK)
     if request.method == 'POST':
         data = request.data
         data_values = list(data.values())
@@ -351,21 +400,6 @@ def daily_entry(request):
             return JsonResponse({
                 'status' : 201,
                 'data' : serializer.data},status=status.HTTP_201_CREATED)
-
-        return JsonResponse({
-            'status' : 201,
-            'data' : serializer.data} , status=HTTP_201_CREATED)
-
-    if request.method == 'GET':
-        dailyEntry = DailyEntry.objects.all()
-        serializer = DailyEntrySerializerGET(dailyEntry ,many=True)
-        return JsonResponse({
-                'status' : 200,
-                'data' : serializer.data} , status=status.HTTP_200_OK)
-
-        return JsonResponse({
-                'status' : 400,
-                'data' : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST','GET'])
