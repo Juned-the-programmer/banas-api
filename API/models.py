@@ -52,7 +52,7 @@ class CustomerPayment(models.Model):
         return str(self.customer_name.name)
 
 class DailyEntry(models.Model):
-    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True)
     cooler = models.IntegerField()
     date = models.DateTimeField(auto_now_add=True)
     addedby = models.CharField(max_length=100,null=True, blank=True)

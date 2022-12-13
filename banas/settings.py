@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 from pathlib import Path
 from datetime import timedelta
 
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -26,11 +27,9 @@ SECRET_KEY = 'django-insecure-ysgf%c$^9y#(dq%$bv_nd#szy(x^=u+3%+1)j@lx-e8$%82%2e
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 CORS_ORIGIN_ALLOW_ALL = True
-CORS_ALLOW_CREDENTIALS = True
-
 ALLOWED_HOSTS = ['*']
 
-
+# APPEND_SLASH=False
 # Application definition
 
 INSTALLED_APPS = [
@@ -41,7 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'API.apps.ApiConfig',
-    'rest_framework',   
+    'rest_framework',
     'corsheaders',
 ]
 
@@ -87,6 +86,7 @@ WSGI_APPLICATION = 'banas.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -95,15 +95,16 @@ DATABASES = {
 }
 
 # DATABASES = {
-#         'default' : {
-#             'ENGINE': 'django.db.backends.mysql',
-#             'NAME': 'banas',
-#             'USER': 'banas',
-#             'PASSWORD': 'Kimws@7698',
-#             'HOST':'localhost',
-#             'PORT':'3306'
+#         'default': {
+#             'ENGINE': 'djongo',
+#             'NAME': 'BanasWater_2022',
+#             'ENFORCE_SCHEMA': False,
+#             'CLIENT': {
+#                 'host': 'mongodb+srv://Banas:wVU9x3fFItZQmjFG@banaswater.8a7bb.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
+#             }
 #         }
 # }
+
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -180,3 +181,4 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_LIFETIME': timedelta(minutes=10),
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
+
