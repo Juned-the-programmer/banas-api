@@ -527,7 +527,7 @@ def due_list_route(request, pk):
 
     try:
       route = Route.objects.get(pk=pk)
-    except Customer.DoesNotExist:
+    except Route.DoesNotExist:
       return JsonResponse({
         'status': 400,
         'data': "Route Not Found"
@@ -697,7 +697,7 @@ def cutomer_payment_list(request, pk):
       return JsonResponse({
         'status': 400,
         'data': "Customer Not Found"
-      }, status=status.HTTP_400_BAD_REQUES)
+      }, status=status.HTTP_400_BAD_REQUEST)
 
     customer_payment = CustomerPayment.objects.filter(customer_name=customer.id)
     customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment, many=True)
