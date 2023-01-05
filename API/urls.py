@@ -12,13 +12,13 @@ urlpatterns = [
 
   path('dashboard/', views.dashboard, name="dashboard"),
 
-  path('route/', views.route, name="add-route"),
+  path('route/', views.RouteListView.as_view()),
   #     path('route/<str:pk>/',views.get_route_detail,name="route-info"),
-  path('route/<str:pk>/', views.view_update_delete_route, name="view_update_delete_route"),
+  path('route/<str:pk>', views.RouteDetailView.as_view()),
 
-  path('customer/', views.customer, name="add-customer"),
+  path('customer/', views.CustomerListView.as_view()),
   path('customer/route/<str:pk>/', views.list_customer_by_route, name="list-customer-route"),
-  path('customer/<str:pk>/', views.view_update_delete_customer, name="view_update_delete_customer"),
+  path('customer/<str:pk>', views.CustomerDetailView.as_view()),
   #     path('customer/<str:pk>/',views.get_customer_detail,name="customer-info"),
   path('customer/account/<str:pk>/', views.customer_account, name="customer-account"),
   path('customer/due/<str:pk>/', views.due_customer, name="customer-due"),

@@ -26,6 +26,14 @@ class CustomerSerializer(serializers.ModelSerializer):
     fields = '__all__'
 
 
+class CustomerSerializerList(serializers.ModelSerializer):
+  # route = RouteSerializer(read_only=True)
+  class Meta:
+    model = Customer
+    fields = '__all__'
+    depth = 1
+
+
 class CustomerSerializerGET(serializers.ModelSerializer):
   #     route = RouteSerializer(read_only=True)
   class Meta:

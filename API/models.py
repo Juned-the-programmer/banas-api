@@ -49,7 +49,7 @@ class CustomerPayment(models.Model):
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
-        return str(self.customer_name.name)
+        return str(self.customer_name)
 
 class DailyEntry(models.Model):
     customer = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True)
@@ -79,7 +79,7 @@ class CustomerBill(models.Model):
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
-        return str(self.customer_name.name)
+        return str(self.customer_name)
 
 
 def customer_account(sender , instance , created , **kwargs):
