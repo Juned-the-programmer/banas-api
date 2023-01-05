@@ -617,11 +617,11 @@ def customer_detail(request, pk):
     customer_bills = CustomerBill.objects.filter(customer_name=customer.id)
     bill_serializer = DetailBillSerializer(customer_bills, many=True)
 
-    customer_daily_entry = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(customer_name=customer.id)
+    customer_daily_entry = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(customer=customer.id)
     daily_entry_serializer = DialyEntrySerializerGETDashboard(customer_daily_entry, many=True)
 
     customer_daily_entry_total = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(
-      customer_name=customer.id).aggregate(Sum("cooler"))
+      customer=customer.id).aggregate(Sum("cooler"))
     total_coolers = customer_daily_entry_total['cooler__sum']
 
     if total_coolers is None:
@@ -659,7 +659,7 @@ def bill_detail(request, pk):
     customer_name = CustomerBill.objects.get(pk=pk).id
 
     daily_entry = DailyEntry.objects.filter(date__gte=bill.from_date, date__lte=bill.to_date).filter(
-      customer_name=customer_name)
+      customer=customer_name)
     daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry, many=True)
 
     return JsonResponse({
