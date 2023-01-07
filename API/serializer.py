@@ -43,8 +43,7 @@ class CustomerSerializerGET(serializers.ModelSerializer):
 
 
 class DailyEntrySerializer(serializers.ModelSerializer):
-  customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), many=False)
-
+  # customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), many=False)
   class Meta:
     model = DailyEntry
     fields = '__all__'

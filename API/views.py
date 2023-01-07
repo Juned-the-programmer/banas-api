@@ -41,42 +41,41 @@ def dashboard(request):
 
       data_list.append({"date": str(today_date - timedelta(days=i)), "coolers": coolers})
 
-    return JsonResponse({
-      'status': '200',
-      'data': data_list
-    }, status=status.HTTP_200_OK)
+    return JsonResponse(
+        data_list
+    , status=status.HTTP_200_OK , safe=False)
 
   if request.method == 'POST':
     date_data = request.data
     data_values = list(date_data.values())
 
-    # Configuring date
-    from_date = datetime.datetime.strptime(data_values[0], "%Y-%m-%d")
-    to_date = datetime.datetime.strptime(data_values[1], "%Y-%m-%d")
-    days = to_date - from_date
+    try:
+      # Configuring date
+      from_date = datetime.datetime.strptime(data_values[0], "%Y-%m-%d")
+      to_date = datetime.datetime.strptime(data_values[1], "%Y-%m-%d")
+      days = to_date - from_date
 
-    data_list = []
+      data_list = []
 
-    for i in range(0, int(days.days)):
-      daily_entry = DailyEntry.objects.filter(date=to_date - timedelta(days=i)).aggregate(Sum('cooler'))
-      coolers_total = daily_entry['cooler__sum']
+      for i in range(0, int(days.days)):
+        daily_entry = DailyEntry.objects.filter(date=to_date - timedelta(days=i)).aggregate(Sum('cooler'))
+        coolers_total = daily_entry['cooler__sum']
 
-      if coolers_total is None:
-        coolers = 0
-      else:
-        coolers = coolers_total
+        if coolers_total is None:
+          coolers = 0
+        else:
+          coolers = coolers_total
 
-      data_list.append({"date": str(to_date - timedelta(days=i)), "coolers": coolers})
+        data_list.append({"date": str(to_date - timedelta(days=i)), "coolers": coolers})
 
-    return JsonResponse({
-      'status': '200',
-      'data': data_list
-    }, status=status.HTTP_200_OK)
-
-  return JsonResponse({
-    'status': '400',
-    'data': "There is some error, Please try again!"
-  }, status=status.HTTP_400_BAD_REQUEST)
+      return JsonResponse(
+        data_list
+      , status=status.HTTP_200_OK, safe=False)
+  
+    except:
+      return JsonResponse({
+        'error': "There is some error, Please try again!"
+      }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -85,7 +84,6 @@ def get_profile(request):
   user = User.objects.get(username=request.user.username)
 
   return JsonResponse({
-    'status': 200,
     'username': user.username,
     'id': user.id,
     'first_name': user.first_name,
@@ -200,10 +198,9 @@ def list_customer_by_route(request, pk):
     customer_route = Customer.objects.filter(route=pk)
     customer_route_serializer = CustomerSerializerGET(customer_route, many=True)
 
-    return JsonResponse({
-      'status': 200,
-      'data': customer_route_serializer.data
-    })
+    return JsonResponse(
+        customer_route_serializer.data
+    , status = status.HTTP_200_OK, safe=False)
 
 
 # @api_view(['PUT', 'GET', 'DELETE'])
@@ -250,12 +247,17 @@ def list_customer_by_route(request, pk):
 @permission_classes([IsAdminUser, IsAuthenticated])
 def daily_entry_count(request):
   if request.method == 'GET':
-    customer_count = DailyEntry.objects.distinct().filter(date=date.today()).count()
+    now = date.today()
+    month = now.month
+    year = now.year
+    day = now.day
 
-    coolers = DailyEntry.objects.distinct().filter(date=date.today()).aggregate(Sum('cooler'))
+    customer_count = DailyEntry.objects.distinct().filter(date__day=day , date__month=month, date__year=year).count()
+
+    coolers = DailyEntry.objects.distinct().filter(date__day=day, date__month=month, date__year=year).aggregate(Sum('cooler'))
     coolers_total = coolers['cooler__sum']
 
-    today_coolers = DailyEntry.objects.filter(date=date.today())
+    today_coolers = DailyEntry.objects.filter(date__day=day, date__month=month, date__year=year)
     today_coolers_serializer = DailyEntrySerializerGET(today_coolers, many=True)
 
     if coolers_total is None:
@@ -263,15 +265,13 @@ def daily_entry_count(request):
     else:
       total = coolers_total
 
-    return JsonResponse(
-      {'status': 200,
-       'data': today_coolers_serializer.data,
-       'customer_count': customer_count,
-       'coolers_total': total}, status=status.HTTP_200_OK)
+    return JsonResponse({
+       'today_coolers': today_coolers_serializer.data,
+       'today_customer_count': customer_count,
+       'today_coolers_total': total}, status=status.HTTP_200_OK)
 
   return JsonResponse({
-    'status': 400,
-    'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET', 'DELETE', 'PUT'])
@@ -325,6 +325,7 @@ def daily_entry(request):
     return JsonResponse({
       'status': 200,
       'data': serializer.data}, status=status.HTTP_200_OK)
+
   if request.method == 'POST':
     data = request.data
     data_values = list(data.values())
@@ -346,6 +347,8 @@ def daily_entry(request):
 
     if serializer.is_valid():
       serializer.save(addedby=request.user.username)
+      serializer.save(customer=Customer.objects.get(pk=pk))
+      print("Serializer Saved") 
 
       if datetime.date.today() == last_date.date():
 
@@ -395,9 +398,12 @@ def daily_entry(request):
           customer.updatedby = request.user.username
           customer.save()
 
-      return JsonResponse({
-        'status': 201,
-        'data': serializer.data}, status=status.HTTP_201_CREATED)
+        return JsonResponse(
+          bill_serializer.data , status=status.HTTP_201_CREATED
+        )
+
+      return JsonResponse(
+        serializer.data , status=status.HTTP_201_CREATED)
 
 
 @api_view(['POST', 'GET'])
@@ -536,13 +542,11 @@ def due_list_route(request, pk):
       total = customer_due_list_total
 
     return JsonResponse({
-      'status': 200,
       'duelist_data': data_list,
       'due_total': total}, status=status.HTTP_200_OK)
 
   return Response({
-    'status': 400,
-    'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -566,8 +570,7 @@ def due_list(request):
       total = customer_due_list_total
 
     return JsonResponse({
-      'status': 200,
-      'duelist_data': data_list,
+      'customer_due_list': data_list,
       'due_total': total
     }, status=status.HTTP_200_OK)
 

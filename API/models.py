@@ -60,7 +60,7 @@ class DailyEntry(models.Model):
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
-        return str(self.customer_name)
+        return str(self.customer)
 
 class CustomerBill(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True)
