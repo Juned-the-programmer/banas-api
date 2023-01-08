@@ -432,8 +432,7 @@ def payment(request):
         customer.updatedby = request.user.username
       except:
         return JsonResponse({
-          'status': 400,
-          'detail': "Customer is not this route"
+          'error': "Customer is not this route"
         }, status=status.HTTP_400_BAD_REQUEST)
 
       try:
@@ -444,18 +443,15 @@ def payment(request):
         customer.save()
       except:
         return JsonResponse({
-          'status': 400,
-          'detail': "Customer has not a Bill, First Generate Bill then try again!"
+          'error': "Customer has not a Bill, First Generate Bill then try again!"
         }, status=status.HTTP_400_BAD_REQUEST)
 
       return JsonResponse({
-        'status': 200,
         'detail': "Bill Paid and Customer Account Updated"
       }, status=status.HTTP_201_CREATED)
 
     return Response({
-      'status': 400,
-      'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+      'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
   if request.method == 'GET':
     today_date = datetime.datetime.now()
