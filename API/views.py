@@ -187,7 +187,7 @@ class CustomerListView(generics.ListCreateAPIView):
 
 class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
   queryset = Customer.objects.all()
-  serializer_class = CustomerSerializer
+  serializer_class = CustomerSerializerList
 
   def perform_update(self, serializer):
     serializer.save(updatedby=self.request.user.username)
@@ -277,54 +277,73 @@ def daily_entry_count(request):
 @api_view(['GET', 'DELETE', 'PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def view_delete_daily_entry(request, pk):
+  
+  #today date
+  today_date = datetime.datetime.now()
+
+  # Last day of month
+  next_month = today_date.replace(day=28) + timedelta(days=4)
+  last_date = next_month - timedelta(days=next_month.day)
+  # print(last_date.date())
+
+  # First day of month
+  first_date = datetime.datetime.today().replace(day=1).date()
+  # print(first_date)
+
+  #Validating daily entry records
   try:
     dailyEntry = DailyEntry.objects.get(pk=pk)
   except DailyEntry.DoesNotExist:
     return JsonResponse({
-      'status': 404,
       'data': 'DailyEntry not found.'}, status=status.HTTP_404_NOT_FOUND)
-  if request.method == 'DELETE':
-    dailyEntry = DailyEntry.objects.get(pk=pk)
-    dailyEntry.delete()
-    return JsonResponse({
-      'status': 200,
-      'message': 'DailyEntry deleted successfully'}, status=status.HTTP_200_OK)
 
-    return JsonResponse({
-      'status': 400,
-      'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+  # Deleting daily Entry
+  if request.method == 'DELETE':
+    if(DailyEntry.objects.filter(id=pk).filter(date_added__gte=first_date , date_added__lte=last_date)):
+      dailyEntry = DailyEntry.objects.get(pk=pk)
+      dailyEntry.delete()
+      return JsonResponse({
+        'message': 'DailyEntry deleted successfully'}, status=status.HTTP_200_OK)
+    else:
+      return JsonResponse({
+        'message' : 'You cannot delete this record for more information contact admin'
+      }, status=status.HTTP_401_UNAUTHORIZED)
+  
+  #Updating daily Entry
   if request.method == 'PUT':
     serializer = DailyEntrySerializer(dailyEntry, data=request.data)
-    if serializer.is_valid():
-      serializer.save(updatedby=request.user.username)
-      return JsonResponse({
-        'status': 201,
-        'data': serializer.data}, status=status.HTTP_201_CREATED)
 
-    return JsonResponse({
-      'status': 400,
+    if(DailyEntry.objects.filter(id=pk).filter(date_added__gte=first_date , date_added__lte=last_date)):
+      if serializer.is_valid():
+        serializer.save(updatedby=request.user.username)
+        return JsonResponse(
+          serializer.data, status=status.HTTP_201_CREATED)
+      return JsonResponse({
       'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    else:
+      return JsonResponse({
+        'message' : "You cannot edit this record. For more Information contact admin"
+      }, status=status.HTTP_401_UNAUTHORIZED)
+  
+  #Getting Daily Entry
   if request.method == 'GET':
     dailyEntry = DailyEntry.objects.get(pk=pk)
     serializer = DailyEntrySerializerGETSingle(dailyEntry)
     return JsonResponse({
-      'status': 200,
-      'data': serializer.data}, status=status.HTTP_200_OK)
+       serializer.data}, status=status.HTTP_200_OK)
 
     return JsonResponse({
-      'status': 400,
       'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
-@api_view(['POST', 'GET', 'DELETE'])
+@api_view(['POST', 'GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def daily_entry(request):
   if request.method == 'GET':
     dailyEntry = DailyEntry.objects.all()
     serializer = DailyEntrySerializerGET(dailyEntry, many=True)
-    return JsonResponse({
-      'status': 200,
-      'data': serializer.data}, status=status.HTTP_200_OK)
+    return JsonResponse(
+      serializer.data, status=status.HTTP_200_OK)
 
   if request.method == 'POST':
     data = request.data
@@ -478,7 +497,6 @@ def payment(request):
       total = total_paid_amount
 
     return JsonResponse({
-      'status': 200,
       'data': customer_payment_serializer.data,
       'total paid amount': total
     }, status=status.HTTP_200_OK)
@@ -491,7 +509,6 @@ def customer_account(request, pk):
     customer = CustomerAccount.objects.get(customer_name=pk)
   except Customer.DoesNotExist:
     return JsonResponse({
-      'status': 400,
       'data': "Customer Not Found"
     }, status=status.HTTP_404_NOT_FOUND)
 
@@ -499,14 +516,12 @@ def customer_account(request, pk):
     serializer = CustomerAccountSerializer(customer, data=request.data)
     if serializer.is_valid():
       serializer.save(updatedby=request.user.username)
-      return JsonResponse({
-        'status': 200,
-        'data': serializer.data
-      }, status=status.HTTP_201_CREATED)
+      return JsonResponse(
+         serializer.data
+      , status=status.HTTP_201_CREATED)
 
     return JsonResponse({
-      'status': 400,
-      'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+      'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -518,8 +533,7 @@ def due_list_route(request, pk):
       route = Route.objects.get(pk=pk)
     except Route.DoesNotExist:
       return JsonResponse({
-        'status': 400,
-        'data': "Route Not Found"
+        'message': "Route Not Found"
       }, status=status.HTTP_404_NOT_FOUND)
 
     data_list = []
@@ -542,7 +556,7 @@ def due_list_route(request, pk):
       'due_total': total}, status=status.HTTP_200_OK)
 
   return Response({
-    'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])
@@ -579,19 +593,16 @@ def due_customer(request, pk):
       customer = CustomerAccount.objects.get(customer_name=pk)
     except:
       return JsonResponse({
-        'status': 400,
-        'data': "Customer Not Found"
+        'message': "Customer Not Found"
       }, status=status.HTTP_400_BAD_REQUEST)
 
     customer_due = customer.due
     return JsonResponse({
-      'status': 200,
       'customer_name': customer.customer_name.name,
       'due': customer_due}, status=status.HTTP_200_OK)
 
   return JsonResponse({
-    'status': 400,
-    'data': "Something went wrong"
+    'message': "Something went wrong"
   }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -606,8 +617,7 @@ def customer_detail(request, pk):
       customer = Customer.objects.get(id=pk)
     except:
       return JsonResponse({
-        'status': 400,
-        'data': "Customer Not Found"
+        'message': "Customer Not Found"
       }, status=status.HTTP_400_BAD_REQUEST)
 
     customer_detail = customer
@@ -623,22 +633,37 @@ def customer_detail(request, pk):
       customer=customer.id).aggregate(Sum("cooler"))
     total_coolers = customer_daily_entry_total['cooler__sum']
 
+    customer_payment = CustomerPayment.objects.filter(customer_name=pk)
+    payment_serializer = CustomerPaymentSerializerGET(customer_payment,many=True)
+
+    total_customer_payment = CustomerPayment.objects.filter(customer_name=pk).aggregate(Sum("paid_amount"))
+    total_payment = total_customer_payment['paid_amount__sum']
+
+    due_payment = CustomerAccount.objects.get(customer_name=pk)
+    due_serializer = CustomerAccountSerializer(due_payment)
+
+    if total_payment is None:
+      total_payment = 0
+    else:
+      total_payment = total_payment
+
     if total_coolers is None:
       total = 0
     else:
       total = total_coolers
 
     return JsonResponse({
-      'status': 200,
       'customer_detail': detail_serializer.data,
       'bills': bill_serializer.data,
       'daily_entry': daily_entry_serializer.data,
-      'total_coolers': total
+      'total_coolers': total,
+      'payments' : payment_serializer.data,
+      'total_payments' : total_payment,
+      'due_payments' : due_serializer.data
     }, status=status.HTTP_200_OK)
 
   return JsonResponse({
-    'status': 400,
-    'data': "Something Went Wrong"
+    'message': "Something Went Wrong"
   }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -650,8 +675,7 @@ def bill_detail(request, pk):
       bill = CustomerBill.objects.get(pk=pk)
     except CustomerBill.DoesNotExist:
       return JsonResponse({
-        'status': 400,
-        'data': "Bill Not Found"
+        'message': "Bill Not Found"
       }, status=status.HTTP_400_BAD_REQUEST)
 
     customer_bill = GenerateBillSerializerGET(bill)
@@ -662,14 +686,12 @@ def bill_detail(request, pk):
     daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry, many=True)
 
     return JsonResponse({
-      'status': 200,
       'bill': customer_bill.data,
       'daily_entry': daily_entry_serializer.data
     }, status=status.HTTP_200_OK)
 
   return JsonResponse({
-    'status': 400,
-    'data': "Something went wrong"
+    'message': "Something went wrong"
   }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -681,8 +703,7 @@ def cutomer_payment_list(request, pk):
       customer = Customer.objects.get(pk=pk)
     except Customer.DoesNotExist:
       return JsonResponse({
-        'status': 400,
-        'data': "Customer Not Found"
+        'message': "Customer Not Found"
       }, status=status.HTTP_400_BAD_REQUEST)
 
     customer_payment = CustomerPayment.objects.filter(customer_name=customer.id)
@@ -697,7 +718,6 @@ def cutomer_payment_list(request, pk):
       total = total_paid_amount
 
     return JsonResponse({
-      'status': 200,
       'data': customer_payment_serializer.data,
       'total paid amount': total
     }, status=status.HTTP_200_OK)
@@ -722,8 +742,7 @@ def payment_list_route(request, pk):
       route = Route.objects.get(pk=pk)
     except Route.DoesNotExist:
       return JsonResponse({
-        'status': 400,
-        'data': "Route DoesNot Exists"
+        'message': "Route DoesNot Exists"
       })
 
     customer_payment_list = CustomerPayment.objects.filter(
@@ -742,7 +761,6 @@ def payment_list_route(request, pk):
       total = total_paid_amount
 
     return JsonResponse({
-      'status': 200,
       'data': customer_payment_serializer.data,
       'total paid amount': total_paid_amount
     })
