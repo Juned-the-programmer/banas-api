@@ -1,5 +1,6 @@
 import datetime
 from datetime import date, timedelta
+from django.utils import timezone
 
 from django.contrib.auth.models import User
 from django.db.models import Sum
@@ -74,7 +75,7 @@ def dashboard(request):
   
     except:
       return JsonResponse({
-        'error': "There is some error, Please try again!"
+        'message': "Something went wrong, Please try again!"
       }, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -101,75 +102,6 @@ class RouteListView(generics.ListCreateAPIView):
 class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
   queryset = Route.objects.all()
   serializer_class = RouteSerializer
-
-
-# @api_view(['POST', 'GET'])
-# @permission_classes([IsAdminUser, IsAuthenticated])
-# def route(request):
-#   if request.method == 'POST':
-#     route_data = request.data
-#     route_serializer = RouteSerializer(data=route_data)
-#
-#     if route_serializer.is_valid():
-#       route_serializer.save(addedby=request.user.username)
-#
-#       return JsonResponse({
-#         'status': 200,
-#         'data': route_serializer.data}, status=status.HTTP_200_OK)
-#
-#     return JsonResponse({
-#       'status': 400,
-#       'data': route_serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-#
-#   if request.method == 'GET':
-#     routes = Route.objects.all()
-#     serializer = RouteSerializer(routes, many=True)
-#     return JsonResponse({
-#       'status': 200,
-#       'data': serializer.data}, status=status.HTTP_200_OK)
-#
-#   return JsonResponse({
-#     'status': 400,
-#     'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-#
-#
-# @api_view(['PUT', 'GET', 'DELETE'])
-# @permission_classes([IsAdminUser, IsAuthenticated])
-# def view_update_delete_route(request, pk):
-#   try:
-#     route = Route.objects.get(pk=pk)
-#   except Route.DoesNotExist:
-#     return JsonResponse({
-#       'status': 404,
-#       'data': 'Route not found.'}, status=status.HTTP_404_NOT_FOUND)
-#
-#   if request.method == 'PUT':
-#     serializer = RouteSerializer(route, data=request.data)
-#     if serializer.is_valid():
-#       serializer.save(updatedby=request.user.username)
-#       return JsonResponse({
-#         'status': 201,
-#         'data': serializer.data}, status=status.HTTP_201_CREATED)
-#
-#     return JsonResponse({
-#       'status': 400,
-#       'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-#   if request.method == 'GET':
-#     route = Route.objects.get(pk=pk)
-#     serializer = RouteSerializerGET(route)
-#     return JsonResponse({
-#       'status': 200,
-#       'data': serializer.data}, status=status.HTTP_200_OK)
-#   if request.method == 'DELETE':
-#     route = Route.objects.get(pk=pk)
-#     serializer = RouteSerializerGET(route)
-#     route.delete()
-#     return JsonResponse({
-#       'status': 200,
-#       'message': 'Route deleted successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
-#   return JsonResponse({
-#     'status': 400,
-#     'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 class CustomerListView(generics.ListCreateAPIView):
   queryset = Customer.objects.all()
@@ -201,47 +133,6 @@ def list_customer_by_route(request, pk):
     return JsonResponse(
         customer_route_serializer.data
     , status = status.HTTP_200_OK, safe=False)
-
-
-# @api_view(['PUT', 'GET', 'DELETE'])
-# @permission_classes([IsAdminUser, IsAuthenticated])
-# def view_update_delete_customer(request, pk):
-#   try:
-#     customer = Customer.objects.get(pk=pk)
-#   except Customer.DoesNotExist:
-#     return JsonResponse({
-#       'status': 404,
-#       'data': 'Customer not found.'}, status=status.HTTP_404_NOT_FOUND)
-#
-#   if request.method == 'PUT':
-#     serializer = CustomerSerializer(customer, data=request.data)
-#     if serializer.is_valid():
-#       serializer.save(updatedby=request.user.username)
-#       return JsonResponse({
-#         'status': 201,
-#         'data': serializer.data}, status=status.HTTP_201_CREATED)
-#
-#     return JsonResponse({
-#       'status': 400,
-#       'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-#   if request.method == 'GET':
-#     customer = Customer.objects.get(pk=pk)
-#     serializer = CustomerSerializerGET(customer)
-#     return JsonResponse({
-#       'status': 200,
-#       'data': serializer.data}, status=status.HTTP_200_OK)
-#   if request.method == 'DELETE':
-#     customer = Customer.objects.get(pk=pk)
-#     serializer = CustomerSerializerGET(customer)
-#     customer.delete()
-#     return JsonResponse({
-#       'status': 200,
-#       'message': 'Customer deleted successfully', 'data': serializer.data}, status=status.HTTP_200_OK)
-#
-#   return JsonResponse({
-#     'status': 400,
-#     'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -300,10 +191,40 @@ def view_delete_daily_entry(request, pk):
   # Deleting daily Entry
   if request.method == 'DELETE':
     if(DailyEntry.objects.filter(id=pk).filter(date_added__gte=first_date , date_added__lte=last_date)):
-      dailyEntry = DailyEntry.objects.get(pk=pk)
-      dailyEntry.delete()
-      return JsonResponse({
+      if(DailyEntry.objects.filter(pk=pk).filter(date_added = last_date.date())):
+        bill_detail = CustomerBill.objects.get(from_date = first_date, to_date = last_date.date(), customer_name = DailyEntry.objects.get(id=pk).customer)
+
+        daily_entry_delete = DailyEntry.objects.get(pk=pk)
+        daily_entry_cooler = DailyEntry.objects.get(pk=pk).cooler
+
+        daily_entry_total = DailyEntry.objects.filter(date_added__gte=first_date, date_added__lte=last_date).filter(customer = DailyEntry.objects.get(id=pk).customer).aggregate(Sum('cooler'))
+        total_coolers = daily_entry_total['cooler__sum']
+
+        if total_coolers is None:
+          total_coolers = 0
+        else:
+          total_coolers = int(total_coolers) - int(daily_entry_cooler)
+
+        total_amount = (int(bill_detail.Rate) * int(total_coolers)) + int(bill_detail.Pending_amount) - int(bill_detail.Advanced_amount)
+        
+        bill_detail.coolers = total_coolers
+        bill_detail.Amount = int(total_coolers) * int(bill_detail.Rate)
+        bill_detail.Total = total_amount
+        bill_detail.updatedby = request.user.username
+        bill_detail.save()
+
+        daily_entry_delete.delete()
+
+        return JsonResponse({
+          'message' : 'Daily Entry Deleted and Bill Updated successfully'
+        } , status=status.HTTP_200_OK)
+
+      else:
+        dailyEntry = DailyEntry.objects.get(pk=pk)
+        dailyEntry.delete()
+        return JsonResponse({
         'message': 'DailyEntry deleted successfully'}, status=status.HTTP_200_OK)
+
     else:
       return JsonResponse({
         'message' : 'You cannot delete this record for more information contact admin'
@@ -314,12 +235,42 @@ def view_delete_daily_entry(request, pk):
     serializer = DailyEntrySerializer(dailyEntry, data=request.data)
 
     if(DailyEntry.objects.filter(id=pk).filter(date_added__gte=first_date , date_added__lte=last_date)):
-      if serializer.is_valid():
-        serializer.save(updatedby=request.user.username)
+      if(DailyEntry.objects.filter(pk=pk).filter(date_added = last_date.date())):
+        bill_detail = CustomerBill.objects.get(from_date = first_date, to_date = last_date.date(), customer_name = DailyEntry.objects.get(id=pk).customer)
+
+        if serializer.is_valid():
+          serializer.save(updatedby=request.user.username)
+
+        daily_entry_total = DailyEntry.objects.filter(date_added__gte=first_date, date_added__lte=last_date).filter(customer = DailyEntry.objects.get(id=pk).customer).aggregate(Sum('cooler'))
+        total_coolers = daily_entry_total['cooler__sum']
+
+        if total_coolers is None:
+          total_coolers = 0
+        else:
+          total_coolers = int(total_coolers)
+
+        total_amount = (int(bill_detail.Rate) * int(total_coolers)) + int(bill_detail.Pending_amount) - int(bill_detail.Advanced_amount)
+        
+        bill_detail.coolers = total_coolers
+        bill_detail.Amount = int(total_coolers) * int(bill_detail.Rate)
+        bill_detail.Total = total_amount
+        bill_detail.updatedby = request.user.username
+        bill_detail.save()
+
+        return JsonResponse({
+          'message' : 'Daily Entry and Bill Updated successfully'
+        } , status=status.HTTP_200_OK)
+
+      else:
+
+        if serializer.is_valid():
+          serializer.save(updatedby=request.user.username)
         return JsonResponse(
-          serializer.data, status=status.HTTP_201_CREATED)
+          serializer.data , status=status.HTTP_201_CREATED)
+
       return JsonResponse({
-      'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+      'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
     else:
       return JsonResponse({
         'message' : "You cannot edit this record. For more Information contact admin"
@@ -329,11 +280,11 @@ def view_delete_daily_entry(request, pk):
   if request.method == 'GET':
     dailyEntry = DailyEntry.objects.get(pk=pk)
     serializer = DailyEntrySerializerGETSingle(dailyEntry)
-    return JsonResponse({
-       serializer.data}, status=status.HTTP_200_OK)
+    return JsonResponse(
+       serializer.data, status=status.HTTP_200_OK)
 
-    return JsonResponse({
-      'data': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+  return JsonResponse({
+    'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST', 'GET'])
@@ -343,7 +294,7 @@ def daily_entry(request):
     dailyEntry = DailyEntry.objects.all()
     serializer = DailyEntrySerializerGET(dailyEntry, many=True)
     return JsonResponse(
-      serializer.data, status=status.HTTP_200_OK)
+      serializer.data, status=status.HTTP_200_OK, safe=False)
 
   if request.method == 'POST':
     data = request.data
@@ -626,10 +577,10 @@ def customer_detail(request, pk):
     customer_bills = CustomerBill.objects.filter(customer_name=customer.id)
     bill_serializer = DetailBillSerializer(customer_bills, many=True)
 
-    customer_daily_entry = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(customer=customer.id)
+    customer_daily_entry = DailyEntry.objects.filter(date_added__gte=first_day_of_month).filter(customer=customer.id)
     daily_entry_serializer = DialyEntrySerializerGETDashboard(customer_daily_entry, many=True)
 
-    customer_daily_entry_total = DailyEntry.objects.filter(date__gte=first_day_of_month).filter(
+    customer_daily_entry_total = DailyEntry.objects.filter(date_added__gte=first_day_of_month).filter(
       customer=customer.id).aggregate(Sum("cooler"))
     total_coolers = customer_daily_entry_total['cooler__sum']
 
