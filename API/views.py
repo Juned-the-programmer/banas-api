@@ -98,10 +98,36 @@ class RouteListView(generics.ListCreateAPIView):
   queryset = Route.objects.all()
   serializer_class = RouteSerializer
 
+@api_view(['GET' , 'PUT'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def list_update_route(request, pk):
+  if request.method == 'GET':
+    try:
+      route = Route.objects.get(id=pk)
+      route_serializer = RouteSerializer(route)
+      return JsonResponse(route_serializer.data)
+    except Route.DoesNotExist:
+      return JsonResponse({
+        'message' : "Route is not valid, Check once again ! "
+      }, status=status.HTTP_404_NOT_FOUND)
 
-class RouteDetailView(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Route.objects.all()
-  serializer_class = RouteSerializer
+  if request.method == 'PUT':
+    try:
+      route = Route.objects.get(id=pk)
+    except Route.DoesNotExist:
+      return JsonResponse({
+        'message' : "Route doesn't exists, check route once again ! "
+      }, status = status.HTTP_400_BAD_REQUEST)
+
+      route_serializer = RouteSerializer(route, data=request.data)
+      if route_serializer.is_valid():
+        route_serializer.save(updatedby = request.user.username)
+        
+      return JsonResponse(route_serializer.data , status = status.HTTP_200_OK)
+      
+  return JsonResponse({
+    'message' : "Something went wrong, Please try again later"
+  }, status = status.HTTP_400_BAD_REQUEST)
 
 class CustomerListView(generics.ListCreateAPIView):
   queryset = Customer.objects.all()

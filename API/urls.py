@@ -13,8 +13,7 @@ urlpatterns = [
   path('dashboard/', views.dashboard, name="dashboard"),
 
   path('route/', views.RouteListView.as_view()),
-  #     path('route/<str:pk>/',views.get_route_detail,name="route-info"),
-  path('route/<str:pk>', views.RouteDetailView.as_view()),
+  path('route/<str:pk>', views.list_update_route , name="list_update_route"),
 
   path('customer/', views.CustomerListView.as_view()),
   path('customer/route/<str:pk>/', views.list_customer_by_route, name="list-customer-route"),

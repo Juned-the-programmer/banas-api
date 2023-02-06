@@ -13,7 +13,6 @@ class RouteSerializerGET(serializers.ModelSerializer):
   class Meta:
     model = Route
     fields = '__all__'
-    #         fields = ['id', 'customer_name', 'cooler' , 'date']
     depth = 1
 
 
