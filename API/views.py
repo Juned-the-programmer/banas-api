@@ -93,10 +93,24 @@ def get_profile(request):
     'is_superuser': user.is_superuser,
     'email': user.email}, status=status.HTTP_200_OK)
 
+@api_view(['GET' , 'POST'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def RouteListView(request):
+  if request.method == 'POST':
+    serializer = RouteSerializer(data = request.data)
+    if serializer.is_valid():
+      serializer.save(addedby = request.user.username)
+      return JsonResponse(serializer.data , status=status.HTTP_201_CREATED)
 
-class RouteListView(generics.ListCreateAPIView):
-  queryset = Route.objects.all()
-  serializer_class = RouteSerializer
+  if request.method == 'GET':
+    route = Route.objects.all()
+    serializer = RouteSerializer(route , many=True)
+    
+    return JsonResponse(serializer.data , status=status.HTTP_200_OK , safe=False)
+
+  return JsonResponse({
+    'message' : "Something went wrong, Please try again ! "
+  }, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['GET' , 'PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -114,17 +128,16 @@ def list_update_route(request, pk):
   if request.method == 'PUT':
     try:
       route = Route.objects.get(id=pk)
+      serializer = RouteSerializer(route , data=request.data)
+      if serializer.is_valid():
+        serializer.save(updatedby = request.user.username)
+        return JsonResponse(serializer.data , status=status.HTTP_200_OK)
+
     except Route.DoesNotExist:
       return JsonResponse({
-        'message' : "Route doesn't exists, check route once again ! "
-      }, status = status.HTTP_400_BAD_REQUEST)
+        'message' : "Route Doesn't Exists !"
+      }, status=status.HTTP_400_BAD_REQUEST)
 
-      route_serializer = RouteSerializer(route, data=request.data)
-      if route_serializer.is_valid():
-        route_serializer.save(updatedby = request.user.username)
-        
-      return JsonResponse(route_serializer.data , status = status.HTTP_200_OK)
-      
   return JsonResponse({
     'message' : "Something went wrong, Please try again later"
   }, status = status.HTTP_400_BAD_REQUEST)
@@ -143,14 +156,47 @@ class CustomerListView(generics.ListCreateAPIView):
     serializer.save(addedby=self.request.user.username)
 
 
-class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
-  queryset = Customer.objects.all()
-  serializer_class = CustomerSerializerList
+# class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
+#   queryset = Customer.objects.all()
 
-  def perform_update(self, serializer):
-    serializer.save(updatedby=self.request.user.username)
+#   def get_serializer_class(self):
+#     method = self.request.method
+#     if request.method == 'PUT':
+#       return CustomerSerializer
+#     else:
+#       return CustomerSerializerList
+
+#   def perform_update(self, serializer):
+#     serializer.save(updatedby=self.request.user.username)
+
+@api_view(['GET' , 'PUT'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def Customer_detail_view_update(request , pk):
+  if request.method == 'GET':
+    customer = Customer.objects.get(id=pk)
+    serializer = CustomerSerializer(customer)
+    return JsonResponse(serializer.data , status=status.HTTP_200_OK)
+
+  if request.method == 'PUT':
+    try:
+      customer = Customer.objects.get(id=pk)
+      serializer = CustomerSerializer(customer , data=request.data)
+      if serializer.is_valid():
+        serializer.save(updatedby = request.user.username)      
+        return JsonResponse(serializer.data , status=status.HTTP_200_OK)
+
+    except Customer.DoesNotExist:
+      return JsonResponse({
+        "message" : "Customer Doesn't Exists ! " 
+      }, status=status.HTTP_404_NOT_FOUND)
+
+  return JsonResponse({
+    "message" : "Something went wrong, Please try again ! "
+  }, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser, IsAuthenticated])
 def list_customer_by_route(request, pk):
   if request.method == 'GET':
     customer_route = Customer.objects.filter(route=pk)

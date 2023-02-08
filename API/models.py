@@ -22,7 +22,7 @@ class Customer(models.Model):
     date_updated = models.DateTimeField(auto_now_add=True)
     addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)
-    expanded = models.BooleanField(default=False)
+    active = models.BooleanField(default=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
