@@ -199,7 +199,7 @@ def Customer_detail_view_update(request , pk):
 @permission_classes([IsAdminUser, IsAuthenticated])
 def list_customer_by_route(request, pk):
   if request.method == 'GET':
-    customer_route = Customer.objects.filter(route=pk)
+    customer_route = Customer.objects.filter(route=pk).filter(active=True)
     customer_route_serializer = CustomerSerializerGET(customer_route, many=True)
 
     return JsonResponse(
@@ -278,6 +278,10 @@ def view_delete_daily_entry(request, pk):
           total_coolers = int(total_coolers) - int(daily_entry_cooler)
 
         total_amount = (int(bill_detail.Rate) * int(total_coolers)) + int(bill_detail.Pending_amount) - int(bill_detail.Advanced_amount)
+
+        due_amount = CustomerAccount.objects.get(customer_name=bill_detail.customer_name)
+        due_amount.due = total_amount
+        due_amount.save()
         
         bill_detail.coolers = total_coolers
         bill_detail.Amount = int(total_coolers) * int(bill_detail.Rate)
@@ -322,6 +326,10 @@ def view_delete_daily_entry(request, pk):
           total_coolers = int(total_coolers)
 
         total_amount = (int(bill_detail.Rate) * int(total_coolers)) + int(bill_detail.Pending_amount) - int(bill_detail.Advanced_amount)
+
+        due_amount = CustomerAccount.objects.get(customer_name=bill_detail.customer_name)
+        due_amount.due = total_amount
+        due_amount.save()
         
         bill_detail.coolers = total_coolers
         bill_detail.Amount = int(total_coolers) * int(bill_detail.Rate)
@@ -410,10 +418,13 @@ def daily_entry(request):
         else:
           coolers = int(coolers_total)
 
-        last_month_due_amount = CustomerAccount.objects.get(customer_name=pk).due
+        last_month_due_amount = CustomerAccount.objects.get(customer_name=pk)
         rate = Customer.objects.get(pk=pk).rate
 
-        total = (int(coolers) * int(rate)) + int(last_month_due_amount)
+        total = (int(coolers) * int(rate)) + int(last_month_due_amount.due)
+
+        last_month_due_amount.due = int(total)
+        last_month_due_amount.save()
 
         amount = int(coolers) * int(rate)
 

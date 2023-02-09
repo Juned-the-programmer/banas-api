@@ -330,3 +330,77 @@ The REST API which we have created and the usecase for this.
     ]
 
 It will get all the customer which are in given in route.
+
+## Add Daily Entry
+
+### Request
+
+`POST /api/daily-entry/`
+
+    Request : http://localhost:8000/api/daily-entry/
+
+    {
+        "customer_name" : "9ca5b862-3e43-4e1e-a514-617ddf7242ca",
+        "cooler" : 5
+    }
+
+customer_name will be the customer ID
+
+### Response
+
+    {
+        "id": "08a9b000-1036-4d96-95f5-b8768a86d5b1",
+        "cooler": 5,
+        "date_added": "2023-02-09T14:18:17.313828Z",
+        "addedby": "admin",
+        "updatedby": null,
+        "customer": "9ca5b862-3e43-4e1e-a514-617ddf7242ca"
+    }
+
+If today is the last day of the month then it will automatically generate the bill for that customer for this month and save it. With all the details and also update the customerAccount according to the bill.
+
+## Update Daily Entry
+
+### Request
+
+`PUT /api/daily-entry/{$id}/`
+
+    Request : http://localhost:8080/api/daily-entry/{$id}/
+
+    {
+        "id": "ffbcf7b1-3ffe-4580-95eb-b1cbff0cea9e",
+        "cooler": 10
+    }
+
+In URL id willl be the daily entry Id and in data ID will be the daily entry ID.
+
+### Response
+
+    {
+        "id": "ffbcf7b1-3ffe-4580-95eb-b1cbff0cea9e",
+        "cooler": 10,
+        "date_added": "2023-02-05T13:38:34.443555Z",
+        "addedby": "admin",
+        "updatedby": "admin",
+        "customer": "4d1c3916-70a8-4ae0-a87e-f71a29eca05d"
+    }
+
+For the same like adding daily entry, If today is last date and we are updating the daily entry then it will automatically update the bill which is generated and the customerAccount also.
+
+## Deleting Daily Entry
+
+### Request
+
+`DEL /api/daily-entry/{$id}/`
+
+    Request : http://localhost:8080/api/daily-entry/{$id}/
+
+{$id} will be the daily entry ID.
+
+### Response
+
+    {
+        "message" : "Daily Entry Deleted ! "
+    }
+
+For the same like adding daily entry, If today is the last date and we are deleting this daily entry then it will automatically update the bill which is generated and update the customerAccount.
