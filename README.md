@@ -15,11 +15,132 @@ Go to the project folder and run this command.
 
 The REST API which we have created and the usecase for this.
 
+## Login
+
+### Request
+
+`POST /api/login/`
+
+    Request : http://localhost:8000/api/login/
+
+    {
+        "username" : "admin",
+        "password" : "admin"
+    }
+
+### Response
+
+    {
+        "refresh": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoicmVmcmVzaCIsImV4cCI6MTY3NjE4NTk4MSwiaWF0IjoxNjc2MDk5NTgxLCJqdGkiOiI1MDBkNTM2ODcyNjU0MDdhOGNjNzY4ZTYzNTEyY2Q1MCIsInVzZXJfaWQiOjF9.J0wIl9Tj5WzBy69iAIQKIBHn5VwfsYHpfRfosAoHCCw",
+        "access": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNjc4NjkxNTgxLCJpYXQiOjE2NzYwOTk1ODEsImp0aSI6ImEwMmU4NmZhZjI3NzRiNTVhNjJlNzZhZTlkODI3ZjZkIiwidXNlcl9pZCI6MX0.mVSLFEUOuy8Dwd01RbySFlKnfvwgodrzFnWMwBzo0ik",
+        "user": "admin",
+        "id": 1,
+        "first_name": "Aman",
+        "last_name": "Davada",
+        "full_name": "Aman Davada",
+        "is_superuser": true,
+        "email": "amandavda@gmail.com"
+    }
+
+## Get Profile for Logined User
+
+### Request
+
+`GET /api/user/get-profile/`
+
+    Request : http://localhost:8000/api/user/get-profile/
+
+### Response
+
+    {
+        "username": "admin",
+        "id": 1,
+        "first_name": "Aman",
+        "last_name": "Davada",
+        "full_name": "Aman Davada",
+        "is_superuser": true,
+        "email": "amandavda@gmail.com"
+    }
+
+## Dashboard 
+
+### Request
+
+`GET /api/dashboard/`
+
+    Request : http://localhost:8000/api/dashboard/
+
+### Response
+
+    [
+        {
+            "date": "2023-02-11",
+            "coolers": 0
+        },
+        {
+            "date": "2023-02-10",
+            "coolers": 0
+        },
+        {
+            "date": "2023-02-09",
+            "coolers": 0
+        },
+        {
+            "date": "2023-02-08",
+            "coolers": 0
+        },
+        {
+            "date": "2023-02-07",
+            "coolers": 0
+        },
+        {
+            "date": "2023-02-06",
+            "coolers": 0
+        },
+        {
+            "date": "2023-02-05",
+            "coolers": 0
+        }
+    ]
+
+It will get the data of last 7 days. Here we are getting how many total coolers are sold on that particular day, Like that we are getting last 7 days of data.
+
+## Customer Dashboard
+
+### Request
+
+`POST /api/dashboard`
+
+    Request : http://localhost:8080/api/dashboard/
+
+    {
+        "start_date" : "2022-11-20",
+        "end_date" : "2022-12-02"
+    }
+
+### Response
+
+    [
+        {
+            "date": "2022-12-02 00:00:00",
+            "coolers": 0
+        },
+        {...},
+        {...},
+        {...},
+        {
+            "date": "2022-11-21 00:00:00",
+            "coolers": 0
+        }
+    ]
+
+It will get the data for the custom dates. Here also the same thing we are getting the total coolers on that respective days. 
+
 ## Add Routes
 
 ### Request
 
-`POST api/route/`
+`POST /api/route/`
 
     Request : http://localhost:8000/api/route/
     
@@ -66,7 +187,7 @@ The REST API which we have created and the usecase for this.
 
 `PUT /api/route/{$id}/`
 
-    Request : http://localhost:8000/api/route/{$id}
+    Request : http://localhost:8000/api/route/{$id}/
     
     {
         "id": "be5b4f74-62c6-4bc0-92e4-d746421d0f12",
@@ -279,6 +400,13 @@ The REST API which we have created and the usecase for this.
         }
     }
 
+Here we are getting the complete details for that customer.Firstly it will get the customer detail with route info. 
+
+After that it will get all the bill details. The bills which are generated for that customer.
+The Daily Entry for this month. With the total coolers.
+Total Payments done by that customer. And their total
+Due for that customer.
+
 ## Get Customer Due
 
 ### Request 
@@ -404,3 +532,199 @@ For the same like adding daily entry, If today is last date and we are updating 
     }
 
 For the same like adding daily entry, If today is the last date and we are deleting this daily entry then it will automatically update the bill which is generated and update the customerAccount.
+
+## Make Payment
+
+### Request
+
+`POST /api/payment/`
+
+    Request : http://localhost:8000/api/payment/
+
+    {
+        "customer_name" : "4d1c3916-70a8-4ae0-a87e-f71a29eca05d",
+        "route_name" : "23bc6409-0a78-4f34-8192-62afa07269f2",
+        "paid_amount" : 800,
+        "pending_amount" : 1800
+    }
+
+### Response
+
+    {
+        "detail": "Bill Paid and Customer Account Updated"
+    }
+
+## Customer Payment List
+
+### Request
+
+`GET /api/customer/payment/{$id}/`
+
+    Request : http://localhost:8000/api/customer/payment/{$id}/
+
+{$id} -> Will be the customer ID
+
+### Response
+
+    {
+        "data": [
+            {
+                "pending_amount": 1800,
+                "paid_amount": 800,
+                "date": "2023-02-05T14:02:53.983923Z",
+                "addedby": "admin"
+            },
+            {....},
+            {....}
+        ],
+        "total paid amount" : 3700
+    }
+
+It will get all the payments done by that customer from start. And at the end of data it will also give the total amount what they have paid to us.
+
+## Current Month Payment List
+
+### Request 
+
+`GET /api/payment/`
+
+    Request : http://localhost:8000/api/payment/
+
+### Response
+
+    {
+        "data": [
+            {
+                "pending_amount": 1800,
+                "paid_amount": 800,
+                "date": "2023-02-05T14:02:53.983923Z",
+                "addedby": "admin"
+            },
+            {...},
+            {...}
+        ],
+        "total paid amount" : 3700
+    }
+
+It will give the data for the payments which are done in this current month. And the Total of paid amount.
+
+## Route Wise Current Month Payment List
+
+### Request
+
+`GET /api/payment/route/{$id}/`
+
+    Request : http://localhost:8000/api/payment/route/{$id}/
+
+### Response
+
+    {
+        "data": [
+            {
+                "pending_amount": 1800,
+                "paid_amount": 800,
+                "date": "2023-02-05T14:02:53.983923Z",
+                "addedby": "admin"
+            },
+            {...},
+            {...}
+        ],
+        "total paid amount" : 3700
+    }
+
+## Bill detail
+
+### Request
+
+`GET /api/bill/{$id}/`
+
+    Request : http://localhost:8000/api/bill/{$id}/
+
+### Response
+
+    {
+        "bill" : {
+            "id": "ee46b4ed-a937-495e-99f5-a88d5287c46d",
+            "from_date": "2023-01-01",
+            "to_date": "2023-01-31",
+            "coolers": 30,
+            "Rate": 20,
+            "Amount": 600,
+            "Pending_amount": 1200,
+            "Advanced_amount": 0,
+            "Total": 1800,
+            "date": "2022-12-03T00:00:00Z",
+            "paid": true,
+            "addedby": "admin",
+            "updatedby": "admin",
+            "customer_name": {
+                "id": "4d1c3916-70a8-4ae0-a87e-f71a29eca05d",
+                "name": "Sunil Sharma",
+                "rate": 20,
+                "date_added": "2022-12-10T11:41:14.585339Z",
+                "date_updated": "2022-12-10T11:41:14.585355Z",
+                "addedby": "admin",
+                "updatedby": "admin",
+                "active": true,
+                "route": "23bc6409-0a78-4f34-8192-62afa07269f2"
+            }
+        },
+        "daily_entry" : [
+            {
+                "cooler" : 5,
+                "date_added" : "2022-12-10T11:41:14.585339Z"
+            },
+            {...},
+            {...}
+        ]
+    }
+
+## Total Due List
+
+### Request
+
+`GET /api/due/`
+
+    Request : http://localhost:8000/api/due/
+
+### Response
+
+    {
+        "customer_due_list": [
+            {
+                "customer_name": "Elon Musk",
+                "due": 2000
+            },
+            {...},
+            {...}
+        ],
+        "due_total": 4000
+    }
+
+It will get all the customer data with there due amount and at the end it will show the due total for the same.
+
+## Due List Route wise
+
+### Request
+
+`GET /api/due/route/{$id}/`
+
+    Request : http://localhost:8000/api/due/route/{$id}/
+
+### Response
+
+    {
+        "duelist_data": [
+            {
+                "customer_name": "Apple",
+                "due": 0
+            },
+            {
+                "customer_name": "Elon Musk",
+                "due": 2000
+            }
+        ],
+        "due_total": 2000
+    }
+
+Here also the same thing but instead of all the customer it will just show the route wise, Which customer are coming under that route.

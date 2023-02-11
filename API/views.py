@@ -32,7 +32,7 @@ def dashboard(request):
     data_list = []
 
     for i in range(0, 7):
-      daily_entry = DailyEntry.objects.filter(date=today_date - timedelta(days=i)).aggregate(Sum('cooler'))
+      daily_entry = DailyEntry.objects.filter(date_added=today_date - timedelta(days=i)).aggregate(Sum('cooler'))
       coolers_total = daily_entry['cooler__sum']
 
       if coolers_total is None:
@@ -59,7 +59,7 @@ def dashboard(request):
       data_list = []
 
       for i in range(0, int(days.days)):
-        daily_entry = DailyEntry.objects.filter(date=to_date - timedelta(days=i)).aggregate(Sum('cooler'))
+        daily_entry = DailyEntry.objects.filter(date_added=to_date - timedelta(days=i)).aggregate(Sum('cooler'))
         coolers_total = daily_entry['cooler__sum']
 
         if coolers_total is None:
@@ -715,7 +715,7 @@ def bill_detail(request, pk):
     customer_bill = GenerateBillSerializerGET(bill)
     customer_name = CustomerBill.objects.get(pk=pk).id
 
-    daily_entry = DailyEntry.objects.filter(date__gte=bill.from_date, date__lte=bill.to_date).filter(
+    daily_entry = DailyEntry.objects.filter(date_added__gte=bill.from_date, date_added__lte=bill.to_date).filter(
       customer=customer_name)
     daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry, many=True)
 
