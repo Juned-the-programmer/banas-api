@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'API.apps.ApiConfig',
     'rest_framework',
     'corsheaders',
+    'import_export',
 ]
 
 MIDDLEWARE = [

@@ -155,27 +155,19 @@ class CustomerListView(generics.ListCreateAPIView):
   def perform_create(self, serializer):
     serializer.save(addedby=self.request.user.username)
 
-
-# class CustomerDetailView(generics.RetrieveUpdateDestroyAPIView):
-#   queryset = Customer.objects.all()
-
-#   def get_serializer_class(self):
-#     method = self.request.method
-#     if request.method == 'PUT':
-#       return CustomerSerializer
-#     else:
-#       return CustomerSerializerList
-
-#   def perform_update(self, serializer):
-#     serializer.save(updatedby=self.request.user.username)
-
 @api_view(['GET' , 'PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def Customer_detail_view_update(request , pk):
   if request.method == 'GET':
-    customer = Customer.objects.get(id=pk)
-    serializer = CustomerSerializer(customer)
-    return JsonResponse(serializer.data , status=status.HTTP_200_OK)
+    try:
+      customer = Customer.objects.get(id=pk)
+      serializer = CustomerSerializer(customer)
+      return JsonResponse(serializer.data , status=status.HTTP_200_OK)
+    
+    except Customer.DoesNotExist:
+      return JsonResponse({
+        "message" : "Customer Doesn't Exists !"
+      }, status = status.HTTP_400_BAD_REQUEST)
 
   if request.method == 'PUT':
     try:
