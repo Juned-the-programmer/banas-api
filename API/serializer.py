@@ -42,7 +42,6 @@ class CustomerSerializerGET(serializers.ModelSerializer):
 
 
 class DailyEntrySerializer(serializers.ModelSerializer):
-  # customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), many=False)
   class Meta:
     model = DailyEntry
     fields = '__all__'
@@ -51,9 +50,7 @@ class DailyEntrySerializer(serializers.ModelSerializer):
 class DailyEntrySerializerGET(serializers.ModelSerializer):
   class Meta:
     model = DailyEntry
-    fields = '__all__'
-    #         fields = ['id','cooler','date','addedby','updatedby']
-    depth = 1
+    fields = ['id','cooler','date_added','addedby','updatedby','customer']
 
 
 class DailyEntrySerializerGETSingle(serializers.ModelSerializer):

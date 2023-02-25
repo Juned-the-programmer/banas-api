@@ -207,12 +207,12 @@ def daily_entry_count(request):
     year = now.year
     day = now.day
 
-    customer_count = DailyEntry.objects.distinct().filter(date__day=day , date__month=month, date__year=year).count()
+    customer_count = DailyEntry.objects.distinct().filter(date_added__day=day , date_added__month=month, date_added__year=year).count()
 
-    coolers = DailyEntry.objects.distinct().filter(date__day=day, date__month=month, date__year=year).aggregate(Sum('cooler'))
+    coolers = DailyEntry.objects.distinct().filter(date_added__day=day, date_added__month=month, date_added__year=year).aggregate(Sum('cooler'))
     coolers_total = coolers['cooler__sum']
 
-    today_coolers = DailyEntry.objects.filter(date__day=day, date__month=month, date__year=year)
+    today_coolers = DailyEntry.objects.filter(date_added__day=day, date_added__month=month, date_added__year=year)
     today_coolers_serializer = DailyEntrySerializerGET(today_coolers, many=True)
 
     if coolers_total is None:
@@ -449,6 +449,10 @@ def daily_entry(request):
 
       return JsonResponse(
         serializer.data , status=status.HTTP_201_CREATED)
+  
+  return JsonResponse({
+    "message" : serializer.errors
+  }, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['POST', 'GET'])
@@ -696,6 +700,7 @@ def customer_detail(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def bill_detail(request, pk):
+  import pytz
   if request.method == 'GET':
     try:
       bill = CustomerBill.objects.get(pk=pk)
@@ -707,8 +712,21 @@ def bill_detail(request, pk):
     customer_bill = GenerateBillSerializerGET(bill)
     customer_name = CustomerBill.objects.get(pk=pk).id
 
-    daily_entry = DailyEntry.objects.filter(date_added__gte=bill.from_date, date_added__lte=bill.to_date).filter(
-      customer=customer_name)
+    from_date = bill.from_date
+    from_date_month = from_date[5:7]
+    from_date_year = from_date[0:4]
+    from_date_date = from_date[8:10]
+    
+    to_date = bill.to_date
+    to_date_month = to_date[5:7]
+    to_date_year = to_date[0:4]
+    to_date_date = to_date[8:10]
+
+    from_date_new = datetime.datetime(int(from_date_year) , int(from_date_month) , int(from_date_date), tzinfo=pytz.UTC)
+    
+    to_date_new = datetime.datetime(int(to_date_year) , int(to_date_month) , int(to_date_date),23,59,59, tzinfo=pytz.UTC)
+
+    daily_entry = DailyEntry.objects.filter(date_added__gte=from_date_new, date_added__lte=to_date_new).filter(customer=bill.customer_name.id)
     daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry, many=True)
 
     return JsonResponse({
