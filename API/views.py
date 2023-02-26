@@ -430,7 +430,6 @@ def daily_entry(request):
           'Total': total,
           'Amount': amount
         }
-        print(bill_data)
         data = bill_data
         data_values = list(data.values())
         pk = data_values[0]
@@ -474,14 +473,15 @@ def payment(request):
     start_day = start_day_of_prev_month.strftime("%Y-%m-%d")
 
     if serializer.is_valid():
-      serializer.save(addedby=request.user.username)
+      serializer.save(addedby=request.user.username , pending_amount=CustomerAccount.objects.get(customer_name=pk).due)
       try:
-        customer = CustomerAccount.objects.get(customer_name__id__in=Customer.objects.filter(route=data_values[1]))
-        customer.due = int(customer.due) - int(data_values[2])
+        customer = CustomerAccount.objects.get(customer_name=pk)
+        customer.due = int(customer.due) - int(data_values[1])
         customer.updatedby = request.user.username
+        customer.save()
       except:
         return JsonResponse({
-          'error': "Customer is not this route"
+          'error': "Customer Account Doesn't Exists ! "
         }, status=status.HTTP_400_BAD_REQUEST)
 
       try:
@@ -489,7 +489,6 @@ def payment(request):
         customer_bill.paid = True
         customer_bill.updatedby = request.user.username
         customer_bill.save()
-        customer.save()
       except:
         return JsonResponse({
           'error': "Customer has not a Bill, First Generate Bill then try again!"
@@ -599,7 +598,6 @@ def due_list(request):
     data_list = []
     for i in customerdue:
       data_list.append({"customer_name": i.customer_name.name, "due": i.due})
-      print(data_list)
 
     customer_due_list = CustomerAccount.objects.all().aggregate(Sum('due'))
     customer_due_list_total = customer_due_list['due__sum']

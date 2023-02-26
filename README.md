@@ -543,9 +543,7 @@ For the same like adding daily entry, If today is the last date and we are delet
 
     {
         "customer_name" : "4d1c3916-70a8-4ae0-a87e-f71a29eca05d",
-        "route_name" : "23bc6409-0a78-4f34-8192-62afa07269f2",
-        "paid_amount" : 800,
-        "pending_amount" : 1800
+        "paid_amount" : 800
     }
 
 ### Response
