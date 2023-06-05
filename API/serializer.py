@@ -1,112 +1,112 @@
 from rest_framework import serializers
-from .models import *
+# from .models import *
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 
-class RouteSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = Route
-    fields = '__all__'
+# class RouteSerializer(serializers.ModelSerializer):
+#   class Meta:
+#     model = Route
+#     fields = '__all__'
 
 
-class RouteSerializerGET(serializers.ModelSerializer):
-  class Meta:
-    model = Route
-    fields = '__all__'
-    depth = 1
+# class RouteSerializerGET(serializers.ModelSerializer):
+#   class Meta:
+#     model = Route
+#     fields = '__all__'
+#     depth = 1
 
 
-class CustomerSerializer(serializers.ModelSerializer):
-  route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(), many=False)
+# class CustomerSerializer(serializers.ModelSerializer):
+#   route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(), many=False)
 
-  # route = RouteSerializer(read_only=True)
-  class Meta:
-    model = Customer
-    fields = '__all__'
-
-
-class CustomerSerializerList(serializers.ModelSerializer):
-  # route = RouteSerializer(read_only=True)
-  class Meta:
-    model = Customer
-    fields = '__all__'
-    depth = 1
+#   # route = RouteSerializer(read_only=True)
+#   class Meta:
+#     model = Customer
+#     fields = '__all__'
 
 
-class CustomerSerializerGET(serializers.ModelSerializer):
-  #     route = RouteSerializer(read_only=True)
-  class Meta:
-    model = Customer
-    fields = '__all__'
-    depth = 1
+# class CustomerSerializerList(serializers.ModelSerializer):
+#   # route = RouteSerializer(read_only=True)
+#   class Meta:
+#     model = Customer
+#     fields = '__all__'
+#     depth = 1
 
 
-class DailyEntrySerializer(serializers.ModelSerializer):
-  class Meta:
-    model = DailyEntry
-    fields = '__all__'
+# class CustomerSerializerGET(serializers.ModelSerializer):
+#   #     route = RouteSerializer(read_only=True)
+#   class Meta:
+#     model = Customer
+#     fields = '__all__'
+#     depth = 1
 
 
-class DailyEntrySerializerGET(serializers.ModelSerializer):
-  class Meta:
-    model = DailyEntry
-    fields = ['id','cooler','date_added','addedby','updatedby','customer']
+# class DailyEntrySerializer(serializers.ModelSerializer):
+#   class Meta:
+#     model = DailyEntry
+#     fields = '__all__'
 
 
-class DailyEntrySerializerGETSingle(serializers.ModelSerializer):
-  class Meta:
-    model = DailyEntry
-    fields = '__all__'
+# class DailyEntrySerializerGET(serializers.ModelSerializer):
+#   class Meta:
+#     model = DailyEntry
+#     fields = ['id','cooler','date_added','addedby','updatedby','customer']
 
 
-class DialyEntrySerializerGETDashboard(serializers.ModelSerializer):
-  class Meta:
-    model = DailyEntry
-    fields = ['cooler', 'date_added']
+# class DailyEntrySerializerGETSingle(serializers.ModelSerializer):
+#   class Meta:
+#     model = DailyEntry
+#     fields = '__all__'
 
 
-class CustomerPaymentSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerPayment
-    fields = '__all__'
+# class DialyEntrySerializerGETDashboard(serializers.ModelSerializer):
+#   class Meta:
+#     model = DailyEntry
+#     fields = ['cooler', 'date_added']
 
 
-class CustomerPaymentSerializerGET(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerPayment
-    fields = ['pending_amount', 'paid_amount', 'date', 'addedby']
+# class CustomerPaymentSerializer(serializers.ModelSerializer):
+#   class Meta:
+#     model = CustomerPayment
+#     fields = '__all__'
 
 
-class CustomerAccountSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerAccount
-    fields = '__all__'
+# class CustomerPaymentSerializerGET(serializers.ModelSerializer):
+#   class Meta:
+#     model = CustomerPayment
+#     fields = ['pending_amount', 'paid_amount', 'date', 'addedby']
 
 
-class CustomerAccountSerializerGET(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerAccount
-    fields = ['customer_name', 'due']
-    depth = 1
+# class CustomerAccountSerializer(serializers.ModelSerializer):
+#   class Meta:
+#     model = CustomerAccount
+#     fields = '__all__'
 
 
-class GenerateBillSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerBill
-    fields = '__all__'
+# class CustomerAccountSerializerGET(serializers.ModelSerializer):
+#   class Meta:
+#     model = CustomerAccount
+#     fields = ['customer_name', 'due']
+#     depth = 1
 
 
-class GenerateBillSerializerGET(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerBill
-    fields = '__all__'
-    depth = 1
+# class GenerateBillSerializer(serializers.ModelSerializer):
+#   class Meta:
+#     model = CustomerBill
+#     fields = '__all__'
 
 
-class DetailBillSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerBill
-    fields = ['from_date', 'to_date', 'coolers', 'Total', 'paid', 'id']
+# class GenerateBillSerializerGET(serializers.ModelSerializer):
+#   class Meta:
+#     model = CustomerBill
+#     fields = '__all__'
+#     depth = 1
+
+
+# class DetailBillSerializer(serializers.ModelSerializer):
+#   class Meta:
+#     model = CustomerBill
+#     fields = ['from_date', 'to_date', 'coolers', 'Total', 'paid', 'id']
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):

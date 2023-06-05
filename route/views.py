@@ -3,6 +3,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from .serializers import *
+from django.http import JsonResponse
+from rest_framework import status
 
 # Create your views here.
 @api_view(['GET' , 'POST'])
@@ -13,10 +15,16 @@ def RouteListView(request):
     if serializer.is_valid():
       serializer.save(addedby = request.user.username)
       return JsonResponse(serializer.data , status=status.HTTP_201_CREATED)
+    else:
+      errors = serializer.errors
+      if 'route_name' in errors:
+        return JsonResponse({"error_message" : "Route already Exists ! "} , status=status.HTTP_400_BAD_REQUEST)
+      else:
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
   if request.method == 'GET':
     route = Route.objects.all()
-    serializer = RouteSerializer(route , many=True)
+    serializer = RouteSerializerGET(route , many=True)
     
     return JsonResponse(serializer.data , status=status.HTTP_200_OK , safe=False)
 
