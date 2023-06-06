@@ -38,7 +38,7 @@ def list_update_route(request, pk):
   if request.method == 'GET':
     try:
       route = Route.objects.get(id=pk)
-      route_serializer = RouteSerializer(route)
+      route_serializer = RouteSerializerGET(route)
       return JsonResponse(route_serializer.data)
     except Route.DoesNotExist:
       return JsonResponse({
