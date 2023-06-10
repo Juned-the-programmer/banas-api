@@ -38,25 +38,32 @@ def list_update_route(request, pk):
   if request.method == 'GET':
     try:
       route = Route.objects.get(id=pk)
-      route_serializer = RouteSerializerGET(route)
-      return JsonResponse(route_serializer.data)
     except Route.DoesNotExist:
       return JsonResponse({
         'message' : "Route is not valid, Check once again ! "
       }, status=status.HTTP_404_NOT_FOUND)
 
+    route_serializer = RouteSerializerGET(route)
+    return JsonResponse(route_serializer.data)
+    
   if request.method == 'PUT':
     try:
       route = Route.objects.get(id=pk)
-      serializer = RouteSerializer(route , data=request.data)
-      if serializer.is_valid():
-        serializer.save(updatedby = request.user.username)
-        return JsonResponse(serializer.data , status=status.HTTP_200_OK)
-
     except Route.DoesNotExist:
       return JsonResponse({
         'message' : "Route Doesn't Exists !"
       }, status=status.HTTP_400_BAD_REQUEST)
+      
+    serializer = RouteSerializer(route , data=request.data)
+    if serializer.is_valid():
+      serializer.save(updatedby = request.user.username)
+      return JsonResponse(serializer.data , status=status.HTTP_200_OK)
+    else: 
+      errors = serializer.errors
+      if 'route_name' in errors:
+        return JsonResponse({"error_message" : "Route already Exists ! "} , status=status.HTTP_400_BAD_REQUEST)
+      else:
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
   return JsonResponse({
     'message' : "Something went wrong, Please try again later"
