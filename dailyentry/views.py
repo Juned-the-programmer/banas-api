@@ -24,82 +24,12 @@ def daily_entry(request):
         serializer.data, status=status.HTTP_200_OK, safe=False)
 
     if request.method == 'POST':
-        data = request.data
-        data_values = list(data.values())
-        pk = data_values[0]
-        print(data_values)
-        # today_date = data_values[1]
-        today_date = datetime.datetime.now()
-
-        # Last day of month
-        next_month = today_date.replace(day=28) + timedelta(days=4)
-        last_date = next_month - timedelta(days=next_month.day)
-        # print(last_date.date())
-
-        # First day of month
-        first_date = datetime.datetime.today().replace(day=1).date()
-        # print(first_date)
-
         serializer = DailyEntrySerializer(data=request.data)
 
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
             serializer.save(customer=Customer.objects.get(pk=pk))
             print("Serializer Saved") 
-
-        if datetime.date.today() == last_date.date():
-
-            customer_name = Customer.objects.get(pk=pk).id
-
-            last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
-            start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
-
-            last_day = last_day_of_prev_month.strftime("%Y-%m-%d")
-            start_day = start_day_of_prev_month.strftime("%Y-%m-%d")
-
-            total_cooler = DailyEntry.objects.filter(date__gte=start_day, date__lte=last_day).aggregate(Sum('cooler'))
-            coolers_total = total_cooler['cooler__sum']
-
-            if coolers_total is None:
-                coolers = 0
-            else:
-                coolers = int(coolers_total)
-
-            last_month_due_amount = CustomerAccount.objects.get(customer_name=pk)
-            rate = Customer.objects.get(pk=pk).rate
-
-            total = (int(coolers) * int(rate)) + int(last_month_due_amount.due)
-
-            last_month_due_amount.due = int(total)
-            last_month_due_amount.save()
-
-            amount = int(coolers) * int(rate)
-
-            bill_data = {
-            'customer_name': pk,
-            'to_date': last_day,
-            'from_date': start_day,
-            'coolers': coolers,
-            'Pending_amount': last_month_due_amount,
-            'Rate': rate,
-            'Total': total,
-            'Amount': amount
-            }
-            data = bill_data
-            data_values = list(data.values())
-            pk = data_values[0]
-
-            bill_serializer = GenerateBillSerializer(data=bill_data)
-            if bill_serializer.is_valid():
-                bill_serializer.save(addedby=request.user.username)
-                customer = CustomerAccount.objects.get(customer_name=pk)
-                customer.due = data_values[6]
-                customer.updatedby = request.user.username
-                customer.save()
-
-            return JsonResponse(
-                bill_serializer.data , status=status.HTTP_201_CREATED
-            )
 
         return JsonResponse(
             serializer.data , status=status.HTTP_201_CREATED)

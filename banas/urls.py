@@ -23,6 +23,7 @@ urlpatterns = [
     path('api/route/',include('route.urls')),
     path('api/customer/',include('customer.urls')),
     path('api/dailyentry/', include('dailyentry.urls')),
+    path('api/bill/', include('bills.urls')),
 
      path('reset_password/', auth_views.PasswordResetView.as_view(template_name="pages/reset_password.html"),
             name="reset_password"),
