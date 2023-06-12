@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'customer.apps.CustomerConfig',
     'dailyentry.apps.DailyentryConfig',
     'route.apps.RouteConfig',
+    'payment.apps.PaymentConfig',
     'rest_framework',
     'corsheaders',
     'import_export',

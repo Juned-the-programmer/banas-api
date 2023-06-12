@@ -14,6 +14,8 @@ from bills.models import CustomerBill
 from bills.serializer import *
 from dailyentry.models import DailyEntry
 from dailyentry.serializer import *
+from payment.models import CustomerPayment
+from payment.serializer import *
 
 # Create your views here.
 class CustomerListView(generics.ListCreateAPIView):
@@ -152,19 +154,19 @@ def customer_detail(request, pk):
         customer=customer.id).aggregate(Sum("cooler"))
         total_coolers = customer_daily_entry_total['cooler__sum']
 
-        # customer_payment = CustomerPayment.objects.filter(customer_name=pk)
-        # payment_serializer = CustomerPaymentSerializerGET(customer_payment,many=True)
+        customer_payment = CustomerPayment.objects.filter(customer_name=pk)
+        payment_serializer = CustomerPaymentSerializerGET(customer_payment,many=True)
 
-        # total_customer_payment = CustomerPayment.objects.filter(customer_name=pk).aggregate(Sum("paid_amount"))
-        # total_payment = total_customer_payment['paid_amount__sum']
+        total_customer_payment = CustomerPayment.objects.filter(customer_name=pk).aggregate(Sum("paid_amount"))
+        total_payment = total_customer_payment['paid_amount__sum']
 
         due_payment = CustomerAccount.objects.get(customer_name=pk)
         due_serializer = CustomerAccountSerializer(due_payment)
 
-        # if total_payment is None:
-        #     total_payment = 0
-        # else:
-        #     total_payment = total_payment
+        if total_payment is None:
+            total_payment = 0
+        else:
+            total_payment = total_payment
 
         if total_coolers is None:
             total = 0
@@ -176,8 +178,8 @@ def customer_detail(request, pk):
         'bills': bill_serializer.data,
         'daily_entry': daily_entry_serializer.data,
         'total_coolers': total,
-        # 'payments' : payment_serializer.data,
-        # 'total_payments' : total_payment,
+        'payments' : payment_serializer.data,
+        'total_payments' : total_payment,
         'due_payments' : due_serializer.data
         }, status=status.HTTP_200_OK)
 
