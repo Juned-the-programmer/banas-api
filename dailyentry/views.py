@@ -195,3 +195,31 @@ def view_delete_daily_entry(request, pk):
 
     return JsonResponse({
         'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['POST', 'GET'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def daily_entry_bulk(request):
+    print("dailyentry Bulk")
+    if request.method == 'POST':
+        serializer = DailyEntryBulkImportSerializer(data=request.data, many=True)
+        if serializer.is_valid():
+            addedby = request.user.username
+            daily_entries = []
+            
+            for data_item in serializer.validated_data:
+                customer_id = data_item['customer']
+                cooler = data_item['cooler']
+                
+                daily_entry_data = DailyEntry(
+                    customer= customer_id,
+                    cooler= cooler,
+                    addedby=addedby
+                )
+                daily_entries.append(daily_entry_data)
+                
+            DailyEntry.objects.bulk_create(daily_entries)
+            return JsonResponse({"message" : "Bulk Import success ! "}, status=status.HTTP_200_OK, safe=False)
+        else:
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST, safe=False)
+                        
+    return JsonResponse({"message" : "Something went wrong, Please try again later ! "}, status=status.HTTP_400_BAD_REQUEST)

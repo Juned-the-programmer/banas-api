@@ -726,3 +726,11 @@ It will get all the customer data with there due amount and at the end it will s
     }
 
 Here also the same thing but instead of all the customer it will just show the route wise, Which customer are coming under that route.
+
+
+
+## Run Crone JOB
+
+### To run the crone job from the command prompt 
+
+python3 manage.py runcrons

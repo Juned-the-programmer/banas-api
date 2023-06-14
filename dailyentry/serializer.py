@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import DailyEntry
+from customer.models import *
 
 class DailyEntrySerializer(serializers.ModelSerializer):
   class Meta:
@@ -23,3 +24,8 @@ class DialyEntrySerializerGETDashboard(serializers.ModelSerializer):
   class Meta:
     model = DailyEntry
     fields = ['cooler', 'date_added']
+    
+class DailyEntryBulkImportSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = DailyEntry
+    fields = '__all__'
