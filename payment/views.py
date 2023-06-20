@@ -27,6 +27,8 @@ def payment(request):
         data = request.data
         data_values = list(data.values())
         pk = data_values[0]
+        if len(data_values) > 2:
+            round_off = data_values[2]
         # Ends here
 
         last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
@@ -39,6 +41,8 @@ def payment(request):
             try:
                 customer = CustomerAccount.objects.get(customer_name=pk)
                 customer.due = int(customer.due) - int(data_values[1])
+                if len(data_values) > 2:
+                    customer.due = int(customer.due) - int(data_values[2])
                 customer.updatedby = request.user.username
             except:
                 return JsonResponse({
@@ -49,15 +53,13 @@ def payment(request):
                 customer_bill = CustomerBill.objects.filter(customer_name=pk).filter(paid=False).get(from_date=start_day)
                 customer_bill.paid = True
                 customer_bill.updatedby = request.user.username
+                customer_bill.save()
             except:
-                return JsonResponse({
-                'error': "Customer has not a Bill, First Generate Bill then try again!"
-                }, status=status.HTTP_400_BAD_REQUEST)
+                pass
                 
             try:
                 serializer.save(addedby=request.user.username , pending_amount=CustomerAccount.objects.get(customer_name=pk).due)
                 customer.save()
-                customer_bill.save()
                 return JsonResponse({
                 'detail': "Bill Paid and Customer Account Updated"
                 }, status=status.HTTP_201_CREATED)

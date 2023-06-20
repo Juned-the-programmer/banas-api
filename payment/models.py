@@ -7,6 +7,7 @@ class CustomerPayment(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True)
     pending_amount = models.IntegerField(null=True, blank=True)
     paid_amount = models.IntegerField()
+    rounf_off_amount = models.IntegerField(default=0, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)

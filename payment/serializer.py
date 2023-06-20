@@ -10,4 +10,4 @@ class CustomerPaymentSerializer(serializers.ModelSerializer):
 class CustomerPaymentSerializerGET(serializers.ModelSerializer):
   class Meta:
     model = CustomerPayment
-    fields = ['pending_amount', 'paid_amount', 'date', 'addedby']
+    fields = ['pending_amount', 'paid_amount', 'date', 'addedby', 'rounf_off_amount']

@@ -31,6 +31,6 @@ class CustomerAccount(models.Model):
 
 def customer_account(sender , instance , created , **kwargs):
     if created:
-        CustomerAccount.objects.create(customer_name = instance)
+        CustomerAccount.objects.create(customer_name = instance, addedby="Signals")
 
 post_save.connect(customer_account,sender=Customer)

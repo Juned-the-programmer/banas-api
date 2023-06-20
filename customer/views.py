@@ -160,8 +160,7 @@ def customer_detail(request, pk):
         total_customer_payment = CustomerPayment.objects.filter(customer_name=pk).aggregate(Sum("paid_amount"))
         total_payment = total_customer_payment['paid_amount__sum']
 
-        due_payment = CustomerAccount.objects.get(customer_name=pk)
-        due_serializer = CustomerAccountSerializer(due_payment)
+        due_payment = CustomerAccount.objects.get(customer_name=pk).due
 
         if total_payment is None:
             total_payment = 0
@@ -180,7 +179,7 @@ def customer_detail(request, pk):
         'total_coolers': total,
         'payments' : payment_serializer.data,
         'total_payments' : total_payment,
-        'due_payments' : due_serializer.data
+        'due_payments' : due_payment
         }, status=status.HTTP_200_OK)
 
     return JsonResponse({
