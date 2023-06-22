@@ -19,19 +19,19 @@ from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/',include('API.urls')),
+    path('api/',include('auth.urls')),
     path('api/route/',include('route.urls')),
     path('api/customer/',include('customer.urls')),
     path('api/dailyentry/', include('dailyentry.urls')),
     path('api/bill/', include('bills.urls')),
     path('api/payment/', include('payment.urls')),
-
-     path('reset_password/', auth_views.PasswordResetView.as_view(template_name="pages/reset_password.html"),
+    
+    path('reset_password/', auth_views.PasswordResetView.as_view(),
             name="reset_password"),
-    path('reset_password_send/',auth_views.PasswordResetDoneView.as_view(template_name="pages/reset_password_sent.html"),
+    path('reset_password_send/',auth_views.PasswordResetDoneView.as_view(),
             name="password_reset_done"),
-    path('reset/<uidb64>/<token>',auth_views.PasswordResetConfirmView.as_view(template_name="pages/reset_password_confirm.html"),
+    path('reset/<uidb64>/<token>',auth_views.PasswordResetConfirmView.as_view(),
             name="password_reset_confirm"),
-    path('reset_password_complete/',auth_views.PasswordResetCompleteView.as_view(template_name="pages/reset_password_complete.html"),
+    path('reset_password_complete/',auth_views.PasswordResetCompleteView.as_view(),
             name="password_reset_complete"),
 ]

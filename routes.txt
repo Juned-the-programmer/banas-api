@@ -1,25 +1,6 @@
-/dashboard/ -> Nothing Just balnk
+For Password Rest (Direct Way Using API's)
 
-/add-route/ -> POST -> Add the route {route_name : ""}
+https://medium.com/django-rest/django-rest-framework-change-password-and-update-profile-1db0c144c0a3
 
-/add-customer/ -> POST -> Add the customer {name : "" , route : "routeid" , rate : "" }
+For Password Reset (Send Email and rest)
 
-/update-customer/<customerid>/ -> PUT -> To update the customer {route : "routeid"}
-
-/list-route/ -> GET -> List of all the routes
-
-/list-customer/ -> GET -> List of all the customer
-
-/daily-entry/ -> POST -> Add the daily entry {customer_name : "customerid" , cooler : ""}
-
-/daily-entry-count/ -> GET -> customer count & coolers count for current date
-
-/customer-payment/ -> POST -> Add the customer Payment {customer_name : "customerid" , pending_amont : "" , paid_amount : ""}
-
-/customer-account/<customerid>/ -> GET -> Display the customer account (Due Amount)
-
-/get-bill-data/<customerid>/   -> GET -> Display the bill data of the particular customer of the previous month 
-
-/generate-bill/ -> POST -> Generate the bill based on the data from previous API {customer_name : "customerid" , from_data : "" , to_date : "" , coolers : "" , Rate : "" , Amount : "" , Pending_amount : "" , Advanced_amount : "" , Total : "" }
-
-/due-list/<routeid>/ -> GET -> Filter the customers due payment based on the route 
