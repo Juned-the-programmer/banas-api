@@ -3,9 +3,11 @@ from route.models import Route
 import uuid
 from django.db.models.signals import post_save
 from django.core.validators import RegexValidator, EmailValidator
+from django.contrib.auth.models import User
 
 # Create your models here.
 class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')
     phone_regex = RegexValidator(
         regex=r'^[789]\d{9}$',
         message="Invalid phone number"

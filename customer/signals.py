@@ -13,7 +13,8 @@ def create_user(sender, instance, created, **kwarg):
             username = instance.first_name.lower() + instance.last_name.lower()
             user = User.objects.create(username=username , email=instance.email, first_name=instance.first_name, last_name=instance.last_name)
         else:
-            user = User.objects.create(username=instance.first_name)
+            username = instance.first_name.lower() + instance.last_name.lower()
+            user = User.objects.create(username=username)
         user.set_password("banaswater")
         user.save()
         
