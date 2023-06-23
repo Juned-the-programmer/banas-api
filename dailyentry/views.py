@@ -28,7 +28,6 @@ def daily_entry(request):
 
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
-            serializer.save(customer=Customer.objects.get(pk=pk))
             print("Serializer Saved") 
 
         return JsonResponse(
@@ -94,43 +93,11 @@ def view_delete_daily_entry(request, pk):
     # Deleting daily Entry
     if request.method == 'DELETE':
         if(DailyEntry.objects.filter(id=pk).filter(date_added__gte=first_date , date_added__lte=last_date)):
-            if(DailyEntry.objects.filter(pk=pk).filter(date_added = last_date.date())):
-                bill_detail = CustomerBill.objects.get(from_date = first_date, to_date = last_date.date(), customer_name = DailyEntry.objects.get(id=pk).customer)
-
-                daily_entry_delete = DailyEntry.objects.get(pk=pk)
-                daily_entry_cooler = DailyEntry.objects.get(pk=pk).cooler
-
-                daily_entry_total = DailyEntry.objects.filter(date_added__gte=first_date, date_added__lte=last_date).filter(customer = DailyEntry.objects.get(id=pk).customer).aggregate(Sum('cooler'))
-                total_coolers = daily_entry_total['cooler__sum']
-
-                if total_coolers is None:
-                    total_coolers = 0
-                else:
-                    total_coolers = int(total_coolers) - int(daily_entry_cooler)
-
-                total_amount = (int(bill_detail.Rate) * int(total_coolers)) + int(bill_detail.Pending_amount) - int(bill_detail.Advanced_amount)
-
-                due_amount = CustomerAccount.objects.get(customer_name=bill_detail.customer_name)
-                due_amount.due = total_amount
-                due_amount.save()
-                
-                bill_detail.coolers = total_coolers
-                bill_detail.Amount = int(total_coolers) * int(bill_detail.Rate)
-                bill_detail.Total = total_amount
-                bill_detail.updatedby = request.user.username
-                bill_detail.save()
-
-                daily_entry_delete.delete()
-
-                return JsonResponse({
-                'message' : 'Daily Entry Deleted and Bill Updated successfully'
-                } , status=status.HTTP_200_OK)
-
-            else:
-                dailyEntry = DailyEntry.objects.get(pk=pk)
-                dailyEntry.delete()
-                return JsonResponse({
-                'message': 'DailyEntry deleted successfully'}, status=status.HTTP_200_OK)
+            
+            dailyEntry = DailyEntry.objects.get(pk=pk)
+            dailyEntry.delete()
+            return JsonResponse({
+            'message': 'DailyEntry deleted successfully'}, status=status.HTTP_200_OK)
 
         else:
             return JsonResponse({
@@ -142,41 +109,10 @@ def view_delete_daily_entry(request, pk):
         serializer = DailyEntrySerializer(dailyEntry, data=request.data)
 
         if(DailyEntry.objects.filter(id=pk).filter(date_added__gte=first_date , date_added__lte=last_date)):
-            if(DailyEntry.objects.filter(pk=pk).filter(date_added = last_date.date())):
-                bill_detail = CustomerBill.objects.get(from_date = first_date, to_date = last_date.date(), customer_name = DailyEntry.objects.get(id=pk).customer)
-
-                if serializer.is_valid():
-                    serializer.save(updatedby=request.user.username)
-
-                daily_entry_total = DailyEntry.objects.filter(date_added__gte=first_date, date_added__lte=last_date).filter(customer = DailyEntry.objects.get(id=pk).customer).aggregate(Sum('cooler'))
-                total_coolers = daily_entry_total['cooler__sum']
-
-                if total_coolers is None:
-                    total_coolers = 0
-                else:
-                    total_coolers = int(total_coolers)
-
-                total_amount = (int(bill_detail.Rate) * int(total_coolers)) + int(bill_detail.Pending_amount) - int(bill_detail.Advanced_amount)
-
-                due_amount = CustomerAccount.objects.get(customer_name=bill_detail.customer_name)
-                due_amount.due = total_amount
-                due_amount.save()
-                
-                bill_detail.coolers = total_coolers
-                bill_detail.Amount = int(total_coolers) * int(bill_detail.Rate)
-                bill_detail.Total = total_amount
-                bill_detail.updatedby = request.user.username
-                bill_detail.save()
-
-                return JsonResponse({
-                'message' : 'Daily Entry and Bill Updated successfully'
-                } , status=status.HTTP_200_OK)
-
-            else:
-                if serializer.is_valid():
-                    serializer.save(updatedby=request.user.username)
-                    return JsonResponse(
-                    serializer.data , status=status.HTTP_201_CREATED)
+            if serializer.is_valid():
+                serializer.save(updatedby=request.user.username)
+                return JsonResponse(
+                serializer.data , status=status.HTTP_201_CREATED)
 
             return JsonResponse({
             'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

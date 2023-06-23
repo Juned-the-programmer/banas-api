@@ -211,7 +211,7 @@ def due_list(request):
 
         data_list = []
         for i in customerdue:
-            data_list.append({"customer_name": i.customer_name.name, "due": i.due})
+            data_list.append({"customer_name": i.customer_name.first_name +' '+i.customer_name.last_name, "due": i.due})
 
         customer_due_list = CustomerAccount.objects.all().aggregate(Sum('due'))
         customer_due_list_total = customer_due_list['due__sum']

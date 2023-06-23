@@ -10,7 +10,7 @@ from django.conf import settings
 def create_user(sender, instance, created, **kwarg):
     if created:
         if instance.email:
-            username = instance.first_name.lower() + instance.last_name.lower()
+            username = instance.first_name.lower() +'_'+ instance.last_name.lower()
             user = User.objects.create(username=username , email=instance.email, first_name=instance.first_name, last_name=instance.last_name)
         else:
             username = instance.first_name.lower() + instance.last_name.lower()
