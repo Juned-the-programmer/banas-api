@@ -33,7 +33,7 @@ class Generate_CustomerBill_CronJobs(CronJobBase):
                 else:
                     coolers = int(daily_entry_total)
                     
-                pending_amount = CustomerAccount.objects.get(customer_name=customer).due
+                pending_amount = CustomerAccount.objects.get(customer_name=customer)
                     
                 CustomerBill.objects.create(
                     customer_name=customer,
@@ -42,8 +42,11 @@ class Generate_CustomerBill_CronJobs(CronJobBase):
                     coolers=coolers,
                     Rate=int(customer.rate),
                     Amount=int(coolers) * int(customer.rate),
-                    Pending_amount=int(pending_amount),
+                    Pending_amount=int(pending_amount.due),
                     Advanced_amount=int(0),
-                    Total=int(coolers) * int(customer.rate) + int(pending_amount),
+                    Total=int(coolers) * int(customer.rate) + int(pending_amount.due),
                     addedby="Crone Job"
                 )
+                
+                pending_amount.due = int(coolers) * int(customer.rate) + int(pending_amount.due)
+                pending_amount.save()
