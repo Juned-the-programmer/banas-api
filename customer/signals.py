@@ -12,16 +12,26 @@ def create_user(sender, instance, created, **kwarg):
         if instance.email:
             username = instance.first_name.lower() +'_'+ instance.last_name.lower()
             user = User.objects.create(username=username , email=instance.email, first_name=instance.first_name, last_name=instance.last_name)
+            user.set_password("banaswater")
+            user.save()
+            user_detail = User.objects.get(username=username)
+            customer_detail = Customer.objects.get(email=instance.email)
+            customer_detail.user = user_detail
+            customer_detail.save()
+            subject = 'Account Created'
+            customer_username = user.username
+            customer_password = "banaswater"
+            message = 'Your account has been created. Welcome!\n\nUsername : {}\n Password : {}'.format(customer_username, customer_password)
+            send_mail(subject, message, settings.EMAIL_HOST_USER, [instance.email], fail_silently=False)
         else:
             username = instance.first_name.lower() + instance.last_name.lower()
-            user = User.objects.create(username=username)
-        user.set_password("banaswater")
-        user.save()
-        
-        if instance.email:
-            subject = 'Account Created'
-            message = 'Your account has been created. Welcome!'
-            send_mail(subject, message, settings.EMAIL_HOST_USER, [instance.email], fail_silently=False)
+            user = User.objects.create(username=username, first_name=instance.first_name, last_name=instance.last_name)
+            user.set_password("banaswater")
+            user.save()
+            user_detail = User.objects.get(username=username)
+            customer_detail = Customer.objects.get(first_name=instance.first_name, last_name=instance.last_name)
+            customer_detail.user = user_detail
+            customer_detail.save()
             
 @receiver(post_save, sender=Customer)
 def customer_account(sender , instance , created , **kwargs):

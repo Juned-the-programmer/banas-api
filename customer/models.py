@@ -7,7 +7,7 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 class Customer(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='customer', null=True, blank=True)
     phone_regex = RegexValidator(
         regex=r'^[789]\d{9}$',
         message="Invalid phone number"
