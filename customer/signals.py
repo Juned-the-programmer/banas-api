@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Customer, CustomerAccount
 from django.conf import settings
+from django.utils.html import strip_tags
 
 @receiver(post_save, sender=Customer)
 def create_user(sender, instance, created, **kwarg):
@@ -21,8 +22,9 @@ def create_user(sender, instance, created, **kwarg):
             subject = 'Account Created'
             customer_username = user.username
             customer_password = "banaswater"
-            message = 'Your account has been created. Welcome!\n\nUsername : {}\n Password : {}'.format(customer_username, customer_password)
-            send_mail(subject, message, settings.EMAIL_HOST_USER, [instance.email], fail_silently=False)
+            message = render_to_string("customer/JoinCustomer.html", {'first_name' : instance.first_name, 'last_name' : instance.last_name , 'username' : customer_username, 'password' : customer_password})
+            plain_text = strip_tags(message)
+            send_mail(subject=subject, message=plain_text, from_email=settings.EMAIL_HOST_USER, recipient_list=[instance.email], html_message=message , fail_silently=False)
         else:
             username = instance.first_name.lower() + instance.last_name.lower()
             user = User.objects.create(username=username, first_name=instance.first_name, last_name=instance.last_name)
