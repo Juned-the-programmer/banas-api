@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from .models import *
 from rest_framework.exceptions import ValidationError
+from globalserializers import CustomeDateField
 
 class RouteSerializer(serializers.ModelSerializer):
   class Meta:
@@ -13,6 +14,8 @@ class RouteSerializer(serializers.ModelSerializer):
     return value
 
 class RouteSerializerGET(serializers.ModelSerializer):
+  date_added = CustomeDateField()
+  date_updated = CustomeDateField()
   class Meta:
     model = Route
     fields = '__all__'

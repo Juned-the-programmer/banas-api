@@ -4,6 +4,7 @@ import uuid
 from django.db.models.signals import post_save
 from django.core.validators import RegexValidator, EmailValidator
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 # Create your models here.
 class Customer(models.Model):
@@ -27,6 +28,13 @@ class Customer(models.Model):
     updatedby = models.CharField(max_length=100,null=True, blank=True)
     active = models.BooleanField(default=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
+    
+    def save(self, *args, **kwargs):
+        if not self.pk:
+            self.date_added = timezone.now()
+        
+        self.date_updated = timezone.now()
+        return super().save(*args, **kwargs)
 
     def __str__(self):
         return "{} {}".format(self.first_name, self.last_name)

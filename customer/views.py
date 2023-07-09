@@ -120,7 +120,7 @@ def due_customer(request, pk):
         
         customer_due = customer.due
         return JsonResponse({
-            'customer_name': customer.customer_name.name,
+            'customer_name': customer.customer_name.first_name + ' ' + customer.customer_name.last_name,
             'due': customer_due}, status=status.HTTP_200_OK)
     
     return JsonResponse({

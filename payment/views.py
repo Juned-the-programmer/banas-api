@@ -184,7 +184,7 @@ def due_list_route(request, pk):
         customer_due_list = CustomerAccount.objects.filter(customer_name__id__in=Customer.objects.filter(route=pk))
 
         for i in customer_due_list:
-            data_list.append({"customer_name": i.customer_name.name, "due": i.due})
+            data_list.append({"customer_name": i.customer_name.first_name + ' ' + i.customer_name.last_name, "due": i.due})
 
         customer_due_list_filter = CustomerAccount.objects.filter(
         customer_name__id__in=Customer.objects.filter(route=pk)).aggregate(Sum('due'))
