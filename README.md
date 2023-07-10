@@ -61,6 +61,7 @@ The REST API which we have created and the usecase for this.
         "is_superuser": true,
         "email": "amandavda@gmail.com"
     }
+    
 
 ## Dashboard 
 
@@ -140,7 +141,7 @@ It will get the data for the custom dates. Here also the same thing we are getti
 
 ### Request
 
-`POST /api/route/`
+`POST /api/route/route`
 
     Request : http://localhost:8000/api/route/
     
@@ -163,7 +164,7 @@ It will get the data for the custom dates. Here also the same thing we are getti
 
 ### Request
 
-`GET /api/route/`
+`GET /api/route/route`
 
     Request : http://localhost:8000/api/route/
     
@@ -218,8 +219,11 @@ It will get the data for the custom dates. Here also the same thing we are getti
     {
         "name" : "Fine Tech",
         "route" : "86509742-40b2-4a26-b137-f8550eaec3d1",
-        "rate" : 25
+        "rate" : 25,
+        "email" : "email@gmail.com"
     }
+    
+NOTE : Here email is compulsory field we can skip the email information. But if we provide then we will get the mail saying Thank you and also provide there credentials which they can't use right now. This is just for the customer.
 
 ### Response
 
@@ -485,7 +489,30 @@ customer_name will be the customer ID
         "customer": "9ca5b862-3e43-4e1e-a514-617ddf7242ca"
     }
 
-If today is the last day of the month then it will automatically generate the bill for that customer for this month and save it. With all the details and also update the customerAccount according to the bill.
+## Add Daily Entry Bulk
+
+### Request
+
+`POST /api/dailyentry/bulk/import`
+
+    Request : http://localhost:8000/api/dailyentry/bulk/import
+    
+    [
+        {
+            "customer" : "aa18184b-2ae3-4fbf-9039-f487c9ea93c1",
+            "cooler" : 5
+        },
+        {
+            "customer" : "aa18184b-2ae3-4fbf-9039-f487c9ea93c1",
+            "cooler" : 5
+        }
+    ]
+    
+### Response
+
+    {
+        "message": "Bulk Import success ! "
+    }
 
 ## Update Daily Entry
 
@@ -543,8 +570,11 @@ For the same like adding daily entry, If today is the last date and we are delet
 
     {
         "customer_name" : "4d1c3916-70a8-4ae0-a87e-f71a29eca05d",
-        "paid_amount" : 800
+        "paid_amount" : 800,
+        "round_off" : 100
     }
+    
+round_off will be the value which we are not going to add in the next bill, this can be null. 
 
 ### Response
 
