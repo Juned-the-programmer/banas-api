@@ -11,7 +11,7 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from customer.models import Customer, CustomerAccount
 from dailyentry.models import DailyEntry
 from dailyentry.serializer import *
-
+  
 from .models import CustomerBill
 from .serializer import *
 
