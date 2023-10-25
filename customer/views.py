@@ -16,6 +16,7 @@ from dailyentry.models import DailyEntry
 from dailyentry.serializer import *
 from payment.models import CustomerPayment
 from payment.serializer import *
+from banas.cache_conf import *
 
 # Create your views here.
 class CustomerListView(generics.ListCreateAPIView):
@@ -31,12 +32,19 @@ class CustomerListView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(addedby=self.request.user.username)
 
+    def list(self, request, *args, **kwargs):
+        customer_data = customer_cached_data()
+        customer_data_serializer = CustomerSerializerList(customer_data, many=True)
+        return JsonResponse(customer_data_serializer.data , status = status.HTTP_200_OK, safe=False)
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def list_customer_by_route(request, pk):
     if request.method == 'GET':
-        customer_route = Customer.objects.filter(route=pk).filter(active=True)
-        customer_route_serializer = CustomerSerializerGET(customer_route, many=True)
+        customer_data = customer_cached_data()
+
+        customer_route = customer_data.filter(route=pk).filter(active=True)
+        customer_route_serializer = CustomerSerializerList(customer_route, many=True)
 
         return JsonResponse(
             customer_route_serializer.data
@@ -50,7 +58,8 @@ def list_customer_by_route(request, pk):
 @permission_classes([IsAdminUser, IsAuthenticated])
 def Customer_detail_view_update(request , pk):
     try:
-        customer = Customer.objects.get(id=pk)
+        customer_data = customer_cached_data()
+        customer = customer_data.get(id=pk)
     except Customer.DoesNotExist:
         return JsonResponse({
             "message" : "Customer Doesn't Exists ! "}, 
@@ -71,6 +80,8 @@ def Customer_detail_view_update(request , pk):
             serializer = CustomerSerializer(customer, data=request.data)
             if serializer.is_valid():
                 serializer.save(updatedby=request.user.username)
+                cache.delete("Customer")
+                customer_cached_data()
                 return JsonResponse(serializer.data, status=status.HTTP_200_OK)
                 
         except Customer.DoesNotExist:

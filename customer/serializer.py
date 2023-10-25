@@ -15,11 +15,10 @@ class CustomerSerializer(serializers.ModelSerializer):
 class CustomerSerializerList(serializers.ModelSerializer):
   date_added = CustomeDateField()
   date_updated = CustomeDateField()
-  route = RouteSerializerGET()
+  route = serializers.StringRelatedField()
   class Meta:
     model = Customer
     fields = '__all__'
-    depth = 1
 
 
 class CustomerSerializerGET(serializers.ModelSerializer):
