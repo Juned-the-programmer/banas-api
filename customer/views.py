@@ -17,6 +17,8 @@ from dailyentry.serializer import *
 from payment.models import CustomerPayment
 from payment.serializer import *
 from banas.cache_conf import *
+from exception.error_constant import *
+from exception.views import *
 
 # Create your views here.
 class CustomerListView(generics.ListCreateAPIView):
@@ -97,7 +99,9 @@ def Customer_detail_view_update(request , pk):
 @permission_classes([IsAdminUser, IsAuthenticated])
 def customer_account(request, pk):
     try:
-        customer = CustomerAccount.objects.get(customer_name=pk)
+        customer_data = customer_cached_data()
+        customer_account = customer_data.CustomerAccount
+        customer = customer_account.get(customer_name = pk)
     except Customer.DoesNotExist:
         return JsonResponse({
         'data': "Customer Not Found"
@@ -123,11 +127,11 @@ def customer_account(request, pk):
 def due_customer(request, pk):
     if request.method == 'GET':
         try:
-            customer = CustomerAccount.objects.get(customer_name=pk)
-        except:
-            return JsonResponse({
-            'message': "Customer Not Found"
-            }, status=status.HTTP_400_BAD_REQUEST)
+            customer_data = customer_cached_data()
+            customer = customer_data.get(id = pk).customer_account
+        except Customer.DoesNotExist:
+            error_message = CUSTOMER_NOT_FOUND.format(pk)
+            not_found_exception(error_message = error_message)
         
         customer_due = customer.due
         return JsonResponse({

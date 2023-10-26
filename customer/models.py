@@ -40,7 +40,7 @@ class Customer(models.Model):
         return "{} {}".format(self.first_name, self.last_name)
 
 class CustomerAccount(models.Model):
-    customer_name = models.ForeignKey(Customer, on_delete = models.CASCADE , null=True, blank=True , default=0)
+    customer_name = models.OneToOneField(Customer, on_delete = models.CASCADE , null=True, blank=True , related_name="customer_account")
     due = models.IntegerField(default=0)
     date = models.DateTimeField(auto_now_add=True)
     addedby = models.CharField(max_length=100,null=True, blank=True)

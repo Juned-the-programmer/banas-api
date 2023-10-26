@@ -35,10 +35,3 @@ class CustomerAccountSerializer(serializers.ModelSerializer):
   class Meta:
     model = CustomerAccount
     fields = '__all__'
-
-
-class CustomerAccountSerializerGET(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerAccount
-    fields = ['customer_name', 'due']
-    depth = 1
