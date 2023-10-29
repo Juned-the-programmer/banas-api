@@ -52,9 +52,7 @@ def list_customer_by_route(request, pk):
             customer_route_serializer.data
         , status = status.HTTP_200_OK, safe=False)
         
-    return JsonResponse({
-        "message" : "Something went wrong, Please try again ! "
-    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return internal_server_error()
 
 @api_view(['GET' , 'PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -87,13 +85,10 @@ def Customer_detail_view_update(request , pk):
                 return JsonResponse(serializer.data, status=status.HTTP_200_OK)
                 
         except Customer.DoesNotExist:
-            return JsonResponse({
-                "message" : serializer.errors
-            }, status=status.HTTP_400_BAD_REQUEST)
+            error_message = CUSTOMER_NOT_FOUND.format(pk)
+            return not_found_exception(error_message = error_message)
             
-    return JsonResponse({
-        "message" : "Something went wrong, Please try again !"
-    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return internal_server_error()
 
 @api_view(['PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -103,9 +98,8 @@ def customer_account(request, pk):
         customer_account = customer_data.CustomerAccount
         customer = customer_account.get(customer_name = pk)
     except Customer.DoesNotExist:
-        return JsonResponse({
-        'data': "Customer Not Found"
-        }, status=status.HTTP_404_NOT_FOUND)
+        error_message = CUSTOMER_NOT_FOUND.format(pk)
+        return not_found_exception(error_message = error_message)
 
     if request.method == 'PUT':
         serializer = CustomerAccountSerializer(customer, data=request.data)
@@ -118,9 +112,7 @@ def customer_account(request, pk):
         return JsonResponse({
             'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         
-    return JsonResponse({
-        "message" : "Something went wrong, Please try again ! "
-    }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    return internal_server_error()
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -131,16 +123,14 @@ def due_customer(request, pk):
             customer = customer_data.get(id = pk).customer_account
         except Customer.DoesNotExist:
             error_message = CUSTOMER_NOT_FOUND.format(pk)
-            not_found_exception(error_message = error_message)
+            return not_found_exception(error_message = error_message)
         
         customer_due = customer.due
         return JsonResponse({
             'customer_name': customer.customer_name.first_name + ' ' + customer.customer_name.last_name,
             'due': customer_due}, status=status.HTTP_200_OK)
     
-    return JsonResponse({
-    'message': "Something went wrong"
-    }, status=status.HTTP_400_BAD_REQUEST)
+    return internal_server_error()
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -152,9 +142,8 @@ def customer_detail(request, pk):
         try:
             customer = Customer.objects.get(id=pk)
         except:
-            return JsonResponse({
-                'message': "Customer Not Found"
-            }, status=status.HTTP_400_BAD_REQUEST)
+            error_message = CUSTOMER_NOT_FOUND.format(pk)
+            return not_found_exception(error_message = error_message)
 
         customer_detail = customer
         detail_serializer = CustomerSerializerGET(customer_detail)
@@ -197,6 +186,4 @@ def customer_detail(request, pk):
         'due_payments' : due_payment
         }, status=status.HTTP_200_OK)
 
-    return JsonResponse({
-        'message': "Something Went Wrong"
-    }, status=status.HTTP_400_BAD_REQUEST)
+    return internal_server_error()
