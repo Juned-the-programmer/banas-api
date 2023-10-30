@@ -4,7 +4,7 @@ import uuid
 
 # Create your models here.
 class CustomerBill(models.Model):
-    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True)
+    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True, related_name="customer_bill")
     from_date = models.CharField(max_length=20)
     to_date = models.CharField(max_length=20)
     coolers = models.IntegerField(default=0, null=True, blank=True)

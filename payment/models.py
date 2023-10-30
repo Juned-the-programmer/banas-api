@@ -4,7 +4,7 @@ import uuid
 
 # Create your models here.
 class CustomerPayment(models.Model):
-    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True)
+    customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True, related_name="customer_payment")
     pending_amount = models.IntegerField(null=True, blank=True)
     paid_amount = models.IntegerField()
     rounf_off_amount = models.IntegerField(default=0, null=True, blank=True)

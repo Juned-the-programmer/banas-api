@@ -140,7 +140,8 @@ def customer_detail(request, pk):
 
     if request.method == 'GET':
         try:
-            customer = Customer.objects.get(id=pk)
+            customer_data = customer_cached_data()
+            customer = customer_data.get(id = pk)
         except:
             error_message = CUSTOMER_NOT_FOUND.format(pk)
             return not_found_exception(error_message = error_message)
@@ -148,23 +149,23 @@ def customer_detail(request, pk):
         customer_detail = customer
         detail_serializer = CustomerSerializerGET(customer_detail)
 
-        customer_bills = CustomerBill.objects.filter(customer_name=customer.id)
+        customer_bills = customer.customer_bill.all()
         bill_serializer = DetailBillSerializer(customer_bills, many=True)
 
-        customer_daily_entry = DailyEntry.objects.filter(date_added__gte=first_day_of_month).filter(customer=customer.id)
+        customer_daily_entry = customer.customer_daily_entry.filter(date_added__gte=first_day_of_month).filter(customer=customer.id)
         daily_entry_serializer = DialyEntrySerializerGETDashboard(customer_daily_entry, many=True)
 
-        customer_daily_entry_total = DailyEntry.objects.filter(date_added__gte=first_day_of_month).filter(
+        customer_daily_entry_total = customer.customer_daily_entry.filter(date_added__gte=first_day_of_month).filter(
         customer=customer.id).aggregate(Sum("cooler"))
         total_coolers = customer_daily_entry_total['cooler__sum']
 
-        customer_payment = CustomerPayment.objects.filter(customer_name=pk)
+        customer_payment = customer.customer_payment.filter(customer_name=pk)
         payment_serializer = CustomerPaymentSerializerGET(customer_payment,many=True)
 
-        total_customer_payment = CustomerPayment.objects.filter(customer_name=pk).aggregate(Sum("paid_amount"))
+        total_customer_payment = customer.customer_payment.filter(customer_name=pk).aggregate(Sum("paid_amount"))
         total_payment = total_customer_payment['paid_amount__sum']
 
-        due_payment = CustomerAccount.objects.get(customer_name=pk).due
+        due_payment = customer.customer_account.due
 
         if total_payment is None:
             total_payment = 0

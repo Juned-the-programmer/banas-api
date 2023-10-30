@@ -4,7 +4,7 @@ import uuid
 
 # Create your models here.
 class DailyEntry(models.Model):
-    customer = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True)
+    customer = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True, related_name="customer_daily_entry")
     cooler = models.IntegerField()
     date_added = models.DateTimeField(auto_now_add=True)
     addedby = models.CharField(max_length=100,null=True, blank=True)
