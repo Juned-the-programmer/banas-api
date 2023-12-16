@@ -12,7 +12,11 @@ https://docs.djangoproject.com/en/4.0/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
+import os
+from dotenv import load_dotenv
 
+#load Env
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -208,11 +212,11 @@ SIMPLE_JWT = {
 }
 
 #Email Setting
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
+EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'example@gmail.com'
-EMAIL_HOST_PASSWORD = '**************'
+EMAIL_HOST_USER = os.getenv('EMAIL_USERNAME')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_APP_PASSWORD')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False   
-DEFAULT_FROM_EMAIL = 'example@gmail.com'
+DEFAULT_FROM_EMAIL = os.getenv('EMAIL_USERNAME')

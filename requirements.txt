@@ -9,6 +9,7 @@ click-repl==0.3.0
 defusedxml==0.7.1
 diff-match-patch==20230430
 Django==4.2
+django-appconf==1.0.6
 django-cors-headers==4.3.1
 django-cron==0.6.0
 django-import-export==3.3.4
@@ -24,6 +25,7 @@ openpyxl==3.1.2
 prompt-toolkit==3.0.43
 PyJWT==2.8.0
 python-dateutil==2.8.2
+python-dotenv==1.0.0
 pytz==2023.3.post1
 PyYAML==6.0.1
 redis==5.0.1
