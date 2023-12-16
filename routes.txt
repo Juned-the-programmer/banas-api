@@ -12,3 +12,10 @@ For Celery Tasks.
 1) Activate VirtualEnv 
 2) redis-server
 3) celery -A banas worker -l info
+
+
+
+
+For Celery beat task : https://python.plainenglish.io/send-async-emails-in-your-django-app-with-celery-and-redis-137e0c454a0c [ We can use this for creating bills ]
+
+For Celery Mail one : https://realpython.com/asynchronous-tasks-with-django-and-celery/

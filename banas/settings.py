@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'dailyentry.apps.DailyentryConfig',
     'route.apps.RouteConfig',
     'payment.apps.PaymentConfig',
+    'django_celery_results',
     'rest_framework',
     'corsheaders',
     'import_export',
@@ -121,7 +122,11 @@ CACHES = {
 }
 
 CELERY_BROKER_URL = "redis://localhost:6379"
-CELERY_RESULT_BACKEND = "redis://localhost:6379"
+CELERY_ACCEPT_CONTENT = {'application/json'}
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'Asia/Kolkata'
+CELERY_RESULT_BACKEND = 'django-db'
 
 # DATABASES = {
 #         'default': {
