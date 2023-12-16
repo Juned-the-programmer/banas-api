@@ -14,13 +14,13 @@ class Customer(models.Model):
         message="Invalid phone number"
     )
     email_validator = EmailValidator(
-        message="Enter Valid Email address"
+        message = "Enter Valid Email Address"
     )
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
     phone_no = models.CharField(max_length=10, validators=[phone_regex], null=True, blank=True)
     route = models.ForeignKey(Route, on_delete=models.CASCADE , null=True, blank=True , related_name="customer_route")
-    email = models.EmailField(validators=[email_validator], null=True, blank=True)
+    email = models.EmailField(validators=[email_validator],null=True, blank=True)
     rate = models.IntegerField()
     date_added = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now_add=True)

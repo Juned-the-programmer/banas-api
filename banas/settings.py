@@ -49,7 +49,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'import_export',
     'django_cron',
-    'exception',
+    'exception'
 ]
 
 MIDDLEWARE = [
@@ -79,7 +79,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [BASE_DIR / "templates"],
-        'APP_DIRS': True,
+        'APP_DIRS': True,   
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -116,6 +116,8 @@ CACHES = {
     }
 }
 
+CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_RESULT_BACKEND = "redis://localhost:6379"
 
 # DATABASES = {
 #         'default': {
@@ -206,11 +208,11 @@ SIMPLE_JWT = {
 }
 
 #Email Setting
-
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'thespoiler20@gmail.com'
-EMAIL_HOST_PASSWORD = 'jnmitnshslylzhaw'
+EMAIL_HOST_USER = 'example@gmail.com'
+EMAIL_HOST_PASSWORD = '**************'
 EMAIL_USE_TLS = True
-DEFAULT_FROM_EMAIL = 'thespoiler20@gmail.com'
+EMAIL_USE_SSL = False   
+DEFAULT_FROM_EMAIL = 'example@gmail.com'

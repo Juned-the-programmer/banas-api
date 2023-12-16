@@ -4,3 +4,11 @@ https://medium.com/django-rest/django-rest-framework-change-password-and-update-
 
 For Password Reset (Send Email and rest)
 
+
+
+
+For Celery Tasks. 
+
+1) Activate VirtualEnv 
+2) redis-server
+3) celery -A banas worker -l info
