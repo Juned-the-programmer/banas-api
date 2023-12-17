@@ -8,9 +8,10 @@ from django.db.models import Sum
 import datetime
 from datetime import time, timedelta, date
 
-from .models import DailyEntry
+from .models import DailyEntry, pending_daily_entry
 from customer.models import Customer, CustomerAccount
 from .serializer import *
+from banas.cache_conf import *
 
 # Create your views here.
 
@@ -159,3 +160,43 @@ def daily_entry_bulk(request):
             return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST, safe=False)
                         
     return JsonResponse({"message" : "Something went wrong, Please try again later ! "}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def verify_pending_daily_entry(request):
+    if request.method == 'POST':
+        serializers = DailyEntry_Verify_Result_Serializer(data=request.data, many=True)
+        print(serializers)
+        if serializers.is_valid():
+            addedby = request.user.username
+            daily_entries = []
+            customer_data = customer_cached_data()
+
+            for data_item in serializers.initial_data:
+                customer_id = data_item.get("customer")
+                cooler = data_item.get("cooler")
+                pending_id = data_item.get("pending_id")
+
+                customer_pending_daily_entry = pending_daily_entry.objects.get(id=pending_id).delete()
+
+                customer_name = customer_data.get(id=cutomer_id)
+
+                daily_entry_data = DailyEntry(
+                    customer= customer_name,
+                    cooler= cooler,
+                    addedby= f'{customer_name.first_name} {customer_name.last_name}'
+                )
+                daily_entries.append(daily_entry_data)
+
+            DailyEntry.objects.bulk_create(daily_entries)
+            return JsonResponse({"message" : "Verified Successfully ! "}, status=status.HTTP_200_OK, safe=False)
+        else:
+            return JsonResponse({"message" : "Something went wrong, Please try again later ! "}, status=    status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def list_pending_daily_entry(request):
+    if request.method == 'GET':
+        daily_entry_pending = pending_daily_entry.objects.all()
+        serializers = Pending_Daily_Entry_Serializer(daily_entry_pending, many=True)
+        return JsonResponse(serializers.data, status=status.HTTP_200_OK, safe=False)
