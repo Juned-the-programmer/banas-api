@@ -40,3 +40,4 @@ class DailyEntry_Verify_Result_Serializer(serializers.Serializer):
   pendng_id = models.CharField(max_length=50, null=True, blank=True)
   customer = models.CharField(max_length=50, null=True, blank=True)
   cooler = models.IntegerField(default=0, null=True, blank=True)
+  date_added = models.DateTimeField(null=True, blank=True)

@@ -7,6 +7,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from django.db.models import Sum
+from django.core.cache import cache
 
 from .models import *
 from .serializer import *
@@ -28,6 +29,8 @@ class CustomerListView(generics.ListCreateAPIView):
         method = self.request.method
         if method == 'POST':
             return CustomerSerializer
+            cache.delete("Customer")
+            customer_cached_data()
         else:
             return CustomerSerializerList
 

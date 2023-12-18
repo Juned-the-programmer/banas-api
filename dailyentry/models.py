@@ -6,7 +6,7 @@ import uuid
 class DailyEntry(models.Model):
     customer = models.ForeignKey(Customer, on_delete = models.SET_NULL, null=True, blank=True, related_name="customer_daily_entry")
     cooler = models.IntegerField()
-    date_added = models.DateTimeField(auto_now_add=True)
+    date_added = models.DateTimeField(null=True, blank=True)
     addedby = models.CharField(max_length=100,null=True, blank=True)
     updatedby = models.CharField(max_length=100,null=True, blank=True)
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
@@ -37,4 +37,3 @@ class pending_daily_entry(models.Model):
 
     def __str__(self):
         return str(self.customer)
-    

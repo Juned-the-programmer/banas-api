@@ -1,14 +1,14 @@
 from celery import shared_task
 import qrcode
 from .models import customer_qr_code
-from io import BytesIO
-from django.core.files import File
-from django.core.files.base import ContentFile
+from customer.models import Customer
+from django.conf import settings
+import os
 
 @shared_task
-def generate_customer_qr_code_for_daily_entry_async(customer):
-    customer_detail = Customer.objects.get(first_name=customer.first_name, last_name=customer.last_name)
-    redirect_url = ""
+def generate_customer_qr_code_for_daily_entry_async(customer_id):
+    customer_detail = Customer.objects.get(id=customer_id)
+    redirect_url = "https://5ed5-49-205-192-126.ngrok-free.app/api/dailyentry/customer/dailyentry/"
 
     # Create a QR code instance
     qr = qrcode.QRCode(
@@ -20,14 +20,22 @@ def generate_customer_qr_code_for_daily_entry_async(customer):
 
     # Adding data
     qr.add_data(redirect_url)
+    qr.add_data(customer_detail.id)
     qr.make(fit=True)
 
     # Create an image from the QR code
     img = qr.make_image(fill_color="black", back_color="white")
 
+    # Save to Media Folder
+    img_dir = os.path.join(settings.MEDIA_ROOT, 'qr_codes')
+    os.makedirs(img_dir, exist_ok=True)
+
+    # Define the complete path to save the image
+    file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
+    img_path = os.path.join(img_dir, file_name)
+
+    # Save the QR code image
+    img.save(img_path)
+
     # Save the image to the model
-    file_name = f"{customer.first_name}_{customer.last_name}_qr_code.png"
-    customer_qr_code.objects.create(customer=customer_detail)
-    image_io = BytesIO()
-    img.save(image_io, format='PNG')
-    customer_qr_code.image.save(file_name, ContentFile(image_io.getvalue()), save=True)
+    customer_qr_code.objects.create(customer = customer_detail, qrcode=f'qr_codes/{file_name}')

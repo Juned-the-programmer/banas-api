@@ -7,6 +7,7 @@ from rest_framework.response import Response
 from django.db.models import Sum
 import datetime
 from datetime import time, timedelta, date
+from django.utils import timezone
 
 from .models import DailyEntry, pending_daily_entry, customer_qr_code, pending_daily_entry
 from customer.models import Customer, CustomerAccount
@@ -29,10 +30,13 @@ def daily_entry(request):
 
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
+            serializer.save(date_added=timezone.now())
             print("Serializer Saved") 
 
-        return JsonResponse(
-            serializer.data , status=status.HTTP_201_CREATED)
+            return JsonResponse(
+                serializer.data , status=status.HTTP_201_CREATED)
+        else:
+            return JsonResponse({"error_message" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
     
     return JsonResponse({
         "message" : serializer.errors
@@ -150,7 +154,8 @@ def daily_entry_bulk(request):
                 daily_entry_data = DailyEntry(
                     customer= customer_id,
                     cooler= cooler,
-                    addedby=addedby
+                    addedby=addedby,
+                    date_added=timezone.now()
                 )
                 daily_entries.append(daily_entry_data)
                 
@@ -166,7 +171,6 @@ def daily_entry_bulk(request):
 def verify_pending_daily_entry(request):
     if request.method == 'POST':
         serializers = DailyEntry_Verify_Result_Serializer(data=request.data, many=True)
-        print(serializers)
         if serializers.is_valid():
             addedby = request.user.username
             daily_entries = []
@@ -176,19 +180,22 @@ def verify_pending_daily_entry(request):
                 customer_id = data_item.get("customer")
                 cooler = data_item.get("cooler")
                 pending_id = data_item.get("pending_id")
+                date_added = data_item.get("date_added")
 
-                customer_pending_daily_entry = pending_daily_entry.objects.get(id=pending_id).delete()
+                # customer_pending_daily_entry = pending_daily_entry.objects.get(id=pending_id).delete()
 
-                customer_name = customer_data.get(id=cutomer_id)
+                customer_name = customer_data.get(id=customer_id)
 
                 daily_entry_data = DailyEntry(
                     customer= customer_name,
                     cooler= cooler,
-                    addedby= f'{customer_name.first_name} {customer_name.last_name}'
+                    addedby= f'{customer_name.first_name} {customer_name.last_name}',
+                    date_added=date_added
                 )
                 daily_entries.append(daily_entry_data)
 
-            DailyEntry.objects.bulk_create(daily_entries)
+            batch_size = len(daily_entries)
+            DailyEntry.objects.bulk_create(daily_entries, batch_size=batch_size)
             return JsonResponse({"message" : "Verified Successfully ! "}, status=status.HTTP_200_OK, safe=False)
         else:
             return JsonResponse({"message" : "Something went wrong, Please try again later ! "}, status=    status.HTTP_400_BAD_REQUEST)
@@ -213,4 +220,11 @@ def customer_qr_daily_entry(request,pk):
             )
             pending_daily_entry_customer.save()
 
-    return render(request, 'dailyentry/dailyentry.html')
+    current_date_time = datetime.datetime.now().time()
+    target_start_date_time = time(9,0,0)
+    target_end_date_time = time(18,0,0)
+
+    if (current_date_time > target_start_date_time and current_date_time < target_end_date_time):
+        return render(request, 'dailyentry/dailyentry.html')
+    else:
+        return render(request, 'dailyentry/dailyentrytime.html')

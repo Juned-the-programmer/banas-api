@@ -55,7 +55,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'import_export',
     'django_cron',
-    'exception'
+    'exception',
+    'bulk_signals'
 ]
 
 MIDDLEWARE = [
