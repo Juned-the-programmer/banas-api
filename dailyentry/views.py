@@ -8,7 +8,7 @@ from django.db.models import Sum
 import datetime
 from datetime import time, timedelta, date
 
-from .models import DailyEntry, pending_daily_entry
+from .models import DailyEntry, pending_daily_entry, customer_qr_code, pending_daily_entry
 from customer.models import Customer, CustomerAccount
 from .serializer import *
 from banas.cache_conf import *
@@ -200,3 +200,17 @@ def list_pending_daily_entry(request):
         daily_entry_pending = pending_daily_entry.objects.all()
         serializers = Pending_Daily_Entry_Serializer(daily_entry_pending, many=True)
         return JsonResponse(serializers.data, status=status.HTTP_200_OK, safe=False)
+
+def customer_qr_daily_entry(request,pk):
+    if request.method == 'POST':
+
+        qr_code_pin = customer_qr_code.objects.get(customer=pk).qrcode_pin
+
+        if (qr_code_pin == int(request.POST['pin'])):
+            pending_daily_entry_customer = pending_daily_entry(
+                customer = Customer.objects.get(id=pk),
+                coolers = int(request.POST['coolers'])
+            )
+            pending_daily_entry_customer.save()
+
+    return render(request, 'dailyentry/dailyentry.html')

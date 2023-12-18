@@ -56,7 +56,7 @@ def customer_daily_entry(sender, instance, created, **kwargs):
 def customer_daily_entry_QR(sender, instance, created, **kwargs):
     if created:
         customer_detail = Customer.objects.get(first_name=instance.first_name, last_name=instance.last_name)
-        redirect_url = ""
+        redirect_url = "https://5ed5-49-205-192-126.ngrok-free.app/api/dailyentry/customer/dailyentry/"
 
         # Create a QR code instance
         qr = qrcode.QRCode(

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Form</title>
+</head>
+<body>
+
+    <h2>Simple Form</h2>
+
+    <form method="POST">
+        {% csrf_token %}
+        <!-- Text input field -->
+        <label for="inputField1">Coolers : </label>
+        <input type="text" id="coolers" name="coolers" required>
+        <br>
+
+        <!-- Another text input field -->
+        <label for="inputField2">Pin : </label>
+        <input type="text" id="pin" name="pin" required>
+        <br>
+
+        <!-- Submit button -->
+        <input type="submit" name="Add cooler" value="submit">
+    </form>
+
+</body>
+</html>
