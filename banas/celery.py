@@ -1,6 +1,7 @@
 from __future__ import absolute_import, unicode_literals
 import os
 from celery import Celery
+from celery.schedules import crontab
 
 # Set the default Django settings module for the 'celery' program.
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'banas.settings')
@@ -17,3 +18,12 @@ app.conf.update(timezone = 'Asia/Kolkata')
 
 # Auto-discover tasks in all installed apps.
 app.autodiscover_tasks()
+
+# celery beats tasks
+app.conf.beat_schedule = {
+    'send-ad-mail-every-day': {
+        'task': 'dailyentry.task.send_ad_mails',
+        'schedule': crontab(hour=15, minute=56),
+        'args' : ("I am a Nigerian Prince.",)
+    }
+}

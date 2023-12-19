@@ -39,3 +39,10 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
 
     # Save the image to the model
     customer_qr_code.objects.create(customer = customer_detail, qrcode=f'qr_codes/{file_name}')
+
+@shared_task
+def update_customer_daily_entry_to_monthly_table_bulk(daily_entries):
+    for entry in daily_entries:
+        customer_detail = customer_daily_entry_monthly.objects.get(customer=entry.customer.id)
+        customer_detail.coolers += int(entry.cooler)
+        customer_detail.save()
