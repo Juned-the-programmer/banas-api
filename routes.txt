@@ -12,7 +12,7 @@ For Celery Tasks.
 1) Activate VirtualEnv 
 2) redis-server
 3) celery -A banas worker -l info
-
+4) celery -A banas beat -l INFO
 
 
 

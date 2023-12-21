@@ -11,6 +11,12 @@ def update_customer_daily_entry(sender, instance, created, **kwargs):
         customer_detail.coolers += int(instance.cooler)
         customer_detail.save()
 
+        # Update today daily Entry dashboard
+        dashboard_detail = DailyEntry_dashboard.objects.first()
+        dashboard_detail.customer_count += 1 
+        dashboard_detail.coolers_count += int(instance.cooler)
+        dashboard_detail.save()
+
 @receiver(signals.post_bulk_create, sender=DailyEntry)
 def update_customer_daily_entry_bulk(sender, **kwargs):
     daily_entries = kwargs["objects"]

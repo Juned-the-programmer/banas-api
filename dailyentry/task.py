@@ -1,6 +1,6 @@
 from celery import shared_task
 import qrcode
-from .models import customer_qr_code
+from .models import customer_qr_code, DailyEntry_dashboard
 from customer.models import Customer
 from django.conf import settings
 import os
@@ -46,3 +46,16 @@ def update_customer_daily_entry_to_monthly_table_bulk(daily_entries):
         customer_detail = customer_daily_entry_monthly.objects.get(customer=entry.customer.id)
         customer_detail.coolers += int(entry.cooler)
         customer_detail.save()
+
+        # Update Dashboard counts
+        dailyentry_dashboard = DailyEntry_dashboard.objects.first()
+        dailyentry_dashboard.customer_count += 1
+        dailyentry_dashboard.coolers_count += int(entry.cooler)
+        dailyentry_dashboard.save()
+
+@shared_task
+def reset_dailentry_dashboard_values():
+    daily_entry_dashboard = DailyEntry_dashboard.objects.first()
+    daily_entry_dashboard.customer_count = 0
+    daily_entry_dashboard.coolers_count = 0
+    daily_entry_dashboard.save()

@@ -9,7 +9,7 @@ import datetime
 from datetime import time, timedelta, date
 from django.utils import timezone
 
-from .models import DailyEntry, pending_daily_entry, customer_qr_code, pending_daily_entry
+from .models import DailyEntry, pending_daily_entry, customer_qr_code, pending_daily_entry, DailyEntry_dashboard
 from customer.models import Customer, CustomerAccount
 from .serializer import *
 from banas.cache_conf import *
@@ -46,28 +46,14 @@ def daily_entry(request):
 @permission_classes([IsAdminUser, IsAuthenticated])
 def daily_entry_count(request):
     if request.method == 'GET':
-        now = date.today()
-        month = now.month
-        year = now.year
-        day = now.day
+        dashboard_detail = DailyEntry_dashboard.objects.first()
 
-        customer_count = DailyEntry.objects.distinct().filter(date_added__day=day , date_added__month=month, date_added__year=year).count()
-
-        coolers = DailyEntry.objects.distinct().filter(date_added__day=day, date_added__month=month, date_added__year=year).aggregate(Sum('cooler'))
-        coolers_total = coolers['cooler__sum']
-
-        today_coolers = DailyEntry.objects.filter(date_added__day=day, date_added__month=month, date_added__year=year)
-        today_coolers_serializer = DailyEntrySerializerGET(today_coolers, many=True)
-
-        if coolers_total is None:
-            total = 0
-        else:
-            total = coolers_total
+        today_coolers_total = dashboard_detail.coolers_count
+        today_customer_count = dashboard_detail.customer_count
 
         return JsonResponse({
-        'today_coolers': today_coolers_serializer.data,
-        'today_customer_count': customer_count,
-        'today_coolers_total': total}, status=status.HTTP_200_OK)
+        'today_customer_count': today_customer_count,
+        'today_coolers_total': today_coolers_total}, status=status.HTTP_200_OK)
 
     return JsonResponse({
         'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)

@@ -21,9 +21,8 @@ app.autodiscover_tasks()
 
 # celery beats tasks
 app.conf.beat_schedule = {
-    'send-ad-mail-every-day': {
-        'task': 'dailyentry.task.send_ad_mails',
-        'schedule': crontab(hour=15, minute=56),
-        'args' : ("I am a Nigerian Prince.",)
+    'reset_dailyentry_dashboard_values': {
+        'task': 'dailyentry.task.reset_dailentry_dashboard_values',
+        'schedule': crontab(hour=22,minute=34)
     }
 }

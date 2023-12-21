@@ -14,6 +14,13 @@ class DailyEntry(models.Model):
     def __str__(self):
         return str(self.customer)
 
+class DailyEntry_dashboard(models.Model):
+    customer_count = models.IntegerField(default=0, null=True, blank=True)
+    coolers_count = models.IntegerField(default=0, null=True, blank=True)
+
+    def __str__(self):
+        return str(self.customer_count)
+    
 class customer_daily_entry_monthly(models.Model):
     customer = models.OneToOneField(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     coolers = models.IntegerField(default=0)
