@@ -9,7 +9,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from customer.models import Customer, CustomerAccount
-from dailyentry.models import DailyEntry
+from dailyentry.models import DailyEntry, customer_daily_entry_monthly
 from dailyentry.serializer import *
   
 from .models import CustomerBill
@@ -74,37 +74,34 @@ def generate_bill(request, pk):
     # Last day of month
     next_month = today_date.replace(day=28) + timedelta(days=4)
     last_date = next_month - timedelta(days=next_month.day)
-    # print(last_date.date())
 
     # First day of month
     first_date = datetime.datetime.today().replace(day=1).date()
     
-    daily_entry = DailyEntry.objects.filter(customer=pk).filter(date_added__gte=first_date, date_added__lte=last_date).aggregate(Sum('cooler'))
-    coolers_total = daily_entry['cooler__sum']
+    customer_daily_entry = customer_daily_entry_monthly.objects.get(customer=pk)
+
+    coolers_total = customer_daily_entry.coolers
     
-    customer_account = CustomerAccount.objects.get(customer_name=pk)
-    
-    if coolers_total is None:
-      total = 0
-    else:
-      total = coolers_total
-      
+    customer_account = CustomerAccount.objects.get(customer_name=pk)    
     
     CustomerBill.objects.create(
       customer_name=customer,
       from_date=first_date,
       to_date=last_date.date(),
-      coolers=total,
+      coolers=coolers_total,
       Rate=int(customer.rate),
-      Amount=int(total) * int(customer.rate),
+      Amount=int(coolers_total) * int(customer.rate),
       Pending_amount=int(customer_account.due),
       Advanced_amount=int(0),
-      Total=int(total) * int(customer.rate) + int(customer_account.due),
+      Total=int(coolers_total) * int(customer.rate) + int(customer_account.due),
       addedby=request.user.username
     )
     
-    customer_account.due = int(total) * int(customer.rate) + int(customer_account.due)
+    customer_account.due = int(coolers_total) * int(customer.rate) + int(customer_account.due)
     customer_account.save()
+
+    customer_daily_entry.coolers = 0
+    customer_daily_entry.save()
     
     return JsonResponse({"message" : "Customer Bill Generated"}, status=status.HTTP_200_OK)
   

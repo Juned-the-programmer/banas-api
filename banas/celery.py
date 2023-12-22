@@ -21,8 +21,12 @@ app.autodiscover_tasks()
 
 # celery beats tasks
 app.conf.beat_schedule = {
+    'generate_bill_on_monthly' : {
+        'task' : 'bills.task.run_monthly_task',
+        'schedule' : crontab(hour=23, minute=00)
+    },
     'reset_dailyentry_dashboard_values': {
         'task': 'dailyentry.task.reset_dailentry_dashboard_values',
-        'schedule': crontab(hour=22,minute=34)
+        'schedule': crontab(hour=0,minute=0),
     }
 }
