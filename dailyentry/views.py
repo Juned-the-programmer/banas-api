@@ -168,7 +168,7 @@ def verify_pending_daily_entry(request):
                 pending_id = data_item.get("pending_id")
                 date_added = data_item.get("date_added")
 
-                # customer_pending_daily_entry = pending_daily_entry.objects.get(id=pending_id).delete()
+                customer_pending_daily_entry = pending_daily_entry.objects.get(id=pending_id).delete()
 
                 customer_name = customer_data.get(id=customer_id)
 
