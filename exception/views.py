@@ -4,12 +4,17 @@ from rest_framework import status
 from .error_constant import *
 
 # Create your views here.
-def not_found_exception(error_message):
+def customer_not_found_exception(customer_id):
     return JsonResponse({
-        'error' : error_message
+        'error' : CUSTOMER_NOT_FOUND.format(customer_id)
     }, status = NOT_FOUND)
 
 def internal_server_error():
     return JsonResponse({
         'error' : INTERAL_SERVER_ERROR_MESSAGE
     }, status = INTERNAL_SERVER_ERROR)
+
+def serializer_errors(error):
+    return JsonResponse({
+        'error' : error
+    }, status = BAD_REQUEST)

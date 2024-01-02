@@ -13,7 +13,7 @@ from .models import *
 from .serializer import *
 from bills.models import CustomerBill
 from bills.serializer import *
-from dailyentry.models import DailyEntry
+from dailyentry.models import DailyEntry, customer_daily_entry_monthly
 from dailyentry.serializer import *
 from payment.models import CustomerPayment
 from payment.serializer import *
@@ -64,32 +64,21 @@ def Customer_detail_view_update(request , pk):
         customer_data = customer_cached_data()
         customer = customer_data.get(id=pk)
     except Customer.DoesNotExist:
-        return JsonResponse({
-            "message" : "Customer Doesn't Exists ! "}, 
-            status=status.HTTP_404_NOT_FOUND)
+        return customer_not_found_exception(pk)
             
     if request.method == 'GET':
-        try:
-            serializer = CustomerSerializer(customer)
-            return JsonResponse(serializer.data , status=status.HTTP_200_OK)
-        
-        except Customer.DoesNotExist:
-            return JsonResponse({
-            "message" : serializer.errors
-            }, status = status.HTTP_400_BAD_REQUEST) 
+        serializer = CustomerSerializer(customer)
+        return JsonResponse(serializer.data , status=status.HTTP_200_OK)
     
     if request.method == 'PUT':
-        try:
-            serializer = CustomerSerializer(customer, data=request.data)
-            if serializer.is_valid():
-                serializer.save(updatedby=request.user.username)
-                cache.delete("Customer")
-                customer_cached_data()
-                return JsonResponse(serializer.data, status=status.HTTP_200_OK)
-                
-        except Customer.DoesNotExist:
-            error_message = CUSTOMER_NOT_FOUND.format(pk)
-            return not_found_exception(error_message = error_message)
+        serializer = CustomerSerializer(customer, data=request.data)
+        if serializer.is_valid():
+            serializer.save(updatedby=request.user.username)
+            cache.delete("Customer")
+            customer_cached_data()
+            return JsonResponse(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return serializer_errors(serializer.errors)
             
     return internal_server_error()
 
@@ -101,8 +90,7 @@ def customer_account(request, pk):
         customer_account = customer_data.CustomerAccount
         customer = customer_account.get(customer_name = pk)
     except Customer.DoesNotExist:
-        error_message = CUSTOMER_NOT_FOUND.format(pk)
-        return not_found_exception(error_message = error_message)
+        return customer_not_found_exception(pk)
 
     if request.method == 'PUT':
         serializer = CustomerAccountSerializer(customer, data=request.data)
@@ -111,9 +99,8 @@ def customer_account(request, pk):
             return JsonResponse(
             serializer.data
             , status=status.HTTP_201_CREATED)
-        
-        return JsonResponse({
-            'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return serializer_errors(serializer.errors)
         
     return internal_server_error()
 
@@ -125,8 +112,7 @@ def due_customer(request, pk):
             customer_data = customer_cached_data()
             customer = customer_data.get(id = pk).customer_account
         except Customer.DoesNotExist:
-            error_message = CUSTOMER_NOT_FOUND.format(pk)
-            return not_found_exception(error_message = error_message)
+            return customer_not_found_exception(pk)
         
         customer_due = customer.due
         return JsonResponse({
@@ -146,8 +132,7 @@ def customer_detail(request, pk):
             customer_data = customer_cached_data()
             customer = customer_data.get(id = pk)
         except:
-            error_message = CUSTOMER_NOT_FOUND.format(pk)
-            return not_found_exception(error_message = error_message)
+            return customer_not_found_exception(pk)
 
         customer_detail = customer
         detail_serializer = CustomerSerializerGET(customer_detail)
@@ -158,9 +143,7 @@ def customer_detail(request, pk):
         customer_daily_entry = customer.customer_daily_entry.filter(date_added__gte=first_day_of_month).filter(customer=customer.id)
         daily_entry_serializer = DialyEntrySerializerGETDashboard(customer_daily_entry, many=True)
 
-        customer_daily_entry_total = customer.customer_daily_entry.filter(date_added__gte=first_day_of_month).filter(
-        customer=customer.id).aggregate(Sum("cooler"))
-        total_coolers = customer_daily_entry_total['cooler__sum']
+        customer_daily_entry_total = customer_daily_entry_monthly.objects.get(customer=customer.id).coolers
 
         customer_payment = customer.customer_payment.filter(customer_name=pk)
         payment_serializer = CustomerPaymentSerializerGET(customer_payment,many=True)
@@ -175,16 +158,11 @@ def customer_detail(request, pk):
         else:
             total_payment = total_payment
 
-        if total_coolers is None:
-            total = 0
-        else:
-            total = total_coolers
-
         return JsonResponse({
         'customer_detail': detail_serializer.data,
         'bills': bill_serializer.data,
         'daily_entry': daily_entry_serializer.data,
-        'total_coolers': total,
+        'total_coolers': customer_daily_entry_total,
         'payments' : payment_serializer.data,
         'total_payments' : total_payment,
         'due_payments' : due_payment
