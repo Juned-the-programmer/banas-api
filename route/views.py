@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from .serializers import *
 from django.http import JsonResponse
 from rest_framework import status
+from exception.views import *
 
 # Create your views here.
 @api_view(['GET' , 'POST'])
@@ -20,7 +21,7 @@ def RouteListView(request):
       if 'route_name' in errors:
         return JsonResponse({"error_message" : "Route already Exists ! "} , status=status.HTTP_400_BAD_REQUEST)
       else:
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return serializer_errors(serializer.errors)
 
   if request.method == 'GET':
     route = Route.objects.all()
@@ -28,9 +29,7 @@ def RouteListView(request):
     
     return JsonResponse(serializer.data , status=status.HTTP_200_OK , safe=False)
 
-  return JsonResponse({
-    'message' : "Something went wrong, Please try again ! "
-  }, status=status.HTTP_400_BAD_REQUEST)
+  return internal_server_error()
 
 @api_view(['GET' , 'PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -39,21 +38,12 @@ def list_update_route(request, pk):
     try:
       route = Route.objects.get(id=pk)
     except Route.DoesNotExist:
-      return JsonResponse({
-        'message' : "Route is not valid, Check once again ! "
-      }, status=status.HTTP_404_NOT_FOUND)
+      return route_not_found_exception(pk)
 
     route_serializer = RouteSerializerGET(route)
     return JsonResponse(route_serializer.data)
     
   if request.method == 'PUT':
-    try:
-      route = Route.objects.get(id=pk)
-    except Route.DoesNotExist:
-      return JsonResponse({
-        'message' : "Route Doesn't Exists !"
-      }, status=status.HTTP_400_BAD_REQUEST)
-      
     serializer = RouteSerializer(route , data=request.data)
     if serializer.is_valid():
       serializer.save(updatedby = request.user.username)
@@ -63,8 +53,6 @@ def list_update_route(request, pk):
       if 'route_name' in errors:
         return JsonResponse({"error_message" : "Route already Exists ! "} , status=status.HTTP_400_BAD_REQUEST)
       else:
-        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return serializer_errors(serializer.errors)
 
-  return JsonResponse({
-    'message' : "Something went wrong, Please try again later"
-  }, status = status.HTTP_400_BAD_REQUEST)
+  return internal_server_error()

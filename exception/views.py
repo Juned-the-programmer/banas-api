@@ -9,6 +9,11 @@ def customer_not_found_exception(customer_id):
         'error' : CUSTOMER_NOT_FOUND.format(customer_id)
     }, status = NOT_FOUND)
 
+def route_not_found_exception(route_id):
+    return JsonResponse({
+        'error' : ROUTE_NOT_FOUND.format(route_id)
+    }, status=NOT_FOUND)
+
 def internal_server_error():
     return JsonResponse({
         'error' : INTERAL_SERVER_ERROR_MESSAGE
