@@ -7,3 +7,4 @@ BAD_REQUEST = 400
 CUSTOMER_NOT_FOUND = "customer not found with ID : {0}"
 INTERAL_SERVER_ERROR_MESSAGE = "Something Went wrong, contact admin ! "
 ROUTE_NOT_FOUND = "Route not found with ID : {0}"
+ROUTE_ALREADY_EXISTS = "Route already Exists ! "

@@ -14,6 +14,11 @@ def route_not_found_exception(route_id):
         'error' : ROUTE_NOT_FOUND.format(route_id)
     }, status=NOT_FOUND)
 
+def route_already_exists():
+    return JsonResponse({
+        'error' : ROUTE_ALREADY_EXISTS
+    }, status=BAD_REQUEST)
+
 def internal_server_error():
     return JsonResponse({
         'error' : INTERAL_SERVER_ERROR_MESSAGE

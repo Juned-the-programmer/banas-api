@@ -19,7 +19,7 @@ def RouteListView(request):
     else:
       errors = serializer.errors
       if 'route_name' in errors:
-        return JsonResponse({"error_message" : "Route already Exists ! "} , status=status.HTTP_400_BAD_REQUEST)
+        return route_already_exists()
       else:
         return serializer_errors(serializer.errors)
 
@@ -51,7 +51,7 @@ def list_update_route(request, pk):
     else: 
       errors = serializer.errors
       if 'route_name' in errors:
-        return JsonResponse({"error_message" : "Route already Exists ! "} , status=status.HTTP_400_BAD_REQUEST)
+        return route_already_exists()
       else:
         return serializer_errors(serializer.errors)
 
