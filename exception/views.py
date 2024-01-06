@@ -28,3 +28,13 @@ def serializer_errors(error):
     return JsonResponse({
         'error' : error
     }, status = BAD_REQUEST)
+
+def daily_entry_not_found(daily_entry_id):
+    return JsonResponse({
+        'error' : DAILY_ENTRY_NOT_FOUND.format(daily_entry_id)
+    }, status = NOT_FOUND)
+
+def bill_not_found_exception(bill_id):
+    return JsonResponse({
+        'error' : BILL_NOT_FOUND.format(bill_id)
+    }, status = NOT_FOUND)

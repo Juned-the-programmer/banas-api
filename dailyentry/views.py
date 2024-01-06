@@ -13,6 +13,7 @@ from .models import DailyEntry, pending_daily_entry, customer_qr_code, pending_d
 from customer.models import Customer, CustomerAccount
 from .serializer import *
 from banas.cache_conf import *
+from exception.views import *
 
 # Create your views here.
 
@@ -31,16 +32,13 @@ def daily_entry(request):
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
             serializer.save(date_added=timezone.now())
-            print("Serializer Saved") 
 
             return JsonResponse(
                 serializer.data , status=status.HTTP_201_CREATED)
         else:
-            return JsonResponse({"error_message" : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return serializer_errors(serializer.errors)
     
-    return JsonResponse({
-        "message" : serializer.errors
-    }, status=status.HTTP_400_BAD_REQUEST)
+    return internal_server_error()
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -55,8 +53,7 @@ def daily_entry_count(request):
         'today_customer_count': today_customer_count,
         'today_coolers_total': today_coolers_total}, status=status.HTTP_200_OK)
 
-    return JsonResponse({
-        'error': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    return internal_server_error()
     
 @api_view(['GET', 'DELETE', 'PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -78,8 +75,7 @@ def view_delete_daily_entry(request, pk):
     try:
         dailyEntry = DailyEntry.objects.get(pk=pk)
     except DailyEntry.DoesNotExist:
-        return JsonResponse({
-        'message': 'Daily Entry Not Found !'}, status=status.HTTP_404_NOT_FOUND)
+        return daily_entry_not_found(pk)
 
     # Deleting daily Entry
     if request.method == 'DELETE':
@@ -105,8 +101,7 @@ def view_delete_daily_entry(request, pk):
                 return JsonResponse(
                 serializer.data , status=status.HTTP_201_CREATED)
 
-            return JsonResponse({
-            'message': serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+            return serializer_errors(serializer.errors)
         
         else:
             return JsonResponse({
@@ -148,9 +143,9 @@ def daily_entry_bulk(request):
             DailyEntry.objects.bulk_create(daily_entries)
             return JsonResponse({"message" : "Bulk Import success ! "}, status=status.HTTP_200_OK, safe=False)
         else:
-            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST, safe=False)
+            return serializer_errors(serializer.errors)
                         
-    return JsonResponse({"message" : "Something went wrong, Please try again later ! "}, status=status.HTTP_400_BAD_REQUEST)
+    return internal_server_error()
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -184,7 +179,7 @@ def verify_pending_daily_entry(request):
             DailyEntry.objects.bulk_create(daily_entries, batch_size=batch_size)
             return JsonResponse({"message" : "Verified Successfully ! "}, status=status.HTTP_200_OK, safe=False)
         else:
-            return JsonResponse({"message" : "Something went wrong, Please try again later ! "}, status=    status.HTTP_400_BAD_REQUEST)
+            return serializer_errors(serializers.errors)
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])

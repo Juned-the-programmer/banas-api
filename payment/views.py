@@ -15,6 +15,7 @@ from route.models import Route
 
 from .models import *
 from .serializer import *
+from exception.views import *
 
 # Create your views here.
 @api_view(['POST', 'GET'])
@@ -45,9 +46,7 @@ def payment(request):
                     customer.due = int(customer.due) - int(data_values[2])
                 customer.updatedby = request.user.username
             except:
-                return JsonResponse({
-                'error': "Customer Account Doesn't Exists ! "
-                }, status=status.HTTP_400_BAD_REQUEST)
+                return customer_not_found_exception(pk)
 
             try:
                 customer_bill = CustomerBill.objects.filter(customer_name=pk).filter(paid=False).get(from_date=start_day)
@@ -64,10 +63,10 @@ def payment(request):
                 'detail': "Bill Paid and Customer Account Updated"
                 }, status=status.HTTP_201_CREATED)
             except: 
-                return JsonResponse({"message" : "Something went wrong while adding recors to database"}, status=status.HTTP_400_BAD_REQUEST)
+                return internal_server_error()
         
         else:
-            return JsonResponse({"message" : serializer.errors} , status=status.HTTP_400_BAD_REQUEST)
+            return serializer_errors(serializer.errors)
 
     if request.method == 'GET':
         today_date = datetime.datetime.now()
@@ -98,8 +97,7 @@ def payment(request):
         'total paid amount': total
         }, status=status.HTTP_200_OK)
         
-    return Response({
-        'message': "Something went wrong, Please try again ! "}, status=status.HTTP_400_BAD_REQUEST)
+    return internal_server_error()
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -108,9 +106,7 @@ def cutomer_payment_list(request, pk):
         try:
             customer = Customer.objects.get(pk=pk)
         except Customer.DoesNotExist:
-            return JsonResponse({
-            'message': "Customer Not Found"
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return customer_not_found_exception(pk)
 
         customer_payment = CustomerPayment.objects.filter(customer_name=customer.id)
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment, many=True)
@@ -144,9 +140,7 @@ def payment_list_route(request, pk):
         try:
             route = Route.objects.get(pk=pk)
         except Route.DoesNotExist:
-            return JsonResponse({
-            'message': "Route DoesNot Exists"
-            })
+            return route_not_found_exception(pk)
 
         customer_payment_list = CustomerPayment.objects.filter(
         customer_name__id__in=Customer.objects.filter(route=pk)).filter(date__gte=first_date).filter(
@@ -176,9 +170,7 @@ def due_list_route(request, pk):
         try:
             route = Route.objects.get(pk=pk)
         except Route.DoesNotExist:
-            return JsonResponse({
-            'message': "Route Not Found"
-        }, status=status.HTTP_404_NOT_FOUND)
+            return route_not_found_exception()
 
         data_list = []
         customer_due_list = CustomerAccount.objects.filter(customer_name__id__in=Customer.objects.filter(route=pk))
@@ -199,9 +191,8 @@ def due_list_route(request, pk):
         'duelist_data': data_list,
         'due_total': total}, status=status.HTTP_200_OK)
 
-    return Response({
-        'message': "Something went wrong, Please Try again Later ! "}, status=status.HTTP_400_BAD_REQUEST)
-    
+    return internal_server_error() 
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def due_list(request):
@@ -226,4 +217,4 @@ def due_list(request):
             'due_total': total
         }, status=status.HTTP_200_OK)
     
-    return JsonResponse({"message" : "Something went wrong, Please try again later ! "}, status=status.HTTP_400_BAD_REQUEST)
+    return internal_server_error()

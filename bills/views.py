@@ -14,6 +14,7 @@ from dailyentry.serializer import *
   
 from .models import CustomerBill
 from .serializer import *
+from exception.views import *
 
 #create your view here
 
@@ -26,9 +27,7 @@ def bill_detail(request, pk):
     try:
       bill = CustomerBill.objects.get(pk=pk)
     except CustomerBill.DoesNotExist:
-      return JsonResponse({
-        'message': "Bill Not Found"
-      }, status=status.HTTP_400_BAD_REQUEST)
+      return bill_not_found_exception(pk)
 
     customer_bill = GenerateBillSerializerGET(bill)
     customer_name = CustomerBill.objects.get(pk=pk).id
@@ -55,9 +54,7 @@ def bill_detail(request, pk):
       'daily_entry': daily_entry_serializer.data
     }, status=status.HTTP_200_OK)
 
-  return JsonResponse({
-    'message': "Something went wrong"
-  }, status=status.HTTP_400_BAD_REQUEST)
+  return internal_server_error()
 
 @api_view(['POST'])
 @permission_classes([IsAdminUser, IsAuthenticated])
@@ -66,7 +63,7 @@ def generate_bill(request, pk):
     try:
       customer = Customer.objects.get(pk=pk)
     except Customer.DoesNotExist:
-      return JsonResponse({'message' : "Customer Doesn't Exists ! "}, status=status.HTTP_404_NOT_FOUND)
+      return customer_not_found_exception(pk)
     
     #today date
     today_date = datetime.datetime.now()
@@ -105,4 +102,4 @@ def generate_bill(request, pk):
     
     return JsonResponse({"message" : "Customer Bill Generated"}, status=status.HTTP_200_OK)
   
-  return JsonResponse({"message" : "Something went wrong !"}, status=status.HTTP_400_BAD_REQUEST) 
+  return internal_server_error()
