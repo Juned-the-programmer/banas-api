@@ -83,7 +83,7 @@ def payment(request):
         customer_payment = CustomerPayment.objects.filter(date__gte=first_date, date__lte=last_date.date())
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment, many=True)
 
-        customer_payment_total = CustomerPayment.objects.filter(date__gte=first_date, date__lte=last_date.date()).aggregate(
+        customer_payment_total = customer_payment.aggregate(
         Sum('paid_amount'))
         total_paid_amount = customer_payment_total['paid_amount__sum']
 
@@ -111,7 +111,7 @@ def cutomer_payment_list(request, pk):
         customer_payment = CustomerPayment.objects.filter(customer_name=customer.id)
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment, many=True)
 
-        customer_payment_total = CustomerPayment.objects.filter(customer_name=customer.id).aggregate(Sum('paid_amount'))
+        customer_payment_total = customer_payment.aggregate(Sum('paid_amount'))
         total_paid_amount = customer_payment_total['paid_amount__sum']
 
         if total_paid_amount is None:
@@ -147,9 +147,7 @@ def payment_list_route(request, pk):
         date__lte=last_date.date())
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment_list, many=True)
 
-        customer_payment_total = CustomerPayment.objects.filter(
-        customer_name__id__in=Customer.objects.filter(route=pk)).filter(date__gte=first_date).filter(
-        date__lte=last_date.date()).aggregate(Sum('paid_amount'))
+        customer_payment_total = customer_payment_list.aggregate(Sum('paid_amount'))
         total_paid_amount = customer_payment_total['paid_amount__sum']
 
         if total_paid_amount is None:
