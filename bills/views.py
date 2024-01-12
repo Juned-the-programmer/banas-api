@@ -20,7 +20,6 @@ from exception.views import *
 
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
-# @permission_classes([IsAdminOrStaffUser])
 def bill_detail(request, pk):
   import pytz
   if request.method == 'GET':
