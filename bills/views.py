@@ -17,7 +17,6 @@ from .serializer import *
 from exception.views import *
 
 #create your view here
-
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def bill_detail(request, pk):
