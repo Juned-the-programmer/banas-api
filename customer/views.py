@@ -22,6 +22,9 @@ from exception.error_constant import *
 from exception.views import *
 
 # Create your views here.
+''' To POST customer and get the complete list of all the customer from database 
+Validation for POST has been done by the serializer by itself don't want to customize here.
+'''
 class CustomerListView(generics.ListCreateAPIView):
     queryset = Customer.objects.all()
 
