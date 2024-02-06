@@ -20,3 +20,6 @@ class Route(models.Model):
 
     def __str__(self):
         return str(self.route_name)
+
+    class Meta():
+        index_together = [['id']]

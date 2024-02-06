@@ -39,6 +39,9 @@ class Customer(models.Model):
     def __str__(self):
         return "{} {}".format(self.first_name, self.last_name)
 
+    class Meta():
+        index_together = [['id']]
+
 class CustomerAccount(models.Model):
     customer_name = models.OneToOneField(Customer, on_delete = models.CASCADE , null=True, blank=True , related_name="customer_account")
     due = models.IntegerField(default=0)
@@ -49,3 +52,6 @@ class CustomerAccount(models.Model):
 
     def __str__(self):
         return str(self.customer_name)
+
+    class Meta():
+        index_together = [['id', 'customer_name']]
