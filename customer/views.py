@@ -45,10 +45,12 @@ class CustomerListView(generics.ListCreateAPIView):
         customer_data_serializer = CustomerSerializerList(customer_data, many=True)
         return JsonResponse(customer_data_serializer.data , status = status.HTTP_200_OK, safe=False)
 
+''' Get all the customer with filter of Route. '''
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def list_customer_by_route(request, pk):
     if request.method == 'GET':
+        # Get the data from cache to reduce the database query.
         customer_data = customer_cached_data()
 
         customer_route = customer_data.filter(route=pk).filter(active=True)
@@ -60,15 +62,18 @@ def list_customer_by_route(request, pk):
         
     return internal_server_error()
 
+''' Get the customer details and update customer details '''
 @api_view(['GET' , 'PUT'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def Customer_detail_view_update(request , pk):
     try:
+        # Verify customer with ID is there in database.
         customer_data = customer_cached_data()
         customer = customer_data.get(id=pk)
     except Customer.DoesNotExist:
         return customer_not_found_exception(pk)
-            
+
+    # Serialize the customer data. 
     if request.method == 'GET':
         serializer = CustomerSerializer(customer)
         return JsonResponse(serializer.data , status=status.HTTP_200_OK)
