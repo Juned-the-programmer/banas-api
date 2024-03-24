@@ -27,6 +27,6 @@ app.conf.beat_schedule = {
     },
     'reset_dailyentry_dashboard_values': {
         'task': 'dailyentry.task.reset_dailentry_dashboard_values',
-        'schedule': crontab(hour=0,minute=0),
+        'schedule': crontab(hour=0,minute=1),
     }
 }

@@ -6,12 +6,13 @@ from .models import CustomerBill
 import datetime
 from datetime import timedelta
 from django.utils import timezone
+from calendar import monthrange
 
 @shared_task
 def run_monthly_task():
     now = timezone.now()
 
-    if now.day == now.monthrange(now.year, now.month)[1]:
+    if now.day == monthrange(now.year, now.month)[1]:
         generate_bill_at_the_end_of_month.apply_async()
 
 @shared_task
