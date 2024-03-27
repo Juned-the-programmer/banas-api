@@ -174,10 +174,9 @@ def due_list_route(request, pk):
         customer_due_list = CustomerAccount.objects.filter(customer_name__id__in=Customer.objects.filter(route=pk))
 
         for i in customer_due_list:
-            data_list.append({"customer_name": i.customer_name.first_name + ' ' + i.customer_name.last_name, "due": i.due})
+            data_list.append({"customer_id" : i.customer_name.id ,"customer_name": i.customer_name.first_name + ' ' + i.customer_name.last_name, "due": i.due})
 
-        customer_due_list_filter = CustomerAccount.objects.filter(
-        customer_name__id__in=Customer.objects.filter(route=pk)).aggregate(Sum('due'))
+        customer_due_list_filter = customer_due_list.aggregate(Sum('due'))
         customer_due_list_total = customer_due_list_filter['due__sum']
 
         if customer_due_list_total is None:
@@ -200,7 +199,7 @@ def due_list(request):
 
         data_list = []
         for i in customerdue:
-            data_list.append({"customer_name": i.customer_name.first_name +' '+i.customer_name.last_name, "due": i.due})
+            data_list.append({"customer_id" : i.customer_name.id ,"customer_name": i.customer_name.first_name +' '+i.customer_name.last_name, "due": i.due})
 
         customer_due_list = CustomerAccount.objects.all().aggregate(Sum('due'))
         customer_due_list_total = customer_due_list['due__sum']
