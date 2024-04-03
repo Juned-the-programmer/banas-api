@@ -21,7 +21,9 @@ from exception.views import *
 @permission_classes([IsAdminUser, IsAuthenticated])
 def daily_entry(request):
     if request.method == 'GET':
-        dailyEntry = DailyEntry.objects.all()
+        today_date = datetime.datetime.now()
+        
+        dailyEntry = DailyEntry.objects.filter(date_added__date=today_date.date())
         serializer = DailyEntrySerializerGET(dailyEntry, many=True)
         return JsonResponse(
         serializer.data, status=status.HTTP_200_OK, safe=False)
