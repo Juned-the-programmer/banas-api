@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'authentication.apps.AuthenticationConfig',
+    'drf_yasg',
     'bills.apps.BillsConfig',
     'customer.apps.CustomerConfig',
     'dailyentry.apps.DailyentryConfig',

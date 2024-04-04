@@ -13,7 +13,7 @@ from .models import *
 from .serializer import *
 from bills.models import CustomerBill
 from bills.serializer import *
-from dailyentry.models import DailyEntry, customer_daily_entry_monthly
+from dailyentry.models import DailyEntry, customer_daily_entry_monthly, customer_qr_code
 from dailyentry.serializer import *
 from payment.models import CustomerPayment
 from payment.serializer import *
@@ -156,10 +156,11 @@ def customer_detail(request, pk):
         customer_payment = customer.customer_payment.filter(customer_name=pk)
         payment_serializer = CustomerPaymentSerializerGET(customer_payment,many=True)
 
-        total_customer_payment = customer.customer_payment.filter(customer_name=pk).aggregate(Sum("paid_amount"))
-        total_payment = total_customer_payment['paid_amount__sum']
+        total_payment = customer.customer_account.total_paid
 
         due_payment = customer.customer_account.due
+
+        daily_entry_qr = customer_qr_code.objects.get(customer=customer.id).qrcode.url
 
         if total_payment is None:
             total_payment = 0
@@ -173,7 +174,8 @@ def customer_detail(request, pk):
         'total_coolers': customer_daily_entry_total,
         'payments' : payment_serializer.data,
         'total_payments' : total_payment,
-        'due_payments' : due_payment
+        'due_payments' : due_payment,
+        'daily_entry_qr' : daily_entry_qr
         }, status=status.HTTP_200_OK)
 
     return internal_server_error()

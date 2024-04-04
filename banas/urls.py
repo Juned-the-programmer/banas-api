@@ -18,6 +18,8 @@ from django.urls import path , include
 from django.contrib.auth import views as auth_views
 from django.conf import settings
 from django.conf.urls.static import static
+from drf_yasg.views import get_schema_view
+from .swagger import *
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,6 +29,7 @@ urlpatterns = [
     path('api/dailyentry/', include('dailyentry.urls')),
     path('api/bill/', include('bills.urls')),
     path('api/payment/', include('payment.urls')),
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     
     path('reset_password/', auth_views.PasswordResetView.as_view(),
             name="reset_password"),

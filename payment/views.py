@@ -42,6 +42,7 @@ def payment(request):
             try:
                 customer = CustomerAccount.objects.get(customer_name=pk)
                 customer.due = int(customer.due) - int(data_values[1])
+                customer.total_paid = int(customer.total_paid) + int(data_values[1])
                 if len(data_values) > 2:
                     customer.due = int(customer.due) - int(data_values[2])
                 customer.updatedby = request.user.username
@@ -57,7 +58,7 @@ def payment(request):
                 pass
                 
             try:
-                serializer.save(addedby=request.user.username , pending_amount=CustomerAccount.objects.get(customer_name=pk).due)
+                serializer.save(addedby=request.user.username , pending_amount=customer.due)
                 customer.save()
                 return JsonResponse({
                 'detail': "Bill Paid and Customer Account Updated"
