@@ -15,6 +15,7 @@ from route.models import Route
 
 from .models import *
 from .serializer import *
+from banas.cache_conf import *
 from exception.views import *
 
 # Create your views here.
@@ -105,15 +106,15 @@ def payment(request):
 def cutomer_payment_list(request, pk):
     if request.method == 'GET':
         try:
-            customer = Customer.objects.get(pk=pk)
-        except Customer.DoesNotExist:
+            customer_data = customer_cached_data()
+            customer = customer_data.get(id = pk)
+        except:
             return customer_not_found_exception(pk)
 
         customer_payment = CustomerPayment.objects.filter(customer_name=customer.id)
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment, many=True)
-
-        customer_payment_total = customer_payment.aggregate(Sum('paid_amount'))
-        total_paid_amount = customer_payment_total['paid_amount__sum']
+        
+        total_paid_amount = customer.customer_account.total_paid
 
         if total_paid_amount is None:
             total = 0
