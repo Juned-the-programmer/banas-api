@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.core.validators import RegexValidator, EmailValidator
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.db.models import Sum
 
 # Create your models here.
 class Customer(models.Model):
@@ -55,4 +56,14 @@ class CustomerAccount(models.Model):
         return str(self.customer_name)
 
     class Meta():
-        index_together = [['id', 'customer_name']]
+        index_together = [['id', 'customer_name', 'due']]
+
+    @classmethod
+    def calculate_total_due(cls):
+        total_due = cls.objects.aggregate(total_due=Sum('due'))['total_due']
+        return total_due if total_due is not None else 0
+
+    @classmethod
+    def calculate_total_due_route(cls):
+        total_due_by_route = cls.objects.values('customer_name__route').annotate(total_due=Sum('due'))
+        return total_due_by_route

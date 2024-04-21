@@ -15,6 +15,7 @@ from dailyentry.serializer import *
 from .models import CustomerBill
 from .serializer import *
 from exception.views import *
+from .task import bill_number_generator
 
 #create your view here
 @api_view(['GET'])
@@ -78,8 +79,15 @@ def generate_bill(request, pk):
     coolers_total = customer_daily_entry.coolers
     
     customer_account = CustomerAccount.objects.get(customer_name=pk)    
+
+    # Bill number
+    bill_number = bill_number_generator()
+    last_four_digits = bill_number[-4:]
+    new_last_four_digits = str(int(last_four_digits) + 1).zfill(4)
+    new_bill_number = bill_number[:-4] + new_last_four_digits
     
     CustomerBill.objects.create(
+      bill_number=str(new_bill_number),
       customer_name=customer,
       from_date=first_date,
       to_date=last_date.date(),

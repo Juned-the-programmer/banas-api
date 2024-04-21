@@ -178,8 +178,15 @@ def due_list_route(request, pk):
         for i in customer_due_list:
             data_list.append({"customer_id" : i.customer_name.id ,"customer_name": i.customer_name.first_name + ' ' + i.customer_name.last_name, "due": i.due})
 
-        customer_due_list_filter = customer_due_list.aggregate(Sum('due'))
-        customer_due_list_total = customer_due_list_filter['due__sum']
+        total_due_by_route = CustomerAccount.calculate_total_due_route()
+        customer_due_list_total = 0
+
+        for due_route in total_due_by_route:
+            route_id = due_route['customer_name__route']
+            total_due_amount = due_route['total_due']
+
+            if(str(route_id) == str(pk)):
+                customer_due_list_total = total_due_amount 
 
         if customer_due_list_total is None:
             total = 0
@@ -203,8 +210,7 @@ def due_list(request):
         for i in customerdue:
             data_list.append({"customer_id" : i.customer_name.id ,"customer_name": i.customer_name.first_name +' '+i.customer_name.last_name, "due": i.due})
 
-        customer_due_list = CustomerAccount.objects.all().aggregate(Sum('due'))
-        customer_due_list_total = customer_due_list['due__sum']
+        customer_due_list_total = CustomerAccount.calculate_total_due()
 
         if customer_due_list_total is None:
             total = 0

@@ -17,4 +17,4 @@ class GenerateBillSerializerGET(serializers.ModelSerializer):
 class DetailBillSerializer(serializers.ModelSerializer):
   class Meta:
     model = CustomerBill
-    fields = ['from_date', 'to_date', 'coolers', 'Total', 'paid', 'id']
+    fields = ['bill_number', 'from_date', 'to_date', 'coolers', 'Total', 'paid', 'id']
