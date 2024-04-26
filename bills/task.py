@@ -12,8 +12,8 @@ from calendar import monthrange
 def run_monthly_task():
     now = timezone.now()
 
-    # if now.day == monthrange(now.year, now.month)[1]:
-    generate_bill_at_the_end_of_month.apply_async()
+    if now.day == monthrange(now.year, now.month)[1]:
+        generate_bill_at_the_end_of_month.apply_async()
 
 @shared_task
 def generate_bill_at_the_end_of_month():
