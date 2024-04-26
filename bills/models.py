@@ -5,6 +5,7 @@ import uuid
 # Create your models here.
 class CustomerBill(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete = models.SET_NULL , null=True, blank=True, related_name="customer_bill")
+    bill_number = models.CharField(max_length=20, null=True, blank=True)
     from_date = models.CharField(max_length=20)
     to_date = models.CharField(max_length=20)
     coolers = models.IntegerField(default=0, null=True, blank=True)
@@ -20,7 +21,14 @@ class CustomerBill(models.Model):
     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
 
     def __str__(self):
-        return str(self.customer_name)
+        return f"{self.customer_name} - {self.bill_number}"
 
     class Meta():
-        index_together = [['id', 'customer_name']]
+        index_together = [['id', 'customer_name', 'bill_number']]
+
+class Bill_number_generator(models.Model):
+    bill_number = models.IntegerField()
+    id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)
+
+    def __str__(self):
+        return str(self.bill_number)
