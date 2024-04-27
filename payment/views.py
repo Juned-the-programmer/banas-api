@@ -82,7 +82,7 @@ def payment(request):
         first_date = datetime.datetime.today().replace(day=1).date()
         print(first_date)
 
-        customer_payment = CustomerPayment.objects.filter(date__gte=first_date, date__lte=last_date.date())
+        customer_payment = CustomerPayment.objects.filter(date__range = (first_date , last_date.date))
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment, many=True)
 
         customer_payment_total = customer_payment.aggregate(
