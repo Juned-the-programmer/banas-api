@@ -58,33 +58,3 @@ class pending_daily_entry(models.Model):
     
     class Meta():
         index_together = [['id', 'customer']]
-
-class PartitionedModelBase(ModelBase):
-    def __new__(cls, name, bases, attrs, **kwargs):
-        if 'Meta' in attrs and hasattr(attrs['Meta'], 'db_table') and hasattr(attrs['date_added'], 'default'):
-            # Extract the year and month from the datetime field
-            default_value = attrs['date_added'].default
-            if default_value is not None:
-                year = default_value.year
-                month = default_value.month
-                # Set the db_table attribute based on the year and month
-                attrs['Meta'].db_table = 'daily_entry_{:04d}_{:02d}'.format(year, month)
-        
-        return super().__new__(cls, name, bases, attrs, **kwargs)
-
-class PartitionedModel(models.Model, metaclass=PartitionedModelBase):
-    date_added = models.DateTimeField()
-
-    class Meta:
-        abstract = True
-
-
-class customer_daily_entry_partition(PartitionedModel):
-    customer = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name="customer_daily_entry_partition_test")
-    cooler = models.IntegerField()
-    addedby = models.CharField(max_length=100, null=True, blank=True)
-    updatedby = models.CharField(max_length=100, null=True, blank=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
-
-    def __str__(self):
-        return str(self.customer)
