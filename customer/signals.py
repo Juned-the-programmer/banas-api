@@ -22,9 +22,8 @@ def create_user(sender, instance, created, **kwarg):
             user.set_password("banaswater")
             user.save()
             user_detail = User.objects.get(username=username)
-            customer_detail = Customer.objects.get(email=instance.email)
-            customer_detail.user = user_detail
-            customer_detail.save()
+            instance.user = user_detail
+            instance.save()
             subject = 'Account Created'
             customer_username = user.username
             customer_password = "banaswater"
@@ -38,9 +37,8 @@ def create_user(sender, instance, created, **kwarg):
             user.set_password("banaswater")
             user.save()
             user_detail = User.objects.get(username=username)
-            customer_detail = Customer.objects.get(first_name=instance.first_name, last_name=instance.last_name)
-            customer_detail.user = user_detail
-            customer_detail.save()
+            instance.user = user_detail
+            instance.save()
             
 @receiver(post_save, sender=Customer)
 def customer_account(sender , instance , created , **kwargs):

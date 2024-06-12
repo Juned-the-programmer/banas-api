@@ -17,7 +17,7 @@ class DailyEntry(models.Model):
         return str(self.customer)
 
     class Meta():
-        index_together = [['id', 'customer']]
+        index_together = [['id', 'customer'], ['customer', 'date_added'], ['date_added']]
 
 class DailyEntry_dashboard(models.Model):
     customer_count = models.IntegerField(default=0, null=True, blank=True)

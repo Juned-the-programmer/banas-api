@@ -32,13 +32,13 @@ class CustomerListView(generics.ListCreateAPIView):
         method = self.request.method
         if method == 'POST':
             return CustomerSerializer
-            cache.delete("Customer")
-            customer_cached_data()
         else:
             return CustomerSerializerList
 
     def perform_create(self, serializer):
         serializer.save(addedby=self.request.user.username)
+        cache.delete("Customer")
+        customer_cached_data()
 
     def list(self, request, *args, **kwargs):
         customer_data = customer_cached_data()
@@ -148,7 +148,7 @@ def customer_detail(request, pk):
         customer_bills = customer.customer_bill.all()
         bill_serializer = DetailBillSerializer(customer_bills, many=True)
 
-        customer_daily_entry = customer.customer_daily_entry.filter(date_added__gte=first_day_of_month).filter(customer=customer.id)
+        customer_daily_entry = customer.customer_daily_entry.filter(date_added__gte=first_day_of_month).filter(customer=customer.id).only('id', 'customer', 'date_added')
         daily_entry_serializer = DialyEntrySerializerGETDashboard(customer_daily_entry, many=True)
 
         customer_daily_entry_total = customer_daily_entry_monthly.objects.get(customer=customer.id).coolers

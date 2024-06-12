@@ -17,6 +17,7 @@ class Customer(models.Model):
     email_validator = EmailValidator(
         message = "Enter Valid Email Address"
     )
+    sequence_no = models.IntegerField(null=True, blank=True)
     first_name = models.CharField(max_length=200)
     last_name = models.CharField(max_length=200)
     phone_no = models.CharField(max_length=10, validators=[phone_regex], null=True, blank=True)

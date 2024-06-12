@@ -45,7 +45,7 @@ def bill_detail(request, pk):
     
     to_date_new = datetime.datetime(int(to_date_year) , int(to_date_month) , int(to_date_date),23,59,59, tzinfo=pytz.UTC)
 
-    daily_entry = DailyEntry.objects.filter(date_added__gte=from_date_new, date_added__lte=to_date_new).filter(customer=bill.customer_name.id)
+    daily_entry = DailyEntry.objects.filter(customer=bill.customer_name.id).filter(date_added__range=[from_date_new, to_date_new]).only("customer", "date_added", "id")
     daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry, many=True)
 
     return JsonResponse({
