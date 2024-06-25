@@ -8,7 +8,7 @@ import os
 @shared_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
     customer_detail = Customer.objects.get(id=customer_id)
-    redirect_url = "https://025d-2409-40c1-10fc-c492-99a2-165f-2409-2849.ngrok-free.app/api/dailyentry/customer/dailyentry/"
+    redirect_url = "https://3d5c-2409-40c1-502a-5efa-9d17-5e72-210e-9f28.ngrok-free.app/api/dailyentry/customer/dailyentry/"
 
     # Create a QR code instance
     qr = qrcode.QRCode(

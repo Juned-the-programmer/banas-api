@@ -27,6 +27,7 @@ Validation for POST has been done by the serializer by itself don't want to cust
 '''
 class CustomerListView(generics.ListCreateAPIView):
     queryset = Customer.objects.all()
+    permission_classes = IsAdminUser, IsAuthenticated
 
     def get_serializer_class(self):
         method = self.request.method
