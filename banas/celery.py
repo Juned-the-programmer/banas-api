@@ -28,5 +28,9 @@ app.conf.beat_schedule = {
     'reset_dailyentry_dashboard_values': {
         'task': 'dailyentry.task.reset_dailentry_dashboard_values',
         'schedule': crontab(hour=0,minute=1),
+    },
+    'process_entries_every_month' : {
+        'task' : 'dailyentry.task.batch_processing_for_daily_entry_ofn_monthly_basis',
+        'schedule' : crontab(hour=3, day_of_month=1)
     }
 }

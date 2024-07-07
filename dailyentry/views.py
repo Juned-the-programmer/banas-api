@@ -8,6 +8,7 @@ from django.db.models import Sum
 import datetime
 from datetime import time, timedelta, date
 from django.utils import timezone
+from django.db import connection
 
 from .models import DailyEntry, pending_daily_entry, customer_qr_code, pending_daily_entry, DailyEntry_dashboard
 from customer.models import Customer, CustomerAccount
@@ -211,3 +212,43 @@ def customer_qr_daily_entry(request,pk):
         return render(request, 'dailyentry/dailyentry.html')
     else:
         return render(request, 'dailyentry/dailyentrytime.html')
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def historical_data_retriever(request):
+    if request.method == 'GET':
+        params = request.GET.get('historical')
+        
+        # response_data = []
+
+        # for param in params:
+        table_name = f"dailyentry_{params}"
+
+        # Check if the table exists
+        with connection.cursor() as cursor:
+            cursor.execute(f"SELECT to_regclass('{table_name}')")
+            if not cursor.fetchone()[0]:
+                return JsonResponse({'error': 'Table not found'}, status=404)
+
+        # Fetch data from the historical table
+        query = f"SELECT * FROM {table_name}"
+        with connection.cursor() as cursor:
+            cursor.execute(query)
+            columns = [col[0] for col in cursor.description]
+            rows = cursor.fetchall()
+
+        # Convert the data to a list of dictionaries
+        old_data = [dict(zip(columns, row)) for row in rows]
+
+        old_data = DialyEntrySerializerGETDashboard(old_data, many=True)
+        # response_data.append({
+        #     'historical_month' : param,
+        #     'data' : old_data.data
+        # })
+
+        return JsonResponse({
+            f"historical_{params}" : old_data.data
+        } , status=status.HTTP_200_OK, safe=False)
+
+    return internal_server_error()

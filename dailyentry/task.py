@@ -1,9 +1,12 @@
 from celery import shared_task
 import qrcode
+from django.utils import timezone
 from .models import customer_qr_code, DailyEntry_dashboard
 from customer.models import Customer
 from django.conf import settings
+from django.db import connection
 import os
+from django.core.management import call_command
 
 @shared_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
@@ -59,3 +62,44 @@ def reset_dailentry_dashboard_values():
     daily_entry_dashboard.customer_count = 0
     daily_entry_dashboard.coolers_count = 0
     daily_entry_dashboard.save()
+
+@shared_task
+def batch_processing_for_daily_entry_ofn_monthly_basis():
+    now = timezone.now()
+    first_day_of_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    first_day_of_previous_month = (first_day_of_current_month - timezone.timedelta(days=1)).replace(day=1)
+    table_name = f'DailyEntry_{first_day_of_previous_month.strftime("%B_%Y")}'
+
+    # Custom SQL for creating a new table
+    create_table_sql = f"""
+    CREATE TABLE {table_name} (
+        id UUID PRIMARY KEY,
+        customer_id UUID,
+        cooler INTEGER,
+        date_added TIMESTAMP,
+        addedby VARCHAR(100),
+        updatedby VARCHAR(100),
+        original_entry_id UUID
+    );
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(create_table_sql)
+
+    # Insert data into the new table
+    insert_sql = f"""
+    INSERT INTO {table_name} (id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id)
+    SELECT id, customer_id, cooler, date_added, addedby, updatedby, id
+    FROM dailyentry_dailyentry;
+    """
+
+    with connection.cursor() as cursor:
+        cursor.execute(insert_sql)
+    
+    # Truncate the original table to free up space
+    truncate_sql = "TRUNCATE TABLE dailyentry_dailyentry RESTART IDENTITY;"
+    
+    with connection.cursor() as cursor:
+        cursor.execute(truncate_sql)
+    
+    return f'Successfully processed entries into {table_name} and truncated the original table'
