@@ -15,7 +15,7 @@ from datetime import timedelta
 import os
 from dotenv import load_dotenv
 
-#load Env
+# Load environment variables
 load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -117,15 +117,17 @@ DATABASES = {
         'NAME': 'banas',
         'USER': 'postgres',
         'PASSWORD': 'Kimws@7698',
-        'HOST': 'localhost',
+        'HOST': 'db',
         'PORT': '5432',
     }
 }
 
+REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
+
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://127.0.0.1:6379',  # Use your Redis server details
+        'LOCATION': REDIS_URL,
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -133,7 +135,7 @@ CACHES = {
 }
 
 # CELERY CONFIGURATION
-CELERY_BROKER_URL = "redis://localhost:6379"
+CELERY_BROKER_URL = REDIS_URL
 CELERY_ACCEPT_CONTENT = {'application/json'}
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

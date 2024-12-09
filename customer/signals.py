@@ -29,7 +29,7 @@ def create_user(sender, instance, created, **kwarg):
             customer_password = "banaswater"
             html_message = render_to_string("customer/JoinCustomer.html", {'first_name' : instance.first_name, 'last_name' : instance.last_name , 'username' : customer_username, 'password' : customer_password})
             plain_text = strip_tags(html_message)
-            # send_async_email.delay(subject, plain_text, settings.EMAIL_HOST_USER, [instance.email], html_message) # Use this to send mail in async way.
+            send_async_email.delay(subject, plain_text, settings.EMAIL_HOST_USER, [instance.email], html_message) # Use this to send mail in async way.
             # send_mail(subject=subject, message=plain_text, from_email=settings.EMAIL_HOST_USER, recipient_list=[instance.email], html_message=message , fail_silently=False)
         else:
             username = instance.first_name.lower() + instance.last_name.lower()

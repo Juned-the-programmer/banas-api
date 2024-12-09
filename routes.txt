@@ -10,7 +10,7 @@ For Password Reset (Send Email and rest)
 For Celery Tasks. 
 
 1) Activate VirtualEnv 
-2) redis-server
+2) redis-server || On windows install a redis-server on ubuntu using wsl and start the redis-server there
 3) celery -A banas worker -l info
 4) celery -A banas beat -l INFO
 

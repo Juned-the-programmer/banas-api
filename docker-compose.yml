@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - .:/app
+      - static_volume:/app/static
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
+      - REDIS_URL=redis://redis:6379/0
+      - EMAIL_BACKEND=${EMAIL_BACKEND}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+    depends_on:
+      - db
+      - redis
+
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=banas
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=Kimws@7698
+
+  redis:
+    image: redis:6
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  celery_worker:
+    build: .
+    command: celery -A banas worker -l info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
+      - REDIS_URL=redis://redis:6379/0
+      - EMAIL_BACKEND=${EMAIL_BACKEND}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+    user: celery
+    depends_on:
+      - web
+      - redis
+      - db
+
+  celery_beat:
+    build: .
+    command: celery -A banas beat -l info
+    volumes:
+      - .:/app
+    environment:
+      - DEBUG=1
+      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
+      - REDIS_URL=redis://redis:6379/0
+      - EMAIL_BACKEND=${EMAIL_BACKEND}
+      - EMAIL_HOST=${EMAIL_HOST}
+      - EMAIL_USERNAME=${EMAIL_USERNAME}
+      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+    user: celery
+    depends_on:
+      - web
+      - redis
+      - db
+
+volumes:
+  postgres_data:
+  redis_data:
+  static_volume:
+  media_volume: 
