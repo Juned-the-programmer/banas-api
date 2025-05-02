@@ -158,6 +158,7 @@ def verify_pending_daily_entry(request):
         if serializers.is_valid():
             addedby = request.user.username
             daily_entries = []
+            pending_ids = []  # Track all pending IDs to delete
             customer_data = customer_cached_data()
 
             for data_item in serializers.initial_data:
@@ -166,21 +167,32 @@ def verify_pending_daily_entry(request):
                 pending_id = data_item.get("pending_id")
                 date_added = data_item.get("date_added")
 
-                customer_pending_daily_entry = pending_daily_entry.objects.get(id=pending_id).delete()
+                # Add to the list of IDs to delete
+                pending_ids.append(pending_id)
 
-                customer_name = customer_data.get(id=customer_id)
+                try:
+                    customer_name = customer_data.get(id=customer_id)
+                    
+                    daily_entry_data = DailyEntry(
+                        customer=customer_name,
+                        cooler=cooler,
+                        addedby=f'{customer_name.first_name} {customer_name.last_name}',
+                        date_added=date_added
+                    )
+                    daily_entries.append(daily_entry_data)
+                except Exception as e:
+                    return JsonResponse({"error": f"Error with customer ID {customer_id}: {str(e)}"}, 
+                                       status=status.HTTP_400_BAD_REQUEST)
 
-                daily_entry_data = DailyEntry(
-                    customer= customer_name,
-                    cooler= cooler,
-                    addedby= f'{customer_name.first_name} {customer_name.last_name}',
-                    date_added=date_added
-                )
-                daily_entries.append(daily_entry_data)
-
+            # Bulk create all entries
             batch_size = len(daily_entries)
-            DailyEntry.objects.bulk_create(daily_entries, batch_size=batch_size)
-            return JsonResponse({"message" : "Verified Successfully ! "}, status=status.HTTP_200_OK, safe=False)
+            if batch_size > 0:
+                DailyEntry.objects.bulk_create(daily_entries, batch_size=batch_size)
+            
+            # Delete all pending entries
+            pending_daily_entry.objects.filter(id__in=pending_ids).delete()
+            
+            return JsonResponse({"message": "Verified Successfully!"}, status=status.HTTP_200_OK, safe=False)
         else:
             return serializer_errors(serializers.errors)
 

@@ -16,12 +16,29 @@ from .models import CustomerBill
 from .serializer import *
 from exception.views import *
 from .task import bill_number_generator
+from .utils import get_dynamic_entries
 
 #create your view here
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def get_bills(request):
+  if request.method == 'GET':
+
+    bills = CustomerBill.objects.all()
+    customer_bill = GenerateBillSerializerGET(bills, many=True)
+    return JsonResponse(customer_bill.data, status=status.HTTP_200_OK, safe=False)
+  
+  return internal_server_error()
+
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def bill_detail(request, pk):
   import pytz
+  now = timezone.now()
+  first_day_of_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+  first_day_of_previous_month = (first_day_of_current_month - timezone.timedelta(days=1)).replace(day=1)
+  table_name = f'DailyEntry_{first_day_of_previous_month.strftime("%B_%Y")}'
   if request.method == 'GET':
     try:
       bill = CustomerBill.objects.get(pk=pk)
@@ -45,8 +62,8 @@ def bill_detail(request, pk):
     
     to_date_new = datetime.datetime(int(to_date_year) , int(to_date_month) , int(to_date_date),23,59,59, tzinfo=pytz.UTC)
 
-    daily_entry = DailyEntry.objects.filter(customer=bill.customer_name.id).filter(date_added__range=[from_date_new, to_date_new]).only("customer", "date_added", "id")
-    daily_entry_serializer = DialyEntrySerializerGETDashboard(daily_entry, many=True)
+    raw_data = get_dynamic_entries(bill.customer_name.id, from_date_new, to_date_new, table_name)
+    daily_entry_serializer = DialyEntrySerializerGETDashboard(raw_data, many=True)
 
     return JsonResponse({
       'bill': customer_bill.data,

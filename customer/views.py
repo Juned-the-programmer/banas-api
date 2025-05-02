@@ -149,7 +149,7 @@ def customer_detail(request, pk):
         customer_bills = customer.customer_bill.all()
         bill_serializer = DetailBillSerializer(customer_bills, many=True)
 
-        customer_daily_entry = customer.customer_daily_entry.filter(customer=customer.id).only('id', 'customer')
+        customer_daily_entry = customer.customer_daily_entry.filter(customer=customer.id).only('id', 'customer').order_by('-date_added')
         daily_entry_serializer = DialyEntrySerializerGETDashboard(customer_daily_entry, many=True)
 
         customer_daily_entry_total = customer_daily_entry_monthly.objects.get(customer=customer.id).coolers

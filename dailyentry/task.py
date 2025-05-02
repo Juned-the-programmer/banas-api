@@ -1,7 +1,7 @@
 from celery import shared_task
 import qrcode
 from django.utils import timezone
-from .models import customer_qr_code, DailyEntry_dashboard
+from .models import customer_qr_code, DailyEntry_dashboard, customer_daily_entry_monthly
 from customer.models import Customer
 from django.conf import settings
 from django.db import connection
@@ -44,16 +44,18 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     customer_qr_code.objects.create(customer = customer_detail, qrcode=f'qr_codes/{file_name}')
 
 @shared_task
-def update_customer_daily_entry_to_monthly_table_bulk(daily_entries):
-    for entry in daily_entries:
-        customer_detail = customer_daily_entry_monthly.objects.get(customer=entry.customer.id)
-        customer_detail.coolers += int(entry.cooler)
+def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
+    for entry in entry_data_list:
+        customer_id = entry['customer_id']
+        cooler_count = entry['cooler']
+        customer_detail = customer_daily_entry_monthly.objects.get(customer=customer_id)
+        customer_detail.coolers += int(cooler_count)
         customer_detail.save()
 
         # Update Dashboard counts
         dailyentry_dashboard = DailyEntry_dashboard.objects.first()
         dailyentry_dashboard.customer_count += 1
-        dailyentry_dashboard.coolers_count += int(entry.cooler)
+        dailyentry_dashboard.coolers_count += int(cooler_count)
         dailyentry_dashboard.save()
 
 @shared_task

@@ -1,5 +1,6 @@
 from .models import Bill_number_generator
 import datetime
+from django.db import connection
 
 def bill_number_generator():
 
@@ -22,3 +23,17 @@ def bill_number_generator():
         bill_number.save()
 
     return f"{year}{month}{new_bill_number}"
+
+def get_dynamic_entries(customer_id, from_date, to_date, table_name):
+    with connection.cursor() as cursor:
+        cursor.execute(f"""
+            SELECT id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id
+            FROM {table_name}
+            WHERE customer_id = %s AND date_added BETWEEN %s AND %s
+        """, [str(customer_id), from_date, to_date])
+        columns = [col[0] for col in cursor.description]
+        rows = [
+            dict(zip(columns, row))
+            for row in cursor.fetchall()
+        ]
+    return rows
