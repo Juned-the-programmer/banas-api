@@ -71,32 +71,16 @@ def payment(request):
             return serializer_errors(serializer.errors)
 
     if request.method == 'GET':
-        today_date = datetime.datetime.now()
-
-        # Last day of month
-        next_month = today_date.replace(day=28) + timedelta(days=4)
-        last_date = next_month - timedelta(days=next_month.day)
-        print(last_date.date())
-
-        # First day of month
-        first_date = datetime.datetime.today().replace(day=1).date()
-        print(first_date)
-
-        customer_payment = CustomerPayment.objects.filter(date__range = (first_date , last_date.date))
+        customer_payment = CustomerPayment.objects.all()
         customer_payment_serializer = CustomerPaymentSerializerGET(customer_payment, many=True)
 
         customer_payment_total = customer_payment.aggregate(
         Sum('paid_amount'))
-        total_paid_amount = customer_payment_total['paid_amount__sum']
-
-        if total_paid_amount is None:
-            total = 0
-        else:
-            total = total_paid_amount
+        total_paid_amount = customer_payment_total['paid_amount__sum'] or 0
 
         return JsonResponse({
         'data': customer_payment_serializer.data,
-        'total paid amount': total
+        'total paid amount': total_paid_amount
         }, status=status.HTTP_200_OK)
         
     return internal_server_error()
