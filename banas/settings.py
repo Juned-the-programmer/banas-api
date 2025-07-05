@@ -62,6 +62,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Moved up for better static file handling
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -145,18 +146,6 @@ CELERY_RESULT_BACKEND = 'django-db'
 # CELERY BEAT CONFIGURATION
 CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
 
-# DATABASES = {
-#         'default': {
-#             'ENGINE': 'djongo',
-#             'NAME': 'BanasWater_2022',
-#             'ENFORCE_SCHEMA': False,
-#             'CLIENT': {
-#                 'host': 'mongodb+srv://Banas:wVU9x3fFItZQmjFG@banaswater.8a7bb.mongodb.net/myFirstDatabase?retryWrites=true&w=majority'
-#             }
-#         }
-# }
-
-
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
 
@@ -188,21 +177,33 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/4.0/howto/static-files/
+# Static files (CSS, JavaScript, Images) - CORRECTED
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'static'  # FIXED: Proper path syntax
 
-STATIC_URL = 'static/'
+# Additional locations of static files - CORRECTED
+STATICFILES_DIRS = [
+    BASE_DIR / 'staticfiles'  # FIXED: Proper path syntax
+]
+
+# Static files finders
+STATICFILES_FINDERS = [
+    'django.contrib.staticfiles.finders.FileSystemFinder',
+    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+]
+
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-STATIC_ROOT = BASE_DIR / "static"
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / "media"
-
+# JWT Configuration
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(days=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
@@ -235,7 +236,7 @@ SIMPLE_JWT = {
     'SLIDING_TOKEN_REFRESH_LIFETIME': timedelta(days=1),
 }
 
-#Email Setting
+# Email Setting
 EMAIL_BACKEND = os.getenv('EMAIL_BACKEND')
 EMAIL_HOST = os.getenv('EMAIL_HOST')
 EMAIL_PORT = 587

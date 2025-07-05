@@ -52,3 +52,4 @@ vine==5.1.0
 wcwidth==0.2.12
 xlrd==2.0.1
 xlwt==1.3.0
+whitenoise==6.9.0

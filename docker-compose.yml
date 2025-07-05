@@ -1,25 +1,36 @@
 version: '3.8'
 
 services:
-  web:
+  api:  # Renamed from 'web' for clarity
     build: .
     command: >
       sh -c "python manage.py migrate &&
-             python manage.py runserver 0.0.0.0:8000"
-    volumes:
-      - .:/app
-      - static_volume:/app/static
-      - media_volume:/app/media
+           gunicorn banas.wsgi:application --bind 0.0.0.0:8000 --workers 2 
+           --access-logfile - 
+           --error-logfile - 
+           --capture-output 
+           --log-level debug 
+           --enable-stdio-inheritance"
+    environment:
+      - PYTHONUNBUFFERED=1  # Critical for real-time logs
+      - DJANGO_SETTINGS_MODULE=banas.settings
+      - DEBUG=1  # Keep this only for staging, remove in production
+      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
     ports:
       - "8000:8000"
-    environment:
-      - DEBUG=1
-      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
-      - REDIS_URL=redis://redis:6379/0
-      - EMAIL_BACKEND=${EMAIL_BACKEND}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_USERNAME=${EMAIL_USERNAME}
-      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
+    volumes:
+      - static_volume:/app/static
+    deploy:
+      resources:
+        limits:
+          memory: 256M  # DRF with Gunicorn needs ~100MB/worker
+          cpus: "0.5"
+    restart: unless-stopped
     depends_on:
       - db
       - redis
@@ -31,14 +42,22 @@ services:
     environment:
       - POSTGRES_DB=banas
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=Kimws@7698
+      - POSTGRES_PASSWORD=Kimws@7698  # Must match DATABASE_URL
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   redis:
     image: redis:6
-    ports:
-      - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   celery_worker:
     build: .
@@ -46,18 +65,11 @@ services:
     volumes:
       - .:/app
     environment:
-      - DEBUG=1
       - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
       - REDIS_URL=redis://redis:6379/0
-      - EMAIL_BACKEND=${EMAIL_BACKEND}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_USERNAME=${EMAIL_USERNAME}
-      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
-    user: celery
     depends_on:
-      - web
-      - redis
       - db
+      - redis
 
   celery_beat:
     build: .
@@ -65,21 +77,13 @@ services:
     volumes:
       - .:/app
     environment:
-      - DEBUG=1
       - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
       - REDIS_URL=redis://redis:6379/0
-      - EMAIL_BACKEND=${EMAIL_BACKEND}
-      - EMAIL_HOST=${EMAIL_HOST}
-      - EMAIL_USERNAME=${EMAIL_USERNAME}
-      - EMAIL_APP_PASSWORD=${EMAIL_APP_PASSWORD}
-    user: celery
     depends_on:
-      - web
-      - redis
       - db
+      - redis
 
 volumes:
-  postgres_data:
-  redis_data:
+  postgres_data:  # Now properly defined
+  redis_data:     # Now properly defined
   static_volume:
-  media_volume: 

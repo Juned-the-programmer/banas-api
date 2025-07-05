@@ -1,25 +1,41 @@
-FROM python:3.9
+# Stage 1: Builder
+FROM python:3.9-slim as builder
 
-# Set environment variables
-ENV PYTHONDONTWRITEBYTECODE 1
-ENV PYTHONUNBUFFERED 1
-
-# Set work directory
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt /app/
-RUN pip install --no-cache-dir -r requirements.txt
+# Install system deps
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    python3-dev && \
+    rm -rf /var/lib/apt/lists/*
 
-# Copy project
-COPY . /app/
+# Install Python deps
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt gunicorn==20.1.*
 
-# Create directories for media and static files
-RUN mkdir -p /app/media /app/static 
+# Stage 2: Runtime
+FROM python:3.9-slim
 
-# Add these lines near the top, after FROM
+WORKDIR /app
+
+# Copy Python packages AND binaries
+COPY --from=builder /usr/local/lib/python3.9/site-packages /usr/local/lib/python3.9/site-packages
+COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
+COPY --from=builder /usr/local/bin/celery /usr/local/bin/celery
+
+# Copy app code
+COPY . .
+
+# Create non-root user
 RUN addgroup --system celery && \
-    adduser --system --group celery
+    adduser --system --ingroup celery celery && \
+    chown -R celery:celery /app
 
-# Add this at the end
-RUN chown -R celery:celery /app
+USER celery
+
+# Verify installations
+RUN python -c "import django; print(f'Django {django.__version__}')" && \
+    gunicorn --version && \
+    /usr/local/bin/celery --version  # Use full path for verification
