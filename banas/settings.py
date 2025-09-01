@@ -32,7 +32,7 @@ SECRET_KEY = 'django-insecure-ysgf%c$^9y#(dq%$bv_nd#szy(x^=u+3%+1)j@lx-e8$%82%2e
 DEBUG = True
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']
-# CSRF_TRUSTED_ORIGINS = ['https://5ed5-49-205-192-126.ngrok-free.app']
+CSRF_TRUSTED_ORIGINS = ['https://web-production-711cf.up.railway.app/']
 
 # APPEND_SLASH=False
 # Application definition

@@ -7,12 +7,12 @@ docker-compose up -> If there is no changes in the docker file.
 
 docker-compose down -> To stop the docker container.
 
-docker-compose run web python manage.py makemigrations -> To make the migrations.
-docker-compose run web python manage.py migrate -> To run the migrations.
+docker-compose run api python manage.py makemigrations -> To make the migrations.
+docker-compose run api python manage.py migrate -> To run the migrations.
 
-docker-compose run web python manage.py runserver 0.0.0.0:8000 -> To run the server.
+docker-compose run api python manage.py runserver 0.0.0.0:8000 -> To run the server.
 
-docker-compose run web python manage.py createsuperuser -> To create the superuser.
+docker-compose run api python manage.py createsuperuser -> To create the superuser.
 
-docker-compose run web python manage.py collectstatic -> To collect the static files.
+docker-compose run api python manage.py collectstatic -> To collect the static files.
 
