@@ -25,7 +25,7 @@ from .swagger import *
 urlpatterns = [
     path('', lambda request: JsonResponse({"status": "ok"})),
     path('health/', lambda request: JsonResponse({"status": "ok"})),
-    path('admin/', admin.site.urls),
+    path('banas/secure/admin/', admin.site.urls),
     path('api/',include('authentication.urls')),
     path('api/route/',include('route.urls')),
     path('api/customer/',include('customer.urls')),
