@@ -9,6 +9,7 @@ import os
 from django.core.management import call_command
 from io import BytesIO
 from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 
 @shared_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
@@ -38,9 +39,10 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
 
     # Define the complete path to save the image
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
-
+    # Save to default storage (handles permissions and path automatically)
+    saved_path = default_storage.save(file_name, ContentFile(buffer.read()))
     # Save the image to the model
-    customer_qr_code.objects.create(customer = customer_detail, qrcode=ContentFile(buffer.read(), name=file_name))
+    customer_qr_code.objects.create(customer = customer_detail, qrcode=saved_path)
 
 @shared_task
 def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
