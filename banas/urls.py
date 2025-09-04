@@ -17,11 +17,14 @@ from django.contrib import admin
 from django.urls import path , include
 from django.contrib.auth import views as auth_views
 from django.conf import settings
+from django.http import JsonResponse
 from django.conf.urls.static import static
 from drf_yasg.views import get_schema_view
 from .swagger import *
 
 urlpatterns = [
+    path('', lambda request: JsonResponse({"status": "ok"})),
+    path('health/', lambda request: JsonResponse({"status": "ok"})),
     path('admin/', admin.site.urls),
     path('api/',include('authentication.urls')),
     path('api/route/',include('route.urls')),

@@ -32,22 +32,7 @@ services:
           cpus: "0.5"
     restart: unless-stopped
     depends_on:
-      - db
       - redis
-
-  db:
-    image: postgres:13
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    environment:
-      - POSTGRES_DB=banas
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=Kimws@7698  # Must match DATABASE_URL
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
 
   redis:
     image: redis:6
@@ -68,7 +53,6 @@ services:
       - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
       - REDIS_URL=redis://redis:6379/0
     depends_on:
-      - db
       - redis
 
   celery_beat:
@@ -80,10 +64,8 @@ services:
       - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
       - REDIS_URL=redis://redis:6379/0
     depends_on:
-      - db
       - redis
 
 volumes:
-  postgres_data:  # Now properly defined
   redis_data:     # Now properly defined
   static_volume:

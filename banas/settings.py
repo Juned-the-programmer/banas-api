@@ -14,6 +14,7 @@ from pathlib import Path
 from datetime import timedelta
 import os
 from dotenv import load_dotenv
+from decouple import config
 
 # Load environment variables
 load_dotenv()
@@ -115,20 +116,18 @@ WSGI_APPLICATION = 'banas.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'banas',
-        'USER': 'postgres',
-        'PASSWORD': 'Kimws@7698',
-        'HOST': 'db',
-        'PORT': '5432',
+        'NAME': config('DB_NAME'),
+        'USER': config('DB_USER'),
+        'PASSWORD': config('DB_PASSWORD'),
+        'HOST': config('DB_HOST'),
+        'PORT': config('DB_PORT'),
     }
 }
-
-REDIS_URL = os.getenv('REDIS_URL', 'redis://redis:6379/0')
 
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': REDIS_URL,
+        'LOCATION': config('REDIS_URL'),
         'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
         }
@@ -136,7 +135,7 @@ CACHES = {
 }
 
 # CELERY CONFIGURATION
-CELERY_BROKER_URL = REDIS_URL
+CELERY_BROKER_URL = config('REDIS_URL')
 CELERY_ACCEPT_CONTENT = {'application/json'}
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'

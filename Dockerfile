@@ -28,6 +28,7 @@ COPY --from=builder /usr/local/bin/celery /usr/local/bin/celery
 # Copy app code
 COPY . .
 
+ENV PORT=8000
 # Create non-root user
 RUN addgroup --system celery && \
     adduser --system --ingroup celery celery && \
@@ -39,3 +40,5 @@ USER celery
 RUN python -c "import django; print(f'Django {django.__version__}')" && \
     gunicorn --version && \
     /usr/local/bin/celery --version  # Use full path for verification
+
+CMD gunicorn banas.wsgi:application --bind 0.0.0.0:$PORT --workers=4
