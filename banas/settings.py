@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-ysgf%c$^9y#(dq%$bv_nd#szy(x^=u+3%+1)j@lx-e8$%82%2e
 DEBUG = True
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://banas.up.railway.app/']
+CSRF_TRUSTED_ORIGINS = ['https://banas.up.railway.app']
 
 # APPEND_SLASH=False
 # Application definition
