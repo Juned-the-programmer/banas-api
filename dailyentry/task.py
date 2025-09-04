@@ -13,6 +13,15 @@ from django.core.files.storage import default_storage
 
 @shared_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
+    # Ensure folder exists and is writable
+    os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
+    os.chmod(settings.MEDIA_ROOT, 0o777)
+
+    # Optional: print/log info for tracking
+    print(f"MEDIA_ROOT: {settings.MEDIA_ROOT}")
+    print(f"Exists: {os.path.exists(settings.MEDIA_ROOT)}")
+    print(f"Permissions: {oct(os.stat(settings.MEDIA_ROOT).st_mode)[-3:]}")
+    
     customer_detail = Customer.objects.get(id=customer_id)
     redirect_url = "https://banas.up.railway.app/api/dailyentry/customer/dailyentry/"
 

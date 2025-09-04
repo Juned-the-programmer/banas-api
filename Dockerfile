@@ -36,6 +36,9 @@ RUN addgroup --system celery && \
 
 USER celery
 
+RUN mkdir -p /media/qr_codes
+RUN chmod -R 777 /media/qr_codes
+
 # Verify installations
 RUN python -c "import django; print(f'Django {django.__version__}')" && \
     gunicorn --version && \
