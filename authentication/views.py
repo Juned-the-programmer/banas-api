@@ -16,6 +16,10 @@ from dailyentry.models import DailyEntry
 from . import serializer
 from .serializer import *
 
+import os
+from django.http import JsonResponse
+from django.conf import settings
+
 
 # Create your views here.
 
@@ -23,6 +27,11 @@ class CustomTokenObtainPairView(TokenObtainPairView):
   serializer_class = CustomTokenObtainPairSerializer
   token_obtain_pair = TokenObtainPairView.as_view()
 
+@api_view(['GET'])
+@permission_classes([IsAdminUser, IsAuthenticated])
+def list_qr_codes(request):
+    files = os.listdir(settings.MEDIA_ROOT)
+    return JsonResponse({"files": files})
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser, IsAuthenticated])

@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-ysgf%c$^9y#(dq%$bv_nd#szy(x^=u+3%+1)j@lx-e8$%82%2e
 DEBUG = True
 CORS_ORIGIN_ALLOW_ALL = True
 ALLOWED_HOSTS = ['*']
-CSRF_TRUSTED_ORIGINS = ['https://banas.up.railway.app']
+CSRF_TRUSTED_ORIGINS = ['https://banas.up.railway.app', 'http://localhost:8000']
 
 # APPEND_SLASH=False
 # Application definition
@@ -195,7 +195,7 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_ROOT = '/media/qr_codes'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
