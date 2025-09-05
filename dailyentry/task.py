@@ -15,7 +15,6 @@ from django.core.files.storage import default_storage
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
     # Ensure folder exists and is writable
     os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
-    os.chmod(settings.MEDIA_ROOT, 0o777)
 
     # Optional: print/log info for tracking
     print(f"MEDIA_ROOT: {settings.MEDIA_ROOT}")
