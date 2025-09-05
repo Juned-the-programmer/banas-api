@@ -34,8 +34,7 @@ RUN addgroup --system celery && \
     adduser --system --ingroup celery celery && \
     chown -R celery:celery /app
 
-RUN mkdir -p /media/qr_codes
-RUN chmod -R 777 /media/qr_codes
+RUN mkdir -p /media/qr_codes/files && chmod -R 777 /media/qr_codes
 
 USER celery
 

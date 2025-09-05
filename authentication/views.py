@@ -30,8 +30,18 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 @api_view(['GET'])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def list_qr_codes(request):
-    files = os.listdir(settings.MEDIA_ROOT)
-    return JsonResponse({"files": files})
+    qr_folder = settings.MEDIA_ROOT  # /media/qr_codes/files
+    files_list = []
+
+    if os.path.exists(qr_folder):
+        # Only list files (skip directories like lost+found)
+        files_list = [
+            request.build_absolute_uri(settings.MEDIA_URL + f)
+            for f in os.listdir(qr_folder)
+            if os.path.isfile(os.path.join(qr_folder, f))
+        ]
+        
+    return JsonResponse({"files": files_list})
 
 @api_view(['GET', 'POST'])
 @permission_classes([IsAdminUser, IsAuthenticated])
