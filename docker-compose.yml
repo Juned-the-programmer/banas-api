@@ -24,6 +24,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - ./media:/app/media
       - static_volume:/app/static
     deploy:
       resources:
@@ -69,3 +70,4 @@ services:
 volumes:
   redis_data:     # Now properly defined
   static_volume:
+  media_volume:

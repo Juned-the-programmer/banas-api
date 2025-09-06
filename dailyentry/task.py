@@ -13,14 +13,6 @@ from django.core.files.storage import default_storage
 
 @shared_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
-    # Ensure folder exists and is writable
-    os.makedirs(settings.MEDIA_ROOT, exist_ok=True)
-
-    # Optional: print/log info for tracking
-    print(f"MEDIA_ROOT: {settings.MEDIA_ROOT}")
-    print(f"Exists: {os.path.exists(settings.MEDIA_ROOT)}")
-    print(f"Permissions: {oct(os.stat(settings.MEDIA_ROOT).st_mode)[-3:]}")
-    
     customer_detail = Customer.objects.get(id=customer_id)
     redirect_url = "https://banas.up.railway.app/api/dailyentry/customer/dailyentry/"
 
@@ -47,8 +39,9 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
 
     # Define the complete path to save the image
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
-    # Save to default storage (handles permissions and path automatically)
-    saved_path = default_storage.save(file_name, ContentFile(buffer.read()))
+    # Save to qr_codes folder within media
+    qr_codes_path = os.path.join('qr_codes', file_name)
+    saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.read()))
     # Save the image to the model
     customer_qr_code.objects.create(customer = customer_detail, qrcode=saved_path)
 
