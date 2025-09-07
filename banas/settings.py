@@ -58,7 +58,8 @@ INSTALLED_APPS = [
     'import_export',
     'exception',
     'bulk_signals',
-    'django_celery_beat'
+    'django_celery_beat',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -194,8 +195,8 @@ STATICFILES_FINDERS = [
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = "media/"
+MEDIA_URL = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com/"
+# MEDIA_ROOT = "media/"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
@@ -244,3 +245,13 @@ EMAIL_HOST_PASSWORD = os.getenv('EMAIL_APP_PASSWORD')
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False   
 DEFAULT_FROM_EMAIL = os.getenv('EMAIL_USERNAME')
+
+# AWS credentials
+
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+# AWS_S3_REGION_NAME = "ap-south-1"  # example, change to your bucket’s region
+AWS_QUERYSTRING_AUTH = False  # makes public URLs without ?AWSAccessKeyId

@@ -54,3 +54,5 @@ xlrd==2.0.1
 xlwt==1.3.0
 whitenoise==6.9.0
 python-decouple==3.8
+boto3==1.40.25
+django-storages==1.14.6
