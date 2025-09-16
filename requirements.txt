@@ -29,7 +29,6 @@ MarkupPy==1.14
 odfpy==1.4.1
 openpyxl==3.1.2
 packaging==24.0
-Pillow==10.1.0
 prompt-toolkit==3.0.43
 psycopg2-binary==2.9.9
 PyJWT==2.8.0
@@ -56,3 +55,4 @@ whitenoise==6.9.0
 python-decouple==3.8
 boto3==1.40.25
 django-storages==1.14.6
+Pillow==10.4.0

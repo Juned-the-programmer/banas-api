@@ -1,0 +1,1750 @@
+openapi: 3.0.3
+info:
+  title: Banas API
+  description: |
+    A comprehensive business management API for handling customers, daily entries, billing, payments, and route management.
+    This API provides endpoints for managing a milk delivery business with features including:
+    - Customer management and account tracking
+    - Daily entry recording for deliveries
+    - Automated billing system
+    - Payment processing and due tracking
+    - Route management for delivery optimization
+    - QR code generation for customer verification
+    - Dashboard analytics and reporting
+  version: 1.0.0
+  license:
+    name: MIT License
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://banas.up.railway.app
+    description: Production server
+  - url: http://localhost:8000
+    description: Development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Health Check Endpoints
+  /:
+    get:
+      tags:
+        - Health Check
+      summary: Root health check
+      description: Basic health check endpoint to verify API status
+      security: []
+      responses:
+        '200':
+          description: API is running
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  /health/:
+    get:
+      tags:
+        - Health Check
+      summary: Health status
+      description: Detailed health status of the API
+      security: []
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "ok"
+
+  # Authentication Endpoints
+  /api/login/:
+    post:
+      tags:
+        - Authentication
+      summary: User login
+      description: Authenticate user and get JWT tokens
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - username
+                - password
+              properties:
+                username:
+                  type: string
+                  example: "admin"
+                password:
+                  type: string
+                  format: password
+                  example: "password123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: JWT access token
+                  refresh:
+                    type: string
+                    description: JWT refresh token
+                  user:
+                    type: string
+                    example: "admin"
+                  id:
+                    type: integer
+                    example: 1
+                  first_name:
+                    type: string
+                    example: "John"
+                  last_name:
+                    type: string
+                    example: "Doe"
+                  full_name:
+                    type: string
+                    example: "John Doe"
+                  is_superuser:
+                    type: boolean
+                    example: true
+                  email:
+                    type: string
+                    example: "admin@example.com"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/user/token/refresh/:
+    post:
+      tags:
+        - Authentication
+      summary: Refresh JWT token
+      description: Refresh the JWT access token using refresh token
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - refresh
+              properties:
+                refresh:
+                  type: string
+                  description: JWT refresh token
+      responses:
+        '200':
+          description: Token refreshed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  access:
+                    type: string
+                    description: New JWT access token
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/user/get-profile/:
+    get:
+      tags:
+        - Authentication
+      summary: Get user profile
+      description: Retrieve authenticated user's profile information
+      responses:
+        '200':
+          description: User profile retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserProfile'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dashboard/:
+    get:
+      tags:
+        - Analytics
+      summary: Get dashboard data (last 7 days)
+      description: Retrieve dashboard analytics for the last 7 days
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardData'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    post:
+      tags:
+        - Analytics
+      summary: Get dashboard data for custom date range
+      description: Retrieve dashboard analytics for a custom date range
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from_date
+                - to_date
+              properties:
+                from_date:
+                  type: string
+                  format: date
+                  example: "2024-01-01"
+                to_date:
+                  type: string
+                  format: date
+                  example: "2024-01-31"
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DashboardData'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/list-qr-codes/:
+    get:
+      tags:
+        - QR Codes
+      summary: List all QR codes
+      description: Retrieve list of all generated QR code files
+      responses:
+        '200':
+          description: QR codes list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      type: string
+                      format: uri
+                      example: "https://example.com/media/qr_code_123.png"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Route Management Endpoints
+  /api/route/:
+    get:
+      tags:
+        - Routes
+      summary: List all routes
+      description: Retrieve all delivery routes
+      responses:
+        '200':
+          description: Routes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Route'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    post:
+      tags:
+        - Routes
+      summary: Create a new route
+      description: Create a new delivery route
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteCreate'
+      responses:
+        '201':
+          description: Route created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/route/{id}/:
+    get:
+      tags:
+        - Routes
+      summary: Get route details
+      description: Retrieve specific route information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Route UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Route details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    put:
+      tags:
+        - Routes
+      summary: Update route
+      description: Update existing route information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Route UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RouteCreate'
+      responses:
+        '200':
+          description: Route updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Customer Management Endpoints
+  /api/customer/:
+    get:
+      tags:
+        - Customers
+      summary: List all customers
+      description: Retrieve all customers with pagination support
+      parameters:
+        - name: page
+          in: query
+          description: Page number
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            default: 20
+      responses:
+        '200':
+          description: Customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                  next:
+                    type: string
+                    nullable: true
+                  previous:
+                    type: string
+                    nullable: true
+                  results:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Customer'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    post:
+      tags:
+        - Customers
+      summary: Create a new customer
+      description: Create a new customer account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        '201':
+          description: Customer created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/customer/{id}/:
+    get:
+      tags:
+        - Customers
+      summary: Get customer details
+      description: Retrieve specific customer information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Customer details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    put:
+      tags:
+        - Customers
+      summary: Update customer
+      description: Update existing customer information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerCreate'
+      responses:
+        '200':
+          description: Customer updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/customer/route/{route_id}/:
+    get:
+      tags:
+        - Customers
+      summary: List customers by route
+      description: Retrieve all customers assigned to a specific route
+      parameters:
+        - name: route_id
+          in: path
+          required: true
+          description: Route UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Route customers retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Customer'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/customer/account/{id}/:
+    get:
+      tags:
+        - Customer Account
+      summary: Get customer account details
+      description: Retrieve customer account and financial information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Customer account retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerAccount'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/customer/due/{id}/:
+    get:
+      tags:
+        - Customer Account
+      summary: Get customer due amount
+      description: Retrieve customer's outstanding due amount
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Customer due amount retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  customer_id:
+                    type: string
+                    format: uuid
+                  due_amount:
+                    type: integer
+                  last_updated:
+                    type: string
+                    format: date-time
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/customer/detail/{id}/:
+    get:
+      tags:
+        - Customers
+      summary: Get detailed customer information
+      description: Retrieve comprehensive customer details including related data
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Detailed customer information retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerDetail'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Daily Entry Management Endpoints
+  /api/dailyentry/:
+    get:
+      tags:
+        - Daily Entries
+      summary: List daily entries
+      description: Retrieve daily delivery entries with filtering options
+      parameters:
+        - name: date
+          in: query
+          description: Filter by specific date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: customer
+          in: query
+          description: Filter by customer UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Daily entries retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DailyEntry'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    post:
+      tags:
+        - Daily Entries
+      summary: Create daily entry
+      description: Record a new daily delivery entry
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DailyEntryCreate'
+      responses:
+        '201':
+          description: Daily entry created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyEntry'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dailyentry/{id}/:
+    get:
+      tags:
+        - Daily Entries
+      summary: Get daily entry details
+      description: Retrieve specific daily entry information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Daily Entry UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Daily entry retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyEntry'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    delete:
+      tags:
+        - Daily Entries
+      summary: Delete daily entry
+      description: Remove a daily entry record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Daily Entry UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Daily entry deleted successfully
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dailyentry/historical/:
+    get:
+      tags:
+        - Daily Entries
+      summary: Get historical data
+      description: Retrieve historical daily entry data with date range filtering
+      parameters:
+        - name: from_date
+          in: query
+          required: true
+          description: Start date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          required: true
+          description: End date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Historical data retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DailyEntry'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dailyentry/count/today:
+    get:
+      tags:
+        - Daily Entries
+      summary: Get today's entry count
+      description: Retrieve count of daily entries for today
+      responses:
+        '200':
+          description: Today's entry count retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+                    example: 45
+                  date:
+                    type: string
+                    format: date
+                    example: "2024-01-15"
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dailyentry/bulk/import/:
+    post:
+      tags:
+        - Daily Entries
+      summary: Bulk import daily entries
+      description: Import multiple daily entries at once
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entries:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/DailyEntryCreate'
+      responses:
+        '201':
+          description: Bulk import completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  imported_count:
+                    type: integer
+                    example: 25
+                  failed_count:
+                    type: integer
+                    example: 2
+                  errors:
+                    type: array
+                    items:
+                      type: string
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dailyentry/verify/dailyentry/:
+    post:
+      tags:
+        - Daily Entries
+      summary: Verify pending daily entries
+      description: Verify and approve pending daily entries
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                entry_ids:
+                  type: array
+                  items:
+                    type: string
+                    format: uuid
+      responses:
+        '200':
+          description: Entries verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified_count:
+                    type: integer
+                    example: 5
+                  message:
+                    type: string
+                    example: "Entries verified successfully"
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dailyentry/list/pending/dailyentry/:
+    get:
+      tags:
+        - Daily Entries
+      summary: List pending daily entries
+      description: Retrieve all pending daily entries awaiting verification
+      responses:
+        '200':
+          description: Pending entries retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PendingDailyEntry'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/dailyentry/customer/dailyentry/{customer_id}:
+    post:
+      tags:
+        - Daily Entries
+      summary: Create customer QR daily entry
+      description: Create daily entry using customer QR code
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cooler:
+                  type: integer
+                  minimum: 1
+                  example: 2
+                qr_pin:
+                  type: integer
+                  example: 1234
+      responses:
+        '201':
+          description: QR daily entry created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailyEntry'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Bill Management Endpoints
+  /api/bill/bills/:
+    get:
+      tags:
+        - Bills
+      summary: List all bills
+      description: Retrieve all customer bills with filtering options
+      parameters:
+        - name: customer
+          in: query
+          description: Filter by customer UUID
+          schema:
+            type: string
+            format: uuid
+        - name: from_date
+          in: query
+          description: Filter bills from date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          description: Filter bills to date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: paid
+          in: query
+          description: Filter by payment status
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Bills retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerBill'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/bill/{id}/:
+    get:
+      tags:
+        - Bills
+      summary: Get bill details
+      description: Retrieve specific bill information
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Bill UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Bill details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerBill'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/bill/generatebill/{customer_id}/:
+    post:
+      tags:
+        - Bills
+      summary: Generate customer bill
+      description: Generate a new bill for a customer for a specific period
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - from_date
+                - to_date
+              properties:
+                from_date:
+                  type: string
+                  format: date
+                  example: "2024-01-01"
+                to_date:
+                  type: string
+                  format: date
+                  example: "2024-01-31"
+                advanced_amount:
+                  type: integer
+                  default: 0
+                  example: 100
+      responses:
+        '201':
+          description: Bill generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerBill'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  # Payment Management Endpoints
+  /api/payment/:
+    get:
+      tags:
+        - Payments
+      summary: List all payments
+      description: Retrieve all customer payments
+      parameters:
+        - name: customer
+          in: query
+          description: Filter by customer UUID
+          schema:
+            type: string
+            format: uuid
+        - name: from_date
+          in: query
+          description: Filter payments from date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: to_date
+          in: query
+          description: Filter payments to date (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Payments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerPayment'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+    
+    post:
+      tags:
+        - Payments
+      summary: Record customer payment
+      description: Record a new payment from customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerPaymentCreate'
+      responses:
+        '201':
+          description: Payment recorded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerPayment'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/payment/customer/{customer_id}/:
+    get:
+      tags:
+        - Payments
+      summary: List customer payments
+      description: Retrieve all payments made by a specific customer
+      parameters:
+        - name: customer_id
+          in: path
+          required: true
+          description: Customer UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Customer payments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerPayment'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/payment/route/{route_id}/:
+    get:
+      tags:
+        - Payments
+      summary: List route payments
+      description: Retrieve all payments from customers in a specific route
+      parameters:
+        - name: route_id
+          in: path
+          required: true
+          description: Route UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Route payments retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerPayment'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/payment/due/route/{route_id}/:
+    get:
+      tags:
+        - Payments
+      summary: List route due amounts
+      description: Retrieve due amounts for all customers in a specific route
+      parameters:
+        - name: route_id
+          in: path
+          required: true
+          description: Route UUID
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Route due amounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    customer_id:
+                      type: string
+                      format: uuid
+                    customer_name:
+                      type: string
+                    due_amount:
+                      type: integer
+                    last_payment_date:
+                      type: string
+                      format: date-time
+                      nullable: true
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+  /api/payment/due/:
+    get:
+      tags:
+        - Payments
+      summary: List all due amounts
+      description: Retrieve due amounts for all customers
+      responses:
+        '200':
+          description: All due amounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total_due:
+                    type: integer
+                    example: 15000
+                  customers_with_due:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        customer_id:
+                          type: string
+                          format: uuid
+                        customer_name:
+                          type: string
+                        due_amount:
+                          type: integer
+                        route:
+                          type: string
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token obtained from login endpoint
+
+  schemas:
+    # Authentication Schemas
+    UserProfile:
+      type: object
+      properties:
+        username:
+          type: string
+          example: "admin"
+        id:
+          type: integer
+          example: 1
+        first_name:
+          type: string
+          example: "John"
+        last_name:
+          type: string
+          example: "Doe"
+        full_name:
+          type: string
+          example: "John Doe"
+        is_superuser:
+          type: boolean
+          example: true
+        email:
+          type: string
+          format: email
+          example: "admin@example.com"
+
+    DashboardData:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2024-01-15"
+        coolers:
+          type: integer
+          example: 125
+
+    # Route Schemas
+    Route:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        route_name:
+          type: string
+          example: "Downtown Route"
+        date_added:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        date_updated:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        addedby:
+          type: string
+          nullable: true
+          example: "admin"
+        updatedby:
+          type: string
+          nullable: true
+          example: "admin"
+
+    RouteCreate:
+      type: object
+      required:
+        - route_name
+      properties:
+        route_name:
+          type: string
+          maxLength: 100
+          example: "Downtown Route"
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+
+    # Customer Schemas
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        sequence_no:
+          type: integer
+          nullable: true
+          example: 1
+        first_name:
+          type: string
+          maxLength: 200
+          example: "John"
+        last_name:
+          type: string
+          maxLength: 200
+          example: "Smith"
+        phone_no:
+          type: string
+          pattern: '^[789]\d{9}$'
+          nullable: true
+          example: "9876543210"
+        route:
+          type: string
+          format: uuid
+          nullable: true
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "john.smith@example.com"
+        rate:
+          type: integer
+          example: 25
+        date_added:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        date_updated:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+        updatedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+        active:
+          type: boolean
+          default: true
+          example: true
+
+    CustomerCreate:
+      type: object
+      required:
+        - first_name
+        - last_name
+        - rate
+      properties:
+        sequence_no:
+          type: integer
+          nullable: true
+        first_name:
+          type: string
+          maxLength: 200
+          example: "John"
+        last_name:
+          type: string
+          maxLength: 200
+          example: "Smith"
+        phone_no:
+          type: string
+          pattern: '^[789]\d{9}$'
+          nullable: true
+          example: "9876543210"
+        route:
+          type: string
+          format: uuid
+          nullable: true
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: "john.smith@example.com"
+        rate:
+          type: integer
+          example: 25
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+        active:
+          type: boolean
+          default: true
+
+    CustomerDetail:
+      allOf:
+        - $ref: '#/components/schemas/Customer'
+        - type: object
+          properties:
+            route_details:
+              $ref: '#/components/schemas/Route'
+            account:
+              $ref: '#/components/schemas/CustomerAccount'
+
+    CustomerAccount:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        customer_name:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        due:
+          type: integer
+          default: 0
+          example: 500
+        total_paid:
+          type: integer
+          default: 0
+          nullable: true
+          example: 2500
+        date:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+        updatedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+
+    # Daily Entry Schemas
+    DailyEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        customer:
+          type: string
+          format: uuid
+          nullable: true
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        cooler:
+          type: integer
+          example: 2
+        date_added:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-01-15T10:30:00Z"
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+        updatedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+
+    DailyEntryCreate:
+      type: object
+      required:
+        - customer
+        - cooler
+      properties:
+        customer:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        cooler:
+          type: integer
+          minimum: 1
+          example: 2
+        date_added:
+          type: string
+          format: date-time
+          nullable: true
+          example: "2024-01-15T10:30:00Z"
+
+    PendingDailyEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        customer:
+          type: string
+          format: uuid
+          nullable: true
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        coolers:
+          type: integer
+          default: 0
+          nullable: true
+          example: 2
+        date_added:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    # Bill Schemas
+    CustomerBill:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        customer_name:
+          type: string
+          format: uuid
+          nullable: true
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        bill_number:
+          type: string
+          maxLength: 20
+          nullable: true
+          example: "BILL-2024-001"
+        from_date:
+          type: string
+          maxLength: 20
+          example: "2024-01-01"
+        to_date:
+          type: string
+          maxLength: 20
+          example: "2024-01-31"
+        coolers:
+          type: integer
+          default: 0
+          nullable: true
+          example: 60
+        Rate:
+          type: integer
+          default: 0
+          nullable: true
+          example: 25
+        Amount:
+          type: integer
+          default: 0
+          nullable: true
+          example: 1500
+        Pending_amount:
+          type: integer
+          default: 0
+          nullable: true
+          example: 300
+        Advanced_amount:
+          type: integer
+          default: 0
+          nullable: true
+          example: 100
+        Total:
+          type: integer
+          default: 0
+          nullable: true
+          example: 1700
+        date:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        paid:
+          type: boolean
+          default: false
+          nullable: true
+          example: false
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+        updatedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+
+    # Payment Schemas
+    CustomerPayment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        customer_name:
+          type: string
+          format: uuid
+          nullable: true
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        pending_amount:
+          type: integer
+          nullable: true
+          example: 500
+        paid_amount:
+          type: integer
+          example: 1200
+        rounf_off_amount:
+          type: integer
+          default: 0
+          nullable: true
+          example: 0
+        date:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+        updatedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+
+    CustomerPaymentCreate:
+      type: object
+      required:
+        - customer_name
+        - paid_amount
+      properties:
+        customer_name:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        pending_amount:
+          type: integer
+          nullable: true
+          example: 500
+        paid_amount:
+          type: integer
+          example: 1200
+        rounf_off_amount:
+          type: integer
+          default: 0
+          nullable: true
+          example: 0
+        addedby:
+          type: string
+          maxLength: 100
+          nullable: true
+          example: "admin"
+
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        detail:
+          type: string
+          example: "Error message"
+        code:
+          type: string
+          example: "error_code"
+
+    ValidationError:
+      type: object
+      properties:
+        field_name:
+          type: array
+          items:
+            type: string
+          example: ["This field is required."]
+
+  responses:
+    BadRequestError:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ErrorResponse'
+              - $ref: '#/components/schemas/ValidationError'
+
+    UnauthorizedError:
+      description: Unauthorized - Invalid or missing authentication token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Authentication credentials were not provided."
+
+    ForbiddenError:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "You do not have permission to perform this action."
+
+    NotFoundError:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "Not found."
+
+    InternalServerError:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            detail: "A server error occurred."
+
+tags:
+  - name: Health Check
+    description: API health and status endpoints
+  - name: Authentication
+    description: User authentication and authorization
+  - name: Analytics
+    description: Dashboard and analytics data
+  - name: QR Codes
+    description: QR code management for customers
+  - name: Routes
+    description: Delivery route management
+  - name: Customers
+    description: Customer account management
+  - name: Customer Account
+    description: Customer financial account operations
+  - name: Daily Entries
+    description: Daily delivery entry management
+  - name: Bills
+    description: Customer billing operations
+  - name: Payments
+    description: Payment processing and tracking

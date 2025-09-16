@@ -6,44 +6,66 @@ from customer.models import Customer
 from django.conf import settings
 from django.db import connection
 import os
+from io import BytesIO
 from django.core.management import call_command
 from io import BytesIO
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
+from PIL import Image, ImageDraw, ImageFont
 
 @shared_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
     customer_detail = Customer.objects.get(id=customer_id)
     redirect_url = "https://banas.up.railway.app/api/dailyentry/customer/dailyentry/"
 
-    # Create a QR code instance
+    # Generate QR code
     qr = qrcode.QRCode(
         version=1,
         error_correction=qrcode.constants.ERROR_CORRECT_L,
         box_size=10,
         border=4,
     )
-
-    # Adding data
     qr.add_data(redirect_url)
     qr.add_data(customer_detail.id)
     qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
 
-    # Create an image from the QR code
-    img = qr.make_image(fill_color="black", back_color="white")
+    # Create A4 canvas (in pixels)
+    # A4 size at 300 DPI = 2480x3508 pixels
+    a4_width, a4_height = 2480, 3508
+    a4_img = Image.new("RGB", (a4_width, a4_height), "white")
+    draw = ImageDraw.Draw(a4_img)
 
-    # Save image in memory
+    # Add Customer Name at top center
+    try:
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 120)  # Bold font
+    except:
+        font = ImageFont.load_default()
+
+    name_text = f"{customer_detail.first_name} {customer_detail.last_name}"
+    text_w, text_h = draw.textsize(name_text, font=font)
+    text_x = (a4_width - text_w) // 2
+    draw.text((text_x, 200), name_text, font=font, fill="black")
+
+    # Resize QR code and paste in center
+    qr_size = 1200  # large enough for A4
+    qr_img = qr_img.resize((qr_size, qr_size), Image.LANCZOS)
+    qr_x = (a4_width - qr_size) // 2
+    qr_y = (a4_height - qr_size) // 2
+    a4_img.paste(qr_img, (qr_x, qr_y))
+
+    # Save final image to memory
     buffer = BytesIO()
-    img.save(buffer, format="PNG")
+    a4_img.save(buffer, format="PNG")
     buffer.seek(0)
 
-    # Define the complete path to save the image
+    # Save using default storage (S3 or local)
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
-    # Save to qr_codes folder within media
     qr_codes_path = os.path.join('qr_codes', file_name)
     saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.read()))
-    # Save the image to the model
-    customer_qr_code.objects.create(customer = customer_detail, qrcode=saved_path)
+
+    # Save to DB
+    customer_qr_code.objects.create(customer=customer_detail, qrcode=saved_path)
 
 @shared_task
 def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):

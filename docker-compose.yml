@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  api:  # Renamed from 'web' for clarity
+  api:
     build: .
     command: >
       sh -c "python manage.py migrate &&
@@ -11,11 +11,8 @@ services:
            --capture-output 
            --log-level debug 
            --enable-stdio-inheritance"
-    environment:
-      - PYTHONUNBUFFERED=1  # Critical for real-time logs
-      - DJANGO_SETTINGS_MODULE=banas.settings
-      - DEBUG=1  # Keep this only for staging, remove in production
-      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
+    env_file:
+      - .env  # Only loads local Django + DB vars
     logging:
       driver: "json-file"
       options:
@@ -29,45 +26,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M  # DRF with Gunicorn needs ~100MB/worker
+          memory: 256M
           cpus: "0.5"
     restart: unless-stopped
-    depends_on:
-      - redis
-
-  redis:
-    image: redis:6
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  celery_worker:
-    build: .
-    command: celery -A banas worker -l info
-    volumes:
-      - .:/app
-    environment:
-      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      - redis
-
-  celery_beat:
-    build: .
-    command: celery -A banas beat -l info
-    volumes:
-      - .:/app
-    environment:
-      - DATABASE_URL=postgresql://postgres:Kimws@7698@db:5432/banas
-      - REDIS_URL=redis://redis:6379/0
-    depends_on:
-      - redis
 
 volumes:
-  redis_data:     # Now properly defined
   static_volume:
   media_volume:

@@ -34,7 +34,7 @@ def daily_entry(request):
 
         if serializer.is_valid():
             serializer.save(addedby=request.user.username)
-            serializer.save(date_added=timezone.now())
+            # serializer.save(date_added=timezone.now())
 
             return JsonResponse(
                 serializer.data , status=status.HTTP_201_CREATED)
