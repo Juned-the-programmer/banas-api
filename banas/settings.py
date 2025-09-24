@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'bulk_signals',
     'django_celery_beat',
     'storages',
+    'drf_api_logger'
 ]
 
 MIDDLEWARE = [
@@ -70,6 +71,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
@@ -255,3 +257,13 @@ AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
 AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
 AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME')  # example, change to your bucket’s region
 AWS_QUERYSTRING_AUTH = False  # makes public URLs without ?AWSAccessKeyId
+
+# DRF API Logger Settings
+DRF_API_LOGGER_DATABASE = True  # Store logs in database
+DRF_API_LOGGER_SIGNAL = False   # Disable Django signals (not needed in most cases)
+DRF_API_LOGGER_EXCLUDE_KEYS = ['password', 'token', 'access', 'refresh']  # Mask sensitive data
+DRF_API_LOGGER_REQUEST_BODY_LOG = True
+DRF_API_LOGGER_RESPONSE_BODY_LOG = True
+DRF_API_LOGGER_STATUS_CODES = ['2xx', '4xx', '5xx']  # Which status codes to log
+DRF_API_LOGGER_PATH_TYPE = 'FULL_PATH'  # or 'RAW_URI'
+DRF_API_LOGGER_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
