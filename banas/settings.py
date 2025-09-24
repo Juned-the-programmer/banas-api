@@ -260,7 +260,7 @@ AWS_QUERYSTRING_AUTH = False  # makes public URLs without ?AWSAccessKeyId
 
 # DRF API Logger Settings
 DRF_API_LOGGER_DATABASE = True  # Store logs in database
-DRF_API_LOGGER_SIGNAL = False   # Disable Django signals (not needed in most cases)
+DRF_API_LOGGER_SIGNAL = True
 DRF_API_LOGGER_EXCLUDE_KEYS = ['password', 'token', 'access', 'refresh']  # Mask sensitive data
 DRF_API_LOGGER_REQUEST_BODY_LOG = True
 DRF_API_LOGGER_RESPONSE_BODY_LOG = True
