@@ -41,6 +41,9 @@ class Customer(models.Model):
     def __str__(self):
         return "{} {}".format(self.first_name, self.last_name)
 
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+
     class Meta():
         index_together = [['id']]
 

@@ -17,7 +17,7 @@ class DailyEntry(models.Model):
         return str(self.customer)
 
     class Meta():
-        index_together = [['id', 'customer'], ['customer', 'date_added'], ['date_added']]
+        index_together = [['customer', 'date_added'], ['date_added']]
 
 class DailyEntry_dashboard(models.Model):
     customer_count = models.IntegerField(default=0, null=True, blank=True)
@@ -33,9 +33,6 @@ class customer_daily_entry_monthly(models.Model):
     def __str__(self):
         return str(self.customer)
 
-    class Meta():
-        index_together = [['customer']]
-
 class customer_qr_code(models.Model):
     customer = models.OneToOneField(Customer, on_delete=models.SET_NULL, null=True, blank=True)
     qrcode = models.ImageField(upload_to='qr_codes/', null=True, blank=True)
@@ -43,9 +40,6 @@ class customer_qr_code(models.Model):
 
     def __str__(self):
         return str(self.customer)
-
-    class Meta():
-        index_together = [['customer']]
 
 class pending_daily_entry(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
@@ -55,6 +49,3 @@ class pending_daily_entry(models.Model):
 
     def __str__(self):
         return str(self.customer)
-    
-    class Meta():
-        index_together = [['id', 'customer']]

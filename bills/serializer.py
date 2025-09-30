@@ -2,22 +2,18 @@ from rest_framework import serializers
 from .models import *
 
 class GenerateBillSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerBill
-    fields = '__all__'
+    """Serializer for creating/updating Customer Bills"""
+    class Meta:
+        model = CustomerBill
+        fields = "__all__"
+        read_only_fields = ["id", "date", "addedby", "updatedby"]
 
 
 class GenerateBillSerializerGET(serializers.ModelSerializer):
-  customer_name = serializers.SerializerMethodField()
-  class Meta:
-    model = CustomerBill
-    fields = '__all__'
+    customer_name = serializers.CharField(
+        source="customer_name.get_full_name", read_only=True
+    )
 
-  def get_customer_name(self, obj):
-    return f"{obj.customer_name.first_name} {obj.customer_name.last_name}"
-
-
-class DetailBillSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = CustomerBill
-    fields = ['bill_number', 'from_date', 'to_date', 'coolers', 'Total', 'paid', 'id']
+    class Meta:
+        model = CustomerBill
+        fields = "__all__"
