@@ -257,6 +257,13 @@ jobs:
         docker exec banas-test python health_check.py
         
         echo "✅ Container health checks passed"
+    
+    - name: Run Trivy security scan (table format)
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'banas-api:latest'
+        format: 'table'
+        exit-code: '0'
         
     - name: Test container logs
       run: |
@@ -270,15 +277,7 @@ jobs:
         docker stop banas-test || true
         docker rm banas-test || true
         docker rmi banas-api:builder || true
-        docker rmi banas-api:latest || true
-        
-    # ==================== DOCKER SECURITY SCANNING ====================        
-    - name: Run Trivy security scan (table format)
-      uses: aquasecurity/trivy-action@master
-      with:
-        image-ref: 'banas-api:latest'
-        format: 'table'
-        exit-code: '0'  # Don't fail on vulnerabilities for now
+        docker rmi banas-api:latest || true   
         
   # ==================== DOCKER COMPOSE VALIDATION ====================
   docker-compose:
