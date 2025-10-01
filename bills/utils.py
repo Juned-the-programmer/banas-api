@@ -24,13 +24,16 @@ def bill_number_generator():
 
     return f"{year}{month}{new_bill_number}"
 
-def get_dynamic_entries(customer_id, from_date, to_date, table_name):
+def get_dynamic_entries(customer_id, table_name):
+    if not table_name.startswith('DailyEntry_'):
+        raise ValueError("Invalid table name format")
+        
     with connection.cursor() as cursor:
         cursor.execute(f"""
             SELECT id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id
             FROM {table_name}
-            WHERE customer_id = %s AND date_added BETWEEN %s AND %s
-        """, [str(customer_id), from_date, to_date])
+            WHERE customer_id = %s
+        """, [str(customer_id)])
         columns = [col[0] for col in cursor.description]
         rows = [
             dict(zip(columns, row))

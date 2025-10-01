@@ -37,22 +37,25 @@ class BillDetailView(generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         bill = self.get_object()
 
+        if not bill.from_date_as_date or not bill.to_date_as_date:
+            return Response({"error": "Invalid date format in bill"}, status=status.HTTP_400_BAD_REQUEST)
+        
         # Prepare dynamic daily entries
         from_date = bill.from_date
         to_date = bill.to_date
 
-        try:
-            from_date_new = datetime.datetime.strptime(from_date, "%Y-%m-%d").replace(tzinfo=pytz.UTC)
-            to_date_new = datetime.datetime.strptime(to_date, "%Y-%m-%d").replace(hour=23, minute=59, second=59, tzinfo=pytz.UTC)
-        except ValueError:
-            return Response({"error": "Invalid date format in bill"}, status=status.HTTP_400_BAD_REQUEST)
+        from_date_new = datetime.datetime.combine(
+        bill.from_date_as_date, 
+        datetime.time.min).replace(tzinfo=pytz.UTC)
+    
+        to_date_new = datetime.datetime.combine(
+        bill.to_date_as_date, 
+        datetime.time.max).replace(tzinfo=pytz.UTC)
 
         # Determine table name for historical data
-        first_day_of_current_month = timezone.now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        first_day_of_previous_month = (first_day_of_current_month - timezone.timedelta(days=1)).replace(day=1)
-        table_name = f"DailyEntry_{first_day_of_previous_month.strftime('%B_%Y')}"
+        table_name = f"DailyEntry_{bill.bill_month.strftime('%B_%Y')}"
 
-        raw_data = get_dynamic_entries(bill.customer_name.id, from_date_new, to_date_new, table_name)
+        raw_data = get_dynamic_entries(bill.customer_name.id, table_name)
         daily_entry_serializer = DailyEntrySerializerGETDashboard(raw_data, many=True)
 
         return Response({
