@@ -1,6 +1,5 @@
 import os
 
-import qrcode
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
@@ -8,6 +7,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+import qrcode
 
 from dailyentry.models import customer_daily_entry_monthly, customer_qr_code
 from dailyentry.task import generate_customer_qr_code_for_daily_entry_async

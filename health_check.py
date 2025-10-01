@@ -9,8 +9,8 @@ import sys
 import time
 
 import django
-import requests
 from django.core.management import execute_from_command_line
+import requests
 
 
 def setup_django():

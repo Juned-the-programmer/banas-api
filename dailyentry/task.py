@@ -1,7 +1,7 @@
-import os
 from io import BytesIO
+import os
 
-import qrcode
+from PIL import Image, ImageDraw, ImageFont
 from celery import shared_task
 from django.conf import settings
 from django.core.files.base import ContentFile
@@ -9,7 +9,7 @@ from django.core.files.storage import default_storage
 from django.core.management import call_command
 from django.db import connection
 from django.utils import timezone
-from PIL import Image, ImageDraw, ImageFont
+import qrcode
 
 from customer.models import Customer
 
