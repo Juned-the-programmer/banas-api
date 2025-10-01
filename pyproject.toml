@@ -37,7 +37,7 @@ src_paths = ["."]
 verbose = false
 
 [tool.coverage.run]
-source = "."
+source = ["."]
 omit = [
     "*/migrations/*",
     "*/venv/*",
