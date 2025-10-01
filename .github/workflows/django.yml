@@ -251,9 +251,6 @@ jobs:
       run: |
         echo "🩺 Running container health checks..."
         
-        # Install requests for health check
-        docker exec banas-test pip install requests
-        
         # Copy health check script and run it
         docker cp health_check.py banas-test:/app/
         docker exec banas-test python health_check.py
@@ -281,9 +278,20 @@ jobs:
         image-ref: 'banas-api:latest'
         format: 'sarif'
         output: 'trivy-results.sarif'
+    
+    - name: Check if SARIF file exists
+      if: always()
+      run: |
+        if [ -f "trivy-results.sarif" ]; then
+          echo "✅ SARIF file created successfully"
+          ls -la trivy-results.sarif
+        else
+          echo "⚠️ SARIF file not found - creating empty file"
+          echo '{"version": "2.1.0", "runs": []}' > trivy-results.sarif
+        fi
         
     - name: Upload Trivy scan results
-      uses: github/codeql-action/upload-sarif@v2
+      uses: github/codeql-action/upload-sarif@v3
       if: always()
       with:
         sarif_file: 'trivy-results.sarif'
@@ -304,11 +312,14 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Set up Docker
+      uses: docker/setup-buildx-action@v3
       
     - name: Validate docker-compose.yml
       run: |
         echo "📄 Validating docker-compose.yml..."
-        docker-compose config --quiet
+        docker compose config --quiet
         echo "✅ docker-compose.yml is valid"
         
     - name: Test docker-compose build
@@ -333,7 +344,7 @@ jobs:
         EOF
         
         # Test build only (don't start services)
-        docker-compose build --no-cache
+        docker compose build --no-cache
         echo "✅ docker-compose build successful"
         
     - name: Validate compose file structure
