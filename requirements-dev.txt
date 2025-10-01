@@ -2,7 +2,7 @@
 # Code Quality and Formatting
 black==23.12.1
 isort==5.13.2
-flake8==7.0.0
+flake8>=6.0.0,<7.0.0  # Compatible with flake8-django
 flake8-django==1.4.0
 flake8-isort==6.1.1
 
