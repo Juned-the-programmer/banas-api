@@ -1,6 +1,6 @@
 # Development and CI/CD Dependencies
 # Code Quality and Formatting
-black==23.12.1
+black==24.3.0
 isort==5.13.2
 flake8>=6.0.0,<7.0.0  # Compatible with flake8-django
 flake8-django==1.4.0
@@ -17,4 +17,4 @@ pytest-django==4.7.0
 pytest-cov==4.1.0
 
 # API Testing and Health Checks
-requests==2.31.0
+requests==2.32.4

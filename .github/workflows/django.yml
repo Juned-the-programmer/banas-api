@@ -73,8 +73,10 @@ jobs:
       run: |
         echo "🚫 Checking for known vulnerabilities in dependencies..."
         if command -v safety &> /dev/null; then
-          safety check --json --output safety-report.json || echo "⚠️ Safety found vulnerable dependencies (continuing...)"
-          safety check || echo "⚠️ Dependency security scan completed with issues"
+          echo "Using modern safety scan command..."
+          # Use the new scan command with proper output handling
+          safety scan --output json --save-json safety-report.json || echo "⚠️ Safety found vulnerable dependencies (continuing...)"
+          safety scan --output text || echo "⚠️ Dependency security scan completed with issues"
           echo "✅ Dependency security scan completed"
         else
           echo "⚠️ Safety not available, skipping dependency scan"
