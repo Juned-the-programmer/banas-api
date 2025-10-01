@@ -129,7 +129,7 @@ def main():
             results.append((check_name, False))
 
     # Summary
-    print(f"\n📊 Health Check Summary:")
+    print("\n📊 Health Check Summary:")
     passed = sum(1 for _, result in results if result)
     total = len(results)
 
