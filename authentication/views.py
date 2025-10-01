@@ -90,7 +90,9 @@ def dashboard(request):
             return JsonResponse(data_list, status=status.HTTP_200_OK, safe=False)
 
         except (ValueError, TypeError) as e:
-            return JsonResponse({"message": "Invalid date format. Please use YYYY-MM-DD format."}, status=status.HTTP_400_BAD_REQUEST)
+            return JsonResponse(
+                {"message": "Invalid date format. Please use YYYY-MM-DD format."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 @api_view(["GET"])
