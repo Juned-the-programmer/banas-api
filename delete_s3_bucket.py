@@ -1,11 +1,13 @@
 import os
-import django
+
 import boto3
+import django
 from django.conf import settings
 
 # Setup Django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "banas.settings")  # <-- apna project ka naam lagao
 django.setup()
+
 
 def delete_all_files():
     s3_resource = boto3.resource(
@@ -17,6 +19,7 @@ def delete_all_files():
     bucket = s3_resource.Bucket(settings.AWS_STORAGE_BUCKET_NAME)
     bucket.objects.all().delete()
     print("✅ All files deleted successfully!")
+
 
 if __name__ == "__main__":
     delete_all_files()

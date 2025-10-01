@@ -13,35 +13,31 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path , include
-from django.contrib.auth import views as auth_views
 from django.conf import settings
-from django.http import JsonResponse
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.contrib.auth import views as auth_views
+from django.http import JsonResponse
+from django.urls import include, path
 from drf_yasg.views import get_schema_view
+
 from .swagger import *
 
 urlpatterns = [
-    path('', lambda request: JsonResponse({"status": "ok"})),
-    path('health/', lambda request: JsonResponse({"status": "ok"})),
-    path('banas/secure/admin/', admin.site.urls),
-    path('api/',include('authentication.urls')),
-    path('api/route/',include('route.urls')),
-    path('api/customer/',include('customer.urls')),
-    path('api/dailyentry/', include('dailyentry.urls')),
-    path('api/bill/', include('bills.urls')),
-    path('api/payment/', include('payment.urls')),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
-    
-    path('reset_password/', auth_views.PasswordResetView.as_view(),
-            name="reset_password"),
-    path('reset_password_send/',auth_views.PasswordResetDoneView.as_view(),
-            name="password_reset_done"),
-    path('reset/<uidb64>/<token>',auth_views.PasswordResetConfirmView.as_view(),
-            name="password_reset_confirm"),
-    path('reset_password_complete/',auth_views.PasswordResetCompleteView.as_view(),
-            name="password_reset_complete"),
+    path("", lambda request: JsonResponse({"status": "ok"})),
+    path("health/", lambda request: JsonResponse({"status": "ok"})),
+    path("banas/secure/admin/", admin.site.urls),
+    path("api/", include("authentication.urls")),
+    path("api/route/", include("route.urls")),
+    path("api/customer/", include("customer.urls")),
+    path("api/dailyentry/", include("dailyentry.urls")),
+    path("api/bill/", include("bills.urls")),
+    path("api/payment/", include("payment.urls")),
+    path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
+    path("reset_password/", auth_views.PasswordResetView.as_view(), name="reset_password"),
+    path("reset_password_send/", auth_views.PasswordResetDoneView.as_view(), name="password_reset_done"),
+    path("reset/<uidb64>/<token>", auth_views.PasswordResetConfirmView.as_view(), name="password_reset_confirm"),
+    path("reset_password_complete/", auth_views.PasswordResetCompleteView.as_view(), name="password_reset_complete"),
 ]
 
 if settings.DEBUG:

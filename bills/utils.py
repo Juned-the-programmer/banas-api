@@ -1,9 +1,11 @@
-from .models import Bill_number_generator
 import datetime
+
 from django.db import connection
 
-def bill_number_generator():
+from .models import Bill_number_generator
 
+
+def bill_number_generator():
     # For Bill Number
     today = datetime.date.today()
     year = today.strftime("%Y")
@@ -17,23 +19,22 @@ def bill_number_generator():
         new_bill_number = str(int(last_bill_number) + 1).zfill(4)
     else:
         new_bill_number = "0001"
-        bill_number = Bill_number_generator.objects.create(
-            bill_number = f"{year}{month}{new_bill_number}"
-        )
+        bill_number = Bill_number_generator.objects.create(bill_number=f"{year}{month}{new_bill_number}")
         bill_number.save()
 
     return f"{year}{month}{new_bill_number}"
 
+
 def get_dynamic_entries(customer_id, from_date, to_date, table_name):
     with connection.cursor() as cursor:
-        cursor.execute(f"""
+        cursor.execute(
+            f"""
             SELECT id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id
             FROM {table_name}
             WHERE customer_id = %s AND date_added BETWEEN %s AND %s
-        """, [str(customer_id), from_date, to_date])
+        """,
+            [str(customer_id), from_date, to_date],
+        )
         columns = [col[0] for col in cursor.description]
-        rows = [
-            dict(zip(columns, row))
-            for row in cursor.fetchall()
-        ]
+        rows = [dict(zip(columns, row)) for row in cursor.fetchall()]
     return rows
