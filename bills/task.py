@@ -1,13 +1,17 @@
-from celery import shared_task
-from banas.cache_conf import *
-from dailyentry.models import *
-from customer.models import CustomerAccount
-from .models import CustomerBill, Bill_number_generator
+from calendar import monthrange
 import datetime
 from datetime import timedelta
+
+from celery import shared_task
 from django.utils import timezone
-from calendar import monthrange
+
+from banas.cache_conf import *
 from bills.utils import bill_number_generator
+from customer.models import CustomerAccount
+from dailyentry.models import *
+
+from .models import Bill_number_generator, CustomerBill
+
 
 @shared_task
 def run_monthly_task():
@@ -16,9 +20,10 @@ def run_monthly_task():
     if now.day == monthrange(now.year, now.month)[1]:
         generate_bill_at_the_end_of_month.apply_async()
 
+
 @shared_task
 def generate_bill_at_the_end_of_month():
-    #today date
+    # today date
     today_date = datetime.datetime.now()
 
     # Last day of month
@@ -54,7 +59,7 @@ def generate_bill_at_the_end_of_month():
             Pending_amount=int(customer_due),
             Advanced_amount=int(0),
             Total=int(coolers_total) * int(instance.rate) + int(customer_due),
-            addedby="Automation Task"
+            addedby="Automation Task",
         )
 
         customer_account.due = int(coolers_total) * int(instance.rate) + int(customer_due)
@@ -63,5 +68,4 @@ def generate_bill_at_the_end_of_month():
         customer_daily_entry.coolers = 0
         customer_daily_entry.save()
 
-    
     Bill_number_generator.objects.all().delete()

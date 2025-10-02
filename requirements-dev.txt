@@ -1,0 +1,20 @@
+# Development and CI/CD Dependencies
+# Code Quality and Formatting
+black==24.3.0
+isort==5.13.2
+flake8>=6.0.0,<7.0.0  # Compatible with flake8-django
+flake8-django==1.4.0
+flake8-isort==6.1.1
+
+# Security Scanning
+bandit[toml]>=1.7.0  # Security linting (with toml support)
+safety>=2.0.0        # Dependency vulnerability scanning
+
+# Testing and Coverage
+coverage==7.3.4
+pytest==7.4.4
+pytest-django==4.7.0
+pytest-cov==4.1.0
+
+# API Testing and Health Checks
+requests==2.32.4
