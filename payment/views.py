@@ -7,16 +7,11 @@ from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from banas.cache_conf import *
+from banas.cache_conf import customer_cached_data
 from bills.models import CustomerBill
 from customer.models import Customer, CustomerAccount
+from exception.views import customer_not_found_exception, internal_server_error, route_not_found_exception, serializer_errors
 from route.models import Route
-from banas.cache_conf import customer_cached_data
-from exception.views import (
-    customer_not_found_exception,
-    route_not_found_exception,
-    serializer_errors,
-    internal_server_error,
-)
 
 from .models import CustomerPayment
 from .serializer import CustomerPaymentSerializer, CustomerPaymentSerializerGET
@@ -70,9 +65,9 @@ class PaymentListCreateView(generics.ListCreateAPIView):
         customer.updatedby = request.user.username
 
         # Mark unpaid bill of prev month as paid if exists
-        CustomerBill.objects.filter(
-            customer_name=pk, paid=False, from_date=start_day
-        ).update(paid=True, updatedby=request.user.username)
+        CustomerBill.objects.filter(customer_name=pk, paid=False, from_date=start_day).update(
+            paid=True, updatedby=request.user.username
+        )
 
         # Save payment record
         serializer.save(addedby=request.user.username, pending_amount=customer.due)
@@ -190,6 +185,7 @@ class DueListByRouteView(generics.ListAPIView):
             {"duelist_data": data_list, "due_total": customer_due_list_total},
             status=status.HTTP_200_OK,
         )
+
 
 # -------------------------------
 # Total Due (All Customers)

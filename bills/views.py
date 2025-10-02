@@ -1,7 +1,8 @@
 import datetime
-import pytz
+from datetime import timedelta
 
 from django.utils import timezone
+import pytz
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -9,14 +10,15 @@ from rest_framework.response import Response
 from customer.models import Customer, CustomerAccount
 from dailyentry.models import customer_daily_entry_monthly
 from dailyentry.serializer import DailyEntrySerializerGETDashboard
+from exception.views import customer_not_found_exception
 
 from .models import CustomerBill
 from .serializer import GenerateBillSerializer, GenerateBillSerializerGET
 from .task import bill_number_generator
 from .utils import get_dynamic_entries
-from exception.views import customer_not_found_exception
 
 # create your view here
+
 
 # List all bills
 class BillListView(generics.ListAPIView):
@@ -39,18 +41,14 @@ class BillDetailView(generics.RetrieveAPIView):
 
         if not bill.from_date_as_date or not bill.to_date_as_date:
             return Response({"error": "Invalid date format in bill"}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # Prepare dynamic daily entries
         from_date = bill.from_date
         to_date = bill.to_date
 
-        from_date_new = datetime.datetime.combine(
-        bill.from_date_as_date, 
-        datetime.time.min).replace(tzinfo=pytz.UTC)
-    
-        to_date_new = datetime.datetime.combine(
-        bill.to_date_as_date, 
-        datetime.time.max).replace(tzinfo=pytz.UTC)
+        from_date_new = datetime.datetime.combine(bill.from_date_as_date, datetime.time.min).replace(tzinfo=pytz.UTC)
+
+        to_date_new = datetime.datetime.combine(bill.to_date_as_date, datetime.time.max).replace(tzinfo=pytz.UTC)
 
         # Determine table name for historical data
         table_name = f"DailyEntry_{bill.bill_month.strftime('%B_%Y')}"
@@ -58,10 +56,8 @@ class BillDetailView(generics.RetrieveAPIView):
         raw_data = get_dynamic_entries(bill.customer_name.id, from_date_new, to_date_new, table_name)
         daily_entry_serializer = DailyEntrySerializerGETDashboard(raw_data, many=True)
 
-        return Response({
-            "bill": GenerateBillSerializerGET(bill).data,
-            "daily_entry": daily_entry_serializer.data
-        })
+        return Response({"bill": GenerateBillSerializerGET(bill).data, "daily_entry": daily_entry_serializer.data})
+
 
 # Generate a new bill for a customer
 class GenerateBillView(generics.CreateAPIView):
@@ -105,7 +101,7 @@ class GenerateBillView(generics.CreateAPIView):
             Pending_amount=int(customer_account.due),
             Advanced_amount=0,
             Total=(int(coolers_total) * int(customer.rate)) + int(customer_account.due),
-            addedby=request.user.username
+            addedby=request.user.username,
         )
 
         # Update customer account

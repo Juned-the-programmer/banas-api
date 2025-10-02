@@ -1,16 +1,15 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from rest_framework import status
+from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework import generics
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from .serializers import *
-from .models import Route
-from django.http import JsonResponse
-from rest_framework import status
+
 from exception.views import *
+
+from .models import Route
+from .serializers import *
 
 
 # Create your views here.
@@ -28,6 +27,7 @@ class RouteListCreateView(generics.ListCreateAPIView):
             serializer.save(addedby=self.request.user.username)
         except ValidationError as e:
             raise e
+
 
 class RouteRetrieveUpdateView(generics.RetrieveUpdateAPIView):
     queryset = Route.objects.all()

@@ -26,9 +26,9 @@ def bill_number_generator():
 
 
 def get_dynamic_entries(customer_id, from_date, to_date, table_name):
-    if not table_name.startswith('DailyEntry_'):
+    if not table_name.startswith("DailyEntry_"):
         raise ValueError("Invalid table name format")
-        
+
     with connection.cursor() as cursor:
         cursor.execute(
             f"""

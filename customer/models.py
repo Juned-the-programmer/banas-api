@@ -45,6 +45,7 @@ class Customer(models.Model):
     class Meta:
         index_together = [["id"]]
 
+
 class CustomerAccount(models.Model):
     customer_name = models.OneToOneField(
         Customer, on_delete=models.CASCADE, null=True, blank=True, related_name="customer_account"

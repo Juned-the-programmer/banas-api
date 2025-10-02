@@ -1,5 +1,5 @@
-import uuid
 import datetime
+import uuid
 
 from django.db import models
 
@@ -27,9 +27,9 @@ class CustomerBill(models.Model):
     def __str__(self):
         return f"{self.customer_name} - {self.bill_number}"
 
-    class Meta():
-        index_together = [['id', 'customer_name', 'bill_number']]
-    
+    class Meta:
+        index_together = [["id", "customer_name", "bill_number"]]
+
     @property
     def from_date_as_date(self):
         """Return from_date as datetime.date object"""
@@ -37,7 +37,7 @@ class CustomerBill(models.Model):
             return datetime.datetime.strptime(self.from_date, "%Y-%m-%d").date()
         except (ValueError, TypeError):
             return None
-    
+
     @property
     def to_date_as_date(self):
         """Return to_date as datetime.date object"""
@@ -45,13 +45,14 @@ class CustomerBill(models.Model):
             return datetime.datetime.strptime(self.to_date, "%Y-%m-%d").date()
         except (ValueError, TypeError):
             return None
-    
+
     @property
     def bill_month(self):
         """Return the bill month for table naming"""
         if self.from_date_as_date:
             return self.from_date_as_date.replace(day=1)
         return None
+
 
 class Bill_number_generator(models.Model):
     bill_number = models.IntegerField()

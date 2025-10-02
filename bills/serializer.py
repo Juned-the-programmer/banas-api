@@ -5,6 +5,7 @@ from .models import *
 
 class GenerateBillSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating Customer Bills"""
+
     class Meta:
         model = CustomerBill
         fields = "__all__"
@@ -12,9 +13,7 @@ class GenerateBillSerializer(serializers.ModelSerializer):
 
 
 class GenerateBillSerializerGET(serializers.ModelSerializer):
-    customer_name = serializers.CharField(
-        source="customer_name.get_full_name", read_only=True
-    )
+    customer_name = serializers.CharField(source="customer_name.get_full_name", read_only=True)
 
     class Meta:
         model = CustomerBill

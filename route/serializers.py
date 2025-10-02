@@ -2,13 +2,14 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
 from globalserializers import CustomeDateField
+
 from .models import *
 
 
 class RouteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Route
-        fields = ['route_name']
+        fields = ["route_name"]
 
     def validate_route_name(self, value):
         # Prevent duplicates except for self during update
@@ -26,4 +27,4 @@ class RouteSerializerGET(serializers.ModelSerializer):
 
     class Meta:
         model = Route
-        fields = '__all__'
+        fields = "__all__"

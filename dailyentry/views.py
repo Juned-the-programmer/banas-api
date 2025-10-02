@@ -5,30 +5,26 @@ from django.db import connection
 from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render
-from django.http import JsonResponse
 from django.utils import timezone
-from django.db import connection
-
 from rest_framework import generics, status
-from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.response import Response
 
-import datetime
-from datetime import time
-
-from .models import DailyEntry, pending_daily_entry, customer_qr_code, DailyEntry_dashboard
-from customer.models import Customer
-from .serializer import (
-    DailyEntrySerializer,
-    DailyEntrySerializerGETSingle,
-    DailyEntryBulkImportSerializer,
-    PendingDailyEntrySerializer,
-    DailyEntryVerifyResultSerializer,
-    DailyEntrySerializerGETDashboard
-)
 from banas.cache_conf import customer_cached_data
+from customer.models import Customer
 from exception.views import internal_server_error
+
+from .models import DailyEntry, DailyEntry_dashboard, customer_qr_code, pending_daily_entry
+from .serializer import (
+    DailyEntryBulkImportSerializer,
+    DailyEntrySerializer,
+    DailyEntrySerializerGETDashboard,
+    DailyEntrySerializerGETSingle,
+    DailyEntryVerifyResultSerializer,
+    PendingDailyEntrySerializer,
+)
+
 
 # -------------------------------
 # List today's entries & create new entry
@@ -44,6 +40,7 @@ class DailyEntryListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(addedby=self.request.user.username)
 
+
 # -------------------------------
 # Count summary for dashboard
 # -------------------------------
@@ -52,10 +49,13 @@ class DailyEntryCountView(generics.RetrieveAPIView):
 
     def get(self, request, *args, **kwargs):
         dashboard = DailyEntry_dashboard.objects.first()
-        return Response({
-            "today_customer_count": dashboard.customer_count if dashboard else 0,
-            "today_coolers_total": dashboard.coolers_count if dashboard else 0
-        })
+        return Response(
+            {
+                "today_customer_count": dashboard.customer_count if dashboard else 0,
+                "today_coolers_total": dashboard.coolers_count if dashboard else 0,
+            }
+        )
+
 
 # -------------------------------
 # Retrieve, Update, Delete a single entry
@@ -83,12 +83,7 @@ class DailyEntryBulkImportView(generics.CreateAPIView):
 
         addedby = request.user.username
         daily_entries = [
-            DailyEntry(
-                customer=item["customer"],
-                cooler=item["cooler"],
-                addedby=addedby,
-                date_added=timezone.now()
-            )
+            DailyEntry(customer=item["customer"], cooler=item["cooler"], addedby=addedby, date_added=timezone.now())
             for item in serializer.validated_data
         ]
         DailyEntry.objects.bulk_create(daily_entries)
@@ -122,17 +117,16 @@ class VerifyPendingDailyEntryView(generics.CreateAPIView):
 
             try:
                 customer = customer_data.get(id=customer_id)
-                daily_entries.append(DailyEntry(
-                    customer=customer,
-                    cooler=cooler,
-                    addedby=f"{customer.first_name} {customer.last_name}",
-                    date_added=date_added
-                ))
-            except Customer.DoesNotExist:
-                return Response(
-                    {"error": f"Customer {customer_id} not found"},
-                    status=status.HTTP_400_BAD_REQUEST
+                daily_entries.append(
+                    DailyEntry(
+                        customer=customer,
+                        cooler=cooler,
+                        addedby=f"{customer.first_name} {customer.last_name}",
+                        date_added=date_added,
+                    )
                 )
+            except Customer.DoesNotExist:
+                return Response({"error": f"Customer {customer_id} not found"}, status=status.HTTP_400_BAD_REQUEST)
 
         if daily_entries:
             DailyEntry.objects.bulk_create(daily_entries)
@@ -154,19 +148,18 @@ class PendingDailyEntryListView(generics.ListAPIView):
 # Customer QR daily entry (function-based)
 # -------------------------------
 def customer_qr_daily_entry(request, pk):
-    if request.method == 'POST':
+    if request.method == "POST":
         qr_code_pin = customer_qr_code.objects.get(customer=pk).qrcode_pin
 
-        if qr_code_pin == int(request.POST.get('pin', 0)):
+        if qr_code_pin == int(request.POST.get("pin", 0)):
             pending_daily_entry_customer = pending_daily_entry(
-                customer=Customer.objects.get(id=pk),
-                coolers=int(request.POST.get('coolers', 0))
+                customer=Customer.objects.get(id=pk), coolers=int(request.POST.get("coolers", 0))
             )
             pending_daily_entry_customer.save()
 
     current_time = datetime.datetime.now().time()
     if time(9, 0, 0) < current_time < time(18, 0, 0):
-        return render(request, 'dailyentry/dailyentry.html')
+        return render(request, "dailyentry/dailyentry.html")
     else:
         return render(request, "dailyentry/dailyentrytime.html")
 
@@ -174,17 +167,17 @@ def customer_qr_daily_entry(request, pk):
 # -------------------------------
 # Historical data retriever
 # -------------------------------
-@api_view(['GET'])
+@api_view(["GET"])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def historical_data_retriever(request):
-    params = request.GET.get('historical')
+    params = request.GET.get("historical")
     table_name = f"dailyentry_{params}"
 
     # Check table existence
     with connection.cursor() as cursor:
         cursor.execute(f"SELECT to_regclass('{table_name}')")
         if not cursor.fetchone()[0]:
-            return JsonResponse({'error': 'Table not found'}, status=404)
+            return JsonResponse({"error": "Table not found"}, status=404)
 
     # Fetch data
     with connection.cursor() as cursor:
