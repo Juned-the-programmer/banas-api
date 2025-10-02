@@ -107,7 +107,7 @@ class VerifyPendingDailyEntryView(generics.CreateAPIView):
 
         for item in serializer.validated_data:
             customer_id = item.get("customer")
-            cooler = item.get("cooler")
+            cooler = item.get("coolers")
             date_added = item.get("date_added")
             pending_id = item.get("pending_id")
             pending_ids.append(pending_id)

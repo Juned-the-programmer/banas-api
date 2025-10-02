@@ -56,5 +56,5 @@ class PendingDailyEntrySerializer(serializers.ModelSerializer):
 class DailyEntryVerifyResultSerializer(serializers.Serializer):
     pending_id = serializers.CharField(max_length=50, required=False, allow_blank=True)
     customer = serializers.CharField(max_length=50, required=False, allow_blank=True)
-    cooler = serializers.IntegerField(required=False)
+    coolers = serializers.IntegerField(required=False)
     date_added = serializers.DateTimeField(required=False)

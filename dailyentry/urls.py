@@ -11,6 +11,7 @@ urlpatterns = [
     path("verify/dailyentry/", views.VerifyPendingDailyEntryView.as_view(), name="verify_pending_daily_entry"),
     path("list/pending/dailyentry/", views.PendingDailyEntryListView.as_view(), name="list_pending_daily_entry"),
     # FBVs for QR and historical (still required)
+    path("customer/dailyentry/<str:pk>", views.customer_qr_daily_entry, name="customer_qr_daily_entry_no_slash"),
     path("customer/dailyentry/<str:pk>/", views.customer_qr_daily_entry, name="customer_qr_daily_entry"),
     path("historical/", views.historical_data_retriever, name="historical_data_retriever"),
 ]

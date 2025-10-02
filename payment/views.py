@@ -57,6 +57,9 @@ class PaymentListCreateView(generics.ListCreateAPIView):
         except CustomerAccount.DoesNotExist:
             return customer_not_found_exception(pk)
 
+        # Capture pending amount BEFORE updating
+        pending_amount_before_payment = int(customer.due)
+
         # Update customer account
         customer.due = int(customer.due) - int(data_values[1]) - int(round_off)
         customer.total_paid = int(customer.total_paid) + int(data_values[1])
@@ -67,8 +70,8 @@ class PaymentListCreateView(generics.ListCreateAPIView):
             paid=True, updatedby=request.user.username
         )
 
-        # Save payment record
-        serializer.save(addedby=request.user.username, pending_amount=customer.due)
+        # Save payment record with pending amount BEFORE payment was made
+        serializer.save(addedby=request.user.username, pending_amount=pending_amount_before_payment)
         customer.save()
 
         return Response(
