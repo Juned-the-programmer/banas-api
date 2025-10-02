@@ -1,31 +1,17 @@
-import datetime
-
 from django.core.cache import cache
-from django.db.models import Sum
-from django.http import JsonResponse
-from django.shortcuts import render
-from rest_framework import generics, status
+from rest_framework import generics
 from rest_framework.exceptions import NotFound
 from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView, UpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 
 from banas.cache_conf import customer_cached_data
-from bills.models import CustomerBill
-from bills.serializer import GenerateBillSerializerGET
-from customer.models import Customer, CustomerAccount
+from customer.models import Customer
 from customer.serializer import (
     CustomerAccountSerializer,
     CustomerDetailNestedSerializer,
     CustomerSerializer,
     CustomerSerializerList,
 )
-from dailyentry.models import DailyEntry, customer_daily_entry_monthly, customer_qr_code
-from dailyentry.serializer import DailyEntrySerializerGETDashboard
-from exception.error_constant import *
-from exception.views import *
-from payment.models import CustomerPayment
-from payment.serializer import CustomerPaymentSerializer, CustomerPaymentSerializerGET
 
 # Create your views here.
 """ To POST customer and get the complete list of all the customer from database 

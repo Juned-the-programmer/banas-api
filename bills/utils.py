@@ -26,11 +26,19 @@ def bill_number_generator():
 
 
 def get_dynamic_entries(customer_id, from_date, to_date, table_name):
+    # Validate table name to prevent SQL injection
     if not table_name.startswith("DailyEntry_"):
         raise ValueError("Invalid table name format")
 
+    # Additional validation: only allow alphanumeric and underscore
+    import re
+
+    if not re.match(r"^DailyEntry_[A-Za-z0-9_]+$", table_name):
+        raise ValueError("Invalid table name format")
+
     with connection.cursor() as cursor:
-        cursor.execute(
+        # Table name is validated above, customer_id/dates are parameterized
+        cursor.execute(  # nosec B608
             f"""
             SELECT id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id
             FROM {table_name}

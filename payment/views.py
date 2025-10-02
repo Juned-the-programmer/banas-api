@@ -6,11 +6,10 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
-from banas.cache_conf import *
 from banas.cache_conf import customer_cached_data
 from bills.models import CustomerBill
 from customer.models import Customer, CustomerAccount
-from exception.views import customer_not_found_exception, internal_server_error, route_not_found_exception, serializer_errors
+from exception.views import customer_not_found_exception, route_not_found_exception, serializer_errors
 from route.models import Route
 
 from .models import CustomerPayment
@@ -51,7 +50,6 @@ class PaymentListCreateView(generics.ListCreateAPIView):
         # Previous month date range
         last_day_of_prev_month = date.today().replace(day=1) - timedelta(days=1)
         start_day_of_prev_month = date.today().replace(day=1) - timedelta(days=last_day_of_prev_month.day)
-        last_day = last_day_of_prev_month.strftime("%Y-%m-%d")
         start_day = start_day_of_prev_month.strftime("%Y-%m-%d")
 
         try:

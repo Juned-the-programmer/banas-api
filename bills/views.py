@@ -1,7 +1,6 @@
 import datetime
 from datetime import timedelta
 
-from django.utils import timezone
 import pytz
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -43,8 +42,6 @@ class BillDetailView(generics.RetrieveAPIView):
             return Response({"error": "Invalid date format in bill"}, status=status.HTTP_400_BAD_REQUEST)
 
         # Prepare dynamic daily entries
-        from_date = bill.from_date
-        to_date = bill.to_date
 
         from_date_new = datetime.datetime.combine(bill.from_date_as_date, datetime.time.min).replace(tzinfo=pytz.UTC)
 

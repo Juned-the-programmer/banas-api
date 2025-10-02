@@ -6,4 +6,4 @@ class DailyentryConfig(AppConfig):
     name = "dailyentry"
 
     def ready(self):
-        import dailyentry.signals
+        import dailyentry.signals  # noqa: F401

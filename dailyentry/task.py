@@ -3,10 +3,8 @@ import os
 
 from PIL import Image, ImageDraw, ImageFont
 from celery import shared_task
-from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.core.management import call_command
 from django.db import connection
 from django.utils import timezone
 import qrcode
@@ -102,8 +100,14 @@ def batch_processing_for_daily_entry_ofn_monthly_basis():
     first_day_of_previous_month = (first_day_of_current_month - timezone.timedelta(days=1)).replace(day=1)
     table_name = f'DailyEntry_{first_day_of_previous_month.strftime("%B_%Y")}'
 
+    # Validate table name format to prevent SQL injection
+    import re
+
+    if not re.match(r"^DailyEntry_[A-Za-z]+_\d{4}$", table_name):
+        raise ValueError(f"Invalid table name format: {table_name}")
+
     # Custom SQL for creating a new table
-    create_table_sql = f"""
+    create_table_sql = f"""  # nosec B608 - table name is validated above
     CREATE TABLE {table_name} (
         id UUID PRIMARY KEY,
         customer_id UUID,
@@ -119,7 +123,7 @@ def batch_processing_for_daily_entry_ofn_monthly_basis():
         cursor.execute(create_table_sql)
 
     # Insert data into the new table
-    insert_sql = f"""
+    insert_sql = f"""  # nosec B608 - table name is validated above
     INSERT INTO {table_name} (id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id)
     SELECT id, customer_id, cooler, date_added, addedby, updatedby, id
     FROM dailyentry_dailyentry;

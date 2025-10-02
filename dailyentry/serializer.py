@@ -1,7 +1,5 @@
 from rest_framework import serializers
 
-from customer.models import Customer
-
 from .models import DailyEntry, pending_daily_entry
 
 

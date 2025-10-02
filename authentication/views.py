@@ -1,22 +1,19 @@
 import datetime
-from datetime import date, timedelta
+from datetime import timedelta
 import os
 
 from django.conf import settings
 from django.contrib.auth.models import User
 from django.db.models import Sum
 from django.http import JsonResponse
-from django.utils import timezone
-from rest_framework import generics, status
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from dailyentry.models import DailyEntry
 
-from . import serializer
-from .serializer import *
+from .serializer import CustomTokenObtainPairSerializer
 
 # Create your views here.
 
@@ -89,7 +86,7 @@ def dashboard(request):
 
             return JsonResponse(data_list, status=status.HTTP_200_OK, safe=False)
 
-        except (ValueError, TypeError) as e:
+        except (ValueError, TypeError):
             return JsonResponse(
                 {"message": "Invalid date format. Please use YYYY-MM-DD format."}, status=status.HTTP_400_BAD_REQUEST
             )

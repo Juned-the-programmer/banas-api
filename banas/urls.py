@@ -20,9 +20,8 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.http import JsonResponse
 from django.urls import include, path
-from drf_yasg.views import get_schema_view
 
-from .swagger import *
+from .swagger import schema_view
 
 urlpatterns = [
     path("", lambda request: JsonResponse({"status": "ok"})),

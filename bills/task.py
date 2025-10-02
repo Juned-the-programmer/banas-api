@@ -5,10 +5,10 @@ from datetime import timedelta
 from celery import shared_task
 from django.utils import timezone
 
-from banas.cache_conf import *
+from banas.cache_conf import customer_cached_data
 from bills.utils import bill_number_generator
 from customer.models import CustomerAccount
-from dailyentry.models import *
+from dailyentry.models import customer_daily_entry_monthly
 
 from .models import Bill_number_generator, CustomerBill
 

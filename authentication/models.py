@@ -1,7 +1,3 @@
-import uuid
-
-from django.db import models
-
 # Create your models here.
 # class Dashboard(models.Model):
 #     id = models.UUIDField(default=uuid.uuid4 , unique=True , primary_key=True , editable=False)

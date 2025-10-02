@@ -2,7 +2,7 @@ from bulk_signals import signals
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-from .models import *
+from .models import DailyEntry, DailyEntry_dashboard, customer_daily_entry_monthly
 from .task import update_customer_daily_entry_to_monthly_table_bulk
 
 

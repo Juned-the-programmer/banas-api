@@ -1,8 +1,7 @@
 import datetime
-from datetime import date, time, timedelta
+from datetime import time
 
 from django.db import connection
-from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -13,7 +12,6 @@ from rest_framework.response import Response
 
 from banas.cache_conf import customer_cached_data
 from customer.models import Customer
-from exception.views import internal_server_error
 
 from .models import DailyEntry, DailyEntry_dashboard, customer_qr_code, pending_daily_entry
 from .serializer import (
@@ -102,7 +100,6 @@ class VerifyPendingDailyEntryView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
-        addedby = request.user.username
         daily_entries = []
         pending_ids = []
 
@@ -171,17 +168,24 @@ def customer_qr_daily_entry(request, pk):
 @permission_classes([IsAdminUser, IsAuthenticated])
 def historical_data_retriever(request):
     params = request.GET.get("historical")
+
+    # Validate params to prevent SQL injection
+    import re
+
+    if not params or not re.match(r"^[A-Za-z]+_\d{4}$", params):
+        return JsonResponse({"error": "Invalid historical parameter format"}, status=400)
+
     table_name = f"dailyentry_{params}"
 
     # Check table existence
     with connection.cursor() as cursor:
-        cursor.execute(f"SELECT to_regclass('{table_name}')")
+        cursor.execute(f"SELECT to_regclass('{table_name}')")  # nosec B608 - params validated above
         if not cursor.fetchone()[0]:
             return JsonResponse({"error": "Table not found"}, status=404)
 
     # Fetch data
     with connection.cursor() as cursor:
-        cursor.execute(f"SELECT * FROM {table_name}")
+        cursor.execute(f"SELECT * FROM {table_name}")  # nosec B608 - table name validated above
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
 

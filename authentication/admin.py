@@ -1,3 +1,3 @@
-from django.contrib import admin
+"""Admin registrations for authentication app (none currently)."""
 
 # Register your models here.

@@ -1,15 +1,11 @@
-import os
-
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.core.mail import send_mail
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
-import qrcode
 
-from dailyentry.models import customer_daily_entry_monthly, customer_qr_code
+from dailyentry.models import customer_daily_entry_monthly
 from dailyentry.task import generate_customer_qr_code_for_daily_entry_async
 
 from .models import Customer, CustomerAccount
@@ -31,7 +27,7 @@ def create_user(sender, instance, created, **kwarg):
             instance.save()
             subject = "Account Created"
             customer_username = user.username
-            customer_password = "banaswater"
+            customer_password = "banaswater"  # nosec B105 - Default password, user should change
             html_message = render_to_string(
                 "customer/JoinCustomer.html",
                 {

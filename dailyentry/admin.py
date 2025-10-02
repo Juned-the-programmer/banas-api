@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import *
+from .models import DailyEntry, DailyEntry_dashboard, customer_daily_entry_monthly, customer_qr_code, pending_daily_entry
 
 # Register your models here.
 admin.site.register(DailyEntry)

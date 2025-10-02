@@ -4,9 +4,9 @@ from bills.models import CustomerBill
 from dailyentry.models import DailyEntry, customer_qr_code
 from globalserializers import CustomeDateField
 from payment.models import CustomerPayment
-from route.serializers import RouteSerializerGET
+from route.models import Route
 
-from .models import *
+from .models import Customer, CustomerAccount
 
 
 class CustomerSerializer(serializers.ModelSerializer):

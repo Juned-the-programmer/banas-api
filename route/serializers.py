@@ -3,7 +3,7 @@ from rest_framework.exceptions import ValidationError
 
 from globalserializers import CustomeDateField
 
-from .models import *
+from .models import Route
 
 
 class RouteSerializer(serializers.ModelSerializer):
