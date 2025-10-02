@@ -81,30 +81,37 @@ jobs:
           echo "❌ Bandit not available"
           exit 1
         fi
+    
+    - name: Install OSV-Scanner
+      run: |
+        echo "📥 Installing OSV-Scanner..."
+        OSV_VERSION="v0.5.0"  # Replace with latest release if needed
+        curl -sSL https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner-linux-amd64 -o osv-scanner
+        chmod +x osv-scanner
+        sudo mv osv-scanner /usr/local/bin/osv-scanner
+        echo "✅ OSV-Scanner installed successfully"
+
     - name: Install jq
       run: sudo apt-get update && sudo apt-get install -y jq
 
-    - name: Dependency vulnerability scan (OSV-Scanner)
+    - name: Run dependency vulnerability scan
       run: |
-        echo "🚫 Checking for known vulnerabilities in dependencies with OSV-Scanner..."
+        echo "🚨 Scanning dependencies for vulnerabilities with OSV-Scanner..."
         
-        # Install OSV-Scanner (latest version)
-        OSV_VERSION="v0.5.0"
-        curl -sSL https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner-linux-amd64 -o osv-scanner
-        chmod +x osv-scanner
-        sudo mv osv-scanner /usr/local/bin/
-
-        # Scan the Python dependencies in requirements.txt
-        osv-scanner --file=requirements.txt --json > osv-report.json
-
-        # Check if vulnerabilities exist
+        # Run OSV-Scanner on requirements.txt
+        osv-scanner -r requirements.txt -o json > osv-report.json
+        
+        # Display a summary in CI logs
+        echo "🔍 Vulnerability Summary:"
+        cat osv-report.json | jq '.results[] | {package: .package.name, affected: .vulns[].id}'
+        
+        # Fail CI if any vulnerabilities exist
         VULN_COUNT=$(jq '.results | length' osv-report.json)
         if [ "$VULN_COUNT" -gt 0 ]; then
-          echo "❌ Found $VULN_COUNT vulnerabilities in dependencies:"
-          jq '.results[] | {package: .package.name, version: .package.version, id: .id, details: .details}' osv-report.json
-          exit 1  # Fail the CI
+          echo "❌ $VULN_COUNT vulnerable dependencies found. Failing CI."
+          exit 1
         else
-          echo "✅ No known vulnerabilities found in dependencies"
+          echo "✅ No known vulnerabilities found."
         fi
         
     # ==================== DJANGO FRAMEWORK CHECKS ====================
