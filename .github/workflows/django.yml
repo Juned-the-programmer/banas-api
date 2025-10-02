@@ -88,8 +88,9 @@ jobs:
         if command -v safety &> /dev/null; then
           echo "Using modern safety scan command..."
           # Use the new scan command with proper output handling
+          # Valid output formats: json, spdx, html, screen, none
           safety scan --output json --save-json safety-report.json || echo "⚠️ Safety found vulnerable dependencies (continuing...)"
-          safety scan --output text || echo "⚠️ Dependency security scan completed with issues"
+          safety scan --output screen || echo "⚠️ Dependency security scan completed with issues"
           echo "✅ Dependency security scan completed"
         else
           echo "⚠️ Safety not available, skipping dependency scan"
