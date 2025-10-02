@@ -95,15 +95,16 @@ jobs:
         sudo chmod +x /usr/local/bin/osv-scanner
         osv-scanner --version
 
-    - name: 🚨 Scan dependencies for vulnerabilities with OSV-Scanner
+    - name: 🚨 Scan Python dependencies for vulnerabilities
       run: |
-        echo "📦 Scanning Python dependencies in requirements.txt..."
+        echo "📦 Scanning dependencies in requirements.txt..."
+        set +e  # prevent immediate exit on vuln detection
         osv-scanner --lockfile=requirements.txt --output=json > osv-report.json
         VULN_COUNT=$(jq '.vulns | length' osv-report.json)
         echo "Found $VULN_COUNT vulnerabilities."
         if [ "$VULN_COUNT" -gt 0 ]; then
-          echo "❌ Vulnerabilities detected! Failing the build."
-          cat osv-report.json
+          echo "❌ Vulnerabilities detected! Details:"
+          jq '.' osv-report.json
           exit 1
         else
           echo "✅ No known vulnerabilities detected."
