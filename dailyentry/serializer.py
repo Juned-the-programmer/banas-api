@@ -1,60 +1,60 @@
-import uuid
-
 from rest_framework import serializers
-
-from customer.models import *
 
 from .models import DailyEntry, pending_daily_entry
 
 
+# For create/update DailyEntry
 class DailyEntrySerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyEntry
-        fields = "__all__"
+        fields = ["id", "customer", "cooler", "date_added", "addedby", "updatedby"]
+        read_only_fields = ["id", "addedby", "updatedby"]
 
 
+# For list DailyEntries (with customer_name)
 class DailyEntrySerializerGET(serializers.ModelSerializer):
-    customer_name = serializers.SerializerMethodField()
+    customer_name = serializers.CharField(source="customer.get_full_name", read_only=True)
 
     class Meta:
         model = DailyEntry
         fields = ["id", "cooler", "date_added", "addedby", "updatedby", "customer_name"]
 
-    def get_customer_name(self, obj):
-        return f"{obj.customer.first_name} {obj.customer.last_name}"
 
-
+# For single record retrieval
 class DailyEntrySerializerGETSingle(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source="customer.get_full_name", read_only=True)
+
     class Meta:
         model = DailyEntry
-        fields = "__all__"
+        fields = ["id", "customer", "cooler", "date_added", "addedby", "updatedby", "customer_name"]
 
 
-class DialyEntrySerializerGETDashboard(serializers.ModelSerializer):
+# For Dashboard lightweight fetch
+class DailyEntrySerializerGETDashboard(serializers.ModelSerializer):
     class Meta:
         model = DailyEntry
         fields = ["cooler", "date_added", "addedby"]
 
 
+# For bulk import
 class DailyEntryBulkImportSerializer(serializers.ModelSerializer):
     class Meta:
         model = DailyEntry
-        fields = "__all__"
+        fields = ["customer", "cooler"]  # only required fields
 
 
-class Pending_Daily_Entry_Serializer(serializers.ModelSerializer):
-    customer_name = serializers.SerializerMethodField()
+# Pending daily entries
+class PendingDailyEntrySerializer(serializers.ModelSerializer):
+    customer_name = serializers.CharField(source="customer.get_full_name", read_only=True)
 
     class Meta:
         model = pending_daily_entry
-        fields = "__all__"
-
-    def get_customer_name(self, obj):
-        return f"{obj.customer.first_name} {obj.customer.last_name}"
+        fields = ["id", "customer", "coolers", "date_added", "customer_name"]
 
 
-class DailyEntry_Verify_Result_Serializer(serializers.Serializer):
-    pendng_id = models.CharField(max_length=50, null=True, blank=True)
-    customer = models.CharField(max_length=50, null=True, blank=True)
-    cooler = models.IntegerField(default=0, null=True, blank=True)
-    date_added = models.DateTimeField(null=True, blank=True)
+# Verify result serializer (FIXED)
+class DailyEntryVerifyResultSerializer(serializers.Serializer):
+    pending_id = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    customer = serializers.CharField(max_length=50, required=False, allow_blank=True)
+    coolers = serializers.IntegerField(required=False)
+    date_added = serializers.DateTimeField(required=False)

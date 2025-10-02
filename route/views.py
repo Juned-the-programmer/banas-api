@@ -1,62 +1,47 @@
-from django.http import JsonResponse
-from django.shortcuts import render
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics
+from rest_framework.exceptions import ValidationError
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
-from rest_framework.response import Response
 
-from exception.views import *
+from exception.views import route_not_found_exception
 
-from .serializers import *
+from .models import Route
+from .serializers import RouteSerializer, RouteSerializerGET
 
 
 # Create your views here.
-@api_view(["GET", "POST"])
-@permission_classes([IsAdminUser, IsAuthenticated])
-def RouteListView(request):
-    if request.method == "POST":
-        serializer = RouteSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(addedby=request.user.username)
-            return JsonResponse(serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            errors = serializer.errors
-            if "route_name" in errors:
-                return route_already_exists()
-            else:
-                return serializer_errors(serializer.errors)
+class RouteListCreateView(generics.ListCreateAPIView):
+    queryset = Route.objects.all()
+    permission_classes = [IsAuthenticated, IsAdminUser]
 
-    if request.method == "GET":
-        route = Route.objects.all()
-        serializer = RouteSerializerGET(route, many=True)
+    def get_serializer_class(self):
+        if self.request.method == "POST":
+            return RouteSerializer
+        return RouteSerializerGET
 
-        return JsonResponse(serializer.data, status=status.HTTP_200_OK, safe=False)
-
-    return internal_server_error()
-
-
-@api_view(["GET", "PUT"])
-@permission_classes([IsAdminUser, IsAuthenticated])
-def list_update_route(request, pk):
-    if request.method == "GET":
+    def perform_create(self, serializer):
         try:
-            route = Route.objects.get(id=pk)
+            serializer.save(addedby=self.request.user.username)
+        except ValidationError as e:
+            raise e
+
+
+class RouteRetrieveUpdateView(generics.RetrieveUpdateAPIView):
+    queryset = Route.objects.all()
+    permission_classes = [IsAuthenticated, IsAdminUser]
+
+    def get_serializer_class(self):
+        if self.request.method == "PUT":
+            return RouteSerializer
+        return RouteSerializerGET
+
+    def get_object(self):
+        try:
+            return super().get_object()
         except Route.DoesNotExist:
-            return route_not_found_exception(pk)
+            raise route_not_found_exception(self.kwargs.get("pk"))
 
-        route_serializer = RouteSerializerGET(route)
-        return JsonResponse(route_serializer.data)
-
-    if request.method == "PUT":
-        serializer = RouteSerializer(route, data=request.data)
-        if serializer.is_valid():
-            serializer.save(updatedby=request.user.username)
-            return JsonResponse(serializer.data, status=status.HTTP_200_OK)
-        else:
-            errors = serializer.errors
-            if "route_name" in errors:
-                return route_already_exists()
-            else:
-                return serializer_errors(serializer.errors)
-
-    return internal_server_error()
+    def perform_update(self, serializer):
+        try:
+            serializer.save(updatedby=self.request.user.username)
+        except ValidationError as e:
+            raise e

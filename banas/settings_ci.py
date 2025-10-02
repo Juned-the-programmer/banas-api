@@ -3,15 +3,13 @@ Django settings for CI/Testing environment.
 Uses SQLite and removes external dependencies for GitHub Actions.
 """
 
-from datetime import timedelta
-import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"
+SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"  # nosec
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -125,7 +123,9 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-STATICFILES_DIRS = [BASE_DIR / "staticfiles"]
+# Include extra static dir only if present to avoid warnings on CI
+_extra_static_dir = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [p for p in [_extra_static_dir] if p.exists()]
 
 STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.FileSystemFinder",
@@ -170,7 +170,17 @@ LOGGING = {
 
 # Remove external dependencies that aren't needed for CI
 AWS_ACCESS_KEY_ID = "test"
-AWS_SECRET_ACCESS_KEY = "test"
+AWS_SECRET_ACCESS_KEY = "test"  # nosec
 AWS_STORAGE_BUCKET_NAME = "test"
 AWS_S3_REGION_NAME = "us-east-1"
-SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"
+SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"  # nosec
+
+# Silence specific system checks in CI if needed
+SILENCED_SYSTEM_CHECKS = [
+    # We don't enforce HTTPS/security headers in CI
+    "security.W004",
+    "security.W008",
+    "security.W009",
+    "security.W012",
+    "security.W016",
+]

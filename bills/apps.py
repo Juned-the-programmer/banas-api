@@ -6,4 +6,4 @@ class BillsConfig(AppConfig):
     name = "bills"
 
     def ready(self):
-        import bills.task
+        import bills.task  # noqa: F401

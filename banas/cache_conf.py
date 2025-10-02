@@ -1,6 +1,6 @@
 from django.core.cache import cache
 
-from customer.models import *
+from customer.models import Customer
 
 
 def customer_cached_data():

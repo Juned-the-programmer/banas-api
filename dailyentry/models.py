@@ -1,8 +1,6 @@
-from datetime import datetime
 import uuid
 
 from django.db import models
-from django.db.models.base import ModelBase
 
 from customer.models import Customer
 

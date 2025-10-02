@@ -21,6 +21,6 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS(f"🔄 Generating QR code for {customer} (ID {customer_id})..."))
 
-        result = generate_customer_qr_code_for_daily_entry_async(customer_id)
+        generate_customer_qr_code_for_daily_entry_async(customer_id)
 
         self.stdout.write(self.style.SUCCESS(f"✅ QR code generated for {customer} (ID {customer_id})"))

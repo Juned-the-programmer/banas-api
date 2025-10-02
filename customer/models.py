@@ -4,7 +4,6 @@ from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 from django.db.models import Sum
-from django.db.models.signals import post_save
 from django.utils import timezone
 
 from route.models import Route
@@ -38,6 +37,9 @@ class Customer(models.Model):
 
     def __str__(self):
         return "{} {}".format(self.first_name, self.last_name)
+
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
 
     class Meta:
         index_together = [["id"]]

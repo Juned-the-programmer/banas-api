@@ -15,4 +15,3 @@ docker-compose run api python manage.py runserver 0.0.0.0:8000 -> To run the ser
 docker-compose run api python manage.py createsuperuser -> To create the superuser.
 
 docker-compose run api python manage.py collectstatic -> To collect the static files.
-

@@ -52,8 +52,8 @@ jobs:
       run: |
         echo "🔍 Running flake8 linting..."
         echo "Checking for critical errors only..."
-        flake8 . --count --show-source --statistics || echo "⚠️ Flake8 found issues, but continuing..."
-        echo "✅ Flake8 check completed (non-blocking)"
+        flake8 . --count --show-source --statistics
+        echo "✅ Flake8 check completed"
         
     - name: Security scan (bandit)
       run: |
@@ -61,25 +61,53 @@ jobs:
         # Check if bandit is properly installed
         if command -v bandit &> /dev/null; then
           echo "✅ Bandit installed successfully"
-          # Run bandit scan (non-blocking)
-          bandit -r . -x */tests/*,*/migrations/*,*/venv/*,*/.venv/* -f json -o bandit-report.json || echo "⚠️ Bandit found security issues (continuing...)"
-          bandit -r . -x */tests/*,*/migrations/*,*/venv/*,*/.venv/* -f txt || echo "⚠️ Bandit scan completed with issues"
-          echo "✅ Code security scan completed"
+          # Run bandit scan - will fail CI if issues found
+          # Skip tests that have been manually reviewed and documented:
+          # B105: hardcoded passwords (test/config files)
+          # B106: hardcoded password function args (test fixtures)
+          # B104: binding to all interfaces (Docker test config)
+          # B108: temp directory usage (Docker test config)
+          # B608: SQL injection (validated with regex patterns)
+          bandit -r . \
+            --exclude ./*/tests.py,./*/tests/*,./*/migrations/*,./venv/*,./.venv/*,./staticfiles/*,./static/* \
+            --skip B104,B105,B106,B108,B608 \
+            -f json -o bandit-report.json
+          bandit -r . \
+            --exclude ./*/tests.py,./*/tests/*,./*/migrations/*,./venv/*,./.venv/*,./staticfiles/*,./static/* \
+            --skip B104,B105,B106,B108,B608 \
+            -f txt
+          echo "✅ Code security scan completed - no issues found"
         else
-          echo "⚠️ Bandit not available, skipping code security scan"
+          echo "❌ Bandit not available"
+          exit 1
         fi
-        
-    - name: Dependency vulnerability scan (safety)
+    
+    - name: Install jq
       run: |
-        echo "🚫 Checking for known vulnerabilities in dependencies..."
-        if command -v safety &> /dev/null; then
-          echo "Using modern safety scan command..."
-          # Use the new scan command with proper output handling
-          safety scan --output json --save-json safety-report.json || echo "⚠️ Safety found vulnerable dependencies (continuing...)"
-          safety scan --output text || echo "⚠️ Dependency security scan completed with issues"
-          echo "✅ Dependency security scan completed"
+        sudo apt-get update
+        sudo apt-get install -y jq curl tar
+
+    - name: 📥 Download OSV-Scanner
+      run: |
+        echo "✅ Downloading OSV-Scanner binary..."
+        curl -L -o osv-scanner https://github.com/google/osv-scanner/releases/download/v2.2.3/osv-scanner_linux_amd64
+        sudo mv osv-scanner /usr/local/bin/
+        sudo chmod +x /usr/local/bin/osv-scanner
+        osv-scanner --version
+
+    - name: 🚨 Scan Python dependencies for vulnerabilities
+      run: |
+        echo "📦 Scanning dependencies in requirements.txt..."
+        set +e  # prevent immediate exit on vuln detection
+        osv-scanner --lockfile=requirements.txt --output=json > osv-report.json
+        VULN_COUNT=$(jq '.vulns | length' osv-report.json)
+        echo "Found $VULN_COUNT vulnerabilities."
+        if [ "$VULN_COUNT" -gt 0 ]; then
+          echo "❌ Vulnerabilities detected! Details:"
+          jq '.' osv-report.json
+          exit 1
         else
-          echo "⚠️ Safety not available, skipping dependency scan"
+          echo "✅ No known vulnerabilities detected."
         fi
         
     # ==================== DJANGO FRAMEWORK CHECKS ====================

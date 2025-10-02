@@ -5,7 +5,7 @@ import django
 from django.conf import settings
 
 # Setup Django
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "banas.settings")  # <-- apna project ka naam lagao
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "banas.settings")
 django.setup()
 
 

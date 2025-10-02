@@ -7,12 +7,12 @@ class BillsTestCase(TestCase):
     """Basic tests for bills app"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(username="testuser", password="testpass123")  # nosec
 
     def test_models_import(self):
         """Test that models can be imported without errors"""
         try:
-            from . import models
+            from . import models  # noqa: F401
 
             self.assertTrue(True)
         except ImportError:
@@ -21,7 +21,7 @@ class BillsTestCase(TestCase):
     def test_views_import(self):
         """Test that views can be imported without errors"""
         try:
-            from . import views
+            from . import views  # noqa: F401
 
             self.assertTrue(True)
         except ImportError:
@@ -32,7 +32,7 @@ class BillsAPITestCase(APITestCase):
     """API tests for bills endpoints"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass123")
+        self.user = User.objects.create_user(username="testuser", password="testpass123")  # nosec
 
     def test_api_accessible(self):
         """Test that bills endpoints are accessible"""

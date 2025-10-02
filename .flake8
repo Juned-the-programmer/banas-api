@@ -1,50 +1,27 @@
 [flake8]
 max-line-length = 127
-exclude = 
+exclude =
     .git,
     __pycache__,
     */migrations/*,
     */venv/*,
-    */env/*,
     .venv,
     .env,
     node_modules,
-    .tox,
     dist,
     build,
     health_check.py
 
-# Ignore common issues in existing codebase - gradually reduce these
-ignore = 
-    E203,
-    W503,
-    F401,
-    F403,
-    F405,
-    E501,
-    W291,
-    E402,
-    F841,
-    C901,
-    
-# Django-specific ignores
-extend-ignore = 
-    DJ01,
-    
+# Critical errors & maintainable code
+select = E9, F, C90, B, S
+
+# Ignore things handled by Black or legacy issues
+ignore = E203, W503
+
+# Complexity limit
+max-complexity = 15
+
+# Per-file ignores (optional for legacy code)
 per-file-ignores =
     __init__.py:F401
     settings*.py:E501,F403,F405
-    */tests/*:E501,F403,F405
-    */admin.py:F403,F405
-    */serializer*.py:F403,F405
-    */views.py:F403,F405
-    */models.py:DJ01
-    
-max-complexity = 15
-
-# Focus on critical errors only for now
-select = 
-    E9,   
-    F63,   
-    F7,    
-    F82,

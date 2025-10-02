@@ -28,7 +28,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-ysgf%c$^9y#(dq%$bv_nd#szy(x^=u+3%+1)j@lx-e8$%82%2e"
+# Load from environment in production; fallback is for local dev only
+SECRET_KEY = config(
+    "SECRET_KEY",
+    default="django-insecure-ysgf%c$^9y#(dq%$bv_nd#szy(x^=u+3%+1)j@lx-e8$%82%2e",  # nosec
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -176,12 +180,13 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images) - CORRECTED
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = "/static/"
-STATIC_ROOT = BASE_DIR / "static"  # FIXED: Proper path syntax
+STATIC_ROOT = BASE_DIR / "static"
 
-# Additional locations of static files - CORRECTED
-STATICFILES_DIRS = [BASE_DIR / "staticfiles"]  # FIXED: Proper path syntax
+# Additional locations of static files (include only if directory exists)
+_extra_static_dir = BASE_DIR / "staticfiles"
+STATICFILES_DIRS = [p for p in [_extra_static_dir] if p.exists()]
 
 # Static files finders
 STATICFILES_FINDERS = [
@@ -257,3 +262,12 @@ DRF_API_LOGGER_RESPONSE_BODY_LOG = True
 DRF_API_LOGGER_STATUS_CODES = ["2xx", "4xx", "5xx"]  # Which status codes to log
 DRF_API_LOGGER_PATH_TYPE = "FULL_PATH"  # or 'RAW_URI'
 DRF_API_LOGGER_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+
+# Security-related toggles (configure via environment for production)
+# These defaults are safe for local/dev; set to secure values in prod env
+SECURE_HSTS_SECONDS = int(config("SECURE_HSTS_SECONDS", default=0))
+SECURE_HSTS_INCLUDE_SUBDOMAINS = config("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False, cast=bool)
+SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=False, cast=bool)
+SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
+SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
+CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)

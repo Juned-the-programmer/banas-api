@@ -1,4 +1,4 @@
-from rest_framework.permissions import IsAdminUser, IsAuthenticated
+from rest_framework.permissions import IsAdminUser
 
 
 class IsAdmin_or_staff_user(IsAdminUser):

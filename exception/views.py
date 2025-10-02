@@ -1,8 +1,16 @@
 from django.http import JsonResponse
-from django.shortcuts import render
-from rest_framework import status
 
-from .error_constant import *
+from .error_constant import (
+    BAD_REQUEST,
+    BILL_NOT_FOUND,
+    CUSTOMER_NOT_FOUND,
+    DAILY_ENTRY_NOT_FOUND,
+    INTERAL_SERVER_ERROR_MESSAGE,
+    INTERNAL_SERVER_ERROR,
+    NOT_FOUND,
+    ROUTE_ALREADY_EXISTS,
+    ROUTE_NOT_FOUND,
+)
 
 
 # Create your views here.

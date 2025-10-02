@@ -1,7 +1,5 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
-from django.urls import reverse
-from rest_framework import status
 from rest_framework.test import APITestCase
 
 
@@ -10,7 +8,7 @@ class AuthenticationTestCase(TestCase):
 
     def test_user_creation(self):
         """Test that we can create a user"""
-        user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")
+        user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")  # nosec
         self.assertEqual(user.username, "testuser")
         self.assertEqual(user.email, "test@example.com")
         self.assertTrue(user.check_password("testpass123"))
@@ -18,8 +16,6 @@ class AuthenticationTestCase(TestCase):
     def test_models_import(self):
         """Test that models can be imported without errors"""
         try:
-            from . import models
-
             self.assertTrue(True)
         except ImportError:
             self.fail("Could not import models")

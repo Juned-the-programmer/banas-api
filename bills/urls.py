@@ -1,9 +1,9 @@
 from django.urls import path
 
-from . import views
+from .views import BillDetailView, BillListView, GenerateBillView
 
 urlpatterns = [
-    path("bills/", views.get_bills, name="get-bills"),
-    path("<str:pk>/", views.bill_detail, name="bill-detail"),
-    path("generatebill/<str:pk>/", views.generate_bill, name="generate-bill"),
+    path("bills/", BillListView.as_view(), name="get-bills"),
+    path("<str:pk>/", BillDetailView.as_view(), name="bill-detail"),
+    path("generatebill/<str:pk>/", GenerateBillView.as_view(), name="generate-bill"),
 ]
