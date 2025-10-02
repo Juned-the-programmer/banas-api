@@ -87,13 +87,19 @@ jobs:
         sudo apt-get update
         sudo apt-get install -y jq curl tar
 
-    - name: 📥 Install OSV-Scanner
+    - name: 📥 Download OSV-Scanner
       run: |
         echo "✅ Downloading latest OSV-Scanner release..."
         curl -L -o osv-scanner.tar.gz https://github.com/google/osv-scanner/releases/latest/download/osv-scanner-linux.tar.gz
-        tar -xzf osv-scanner.tar.gz
+        file osv-scanner.tar.gz
+        if file osv-scanner.tar.gz | grep -q 'gzip compressed data'; then
+          tar -xzf osv-scanner.tar.gz
+        else
+          echo "⚠️ The downloaded file is not in gzip format. Attempting to extract without gzip."
+          tar -xf osv-scanner.tar.gz
+        fi
         sudo mv osv-scanner /usr/local/bin/
-        sudo chmod +x /usr/local/bin
+        sudo chmod +x /usr/local/bin/osv-scanner
         osv-scanner --version
 
     - name: 🚨 Scan dependencies for vulnerabilities with OSV-Scanner
