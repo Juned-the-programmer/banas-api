@@ -703,57 +703,48 @@ paths:
       tags:
         - Daily Entries
       summary: Get historical data
-      description: Retrieve historical daily entry data with date range filtering
+      description: Retrieve historical daily entry data by historical key (e.g., Month_YYYY)
       parameters:
-        - name: from_date
+        - name: historical
           in: query
           required: true
-          description: Start date (YYYY-MM-DD)
+          description: Historical table suffix in the format Name_YYYY (e.g., January_2024)
           schema:
             type: string
-            format: date
-        - name: to_date
-          in: query
-          required: true
-          description: End date (YYYY-MM-DD)
-          schema:
-            type: string
-            format: date
+            pattern: '^[A-Za-z]+_\\d{4}$'
       responses:
         '200':
           description: Historical data retrieved successfully
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/DailyEntry'
+                type: object
+                description: Object keyed by the provided historical param (e.g., historical_January_2024)
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
-  /api/dailyentry/count/today:
+  /api/dailyentry/count/today/:
     get:
       tags:
         - Daily Entries
       summary: Get today's entry count
-      description: Retrieve count of daily entries for today
+      description: Retrieve today's aggregated customer count and coolers total
       responses:
         '200':
-          description: Today's entry count retrieved successfully
+          description: Today's counts retrieved successfully
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  count:
+                  today_customer_count:
                     type: integer
                     example: 45
-                  date:
-                    type: string
-                    format: date
-                    example: "2024-01-15"
+                  today_coolers_total:
+                    type: integer
+                    example: 120
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
@@ -768,12 +759,9 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entries:
-                  type: array
-                  items:
-                    $ref: '#/components/schemas/DailyEntryCreate'
+              type: array
+              items:
+                $ref: '#/components/schemas/DailyEntryCreate'
       responses:
         '201':
           description: Bulk import completed successfully
@@ -808,11 +796,19 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                entry_ids:
-                  type: array
-                  items:
+              type: array
+              items:
+                type: object
+                properties:
+                  customer:
+                    type: string
+                    format: uuid
+                  cooler:
+                    type: integer
+                  date_added:
+                    type: string
+                    format: date-time
+                  pending_id:
                     type: string
                     format: uuid
       responses:
@@ -823,12 +819,9 @@ paths:
               schema:
                 type: object
                 properties:
-                  verified_count:
-                    type: integer
-                    example: 5
                   message:
                     type: string
-                    example: "Entries verified successfully"
+                    example: "Verified Successfully!"
         '400':
           $ref: '#/components/responses/BadRequestError'
         '401':
@@ -966,7 +959,7 @@ paths:
       tags:
         - Bills
       summary: Generate customer bill
-      description: Generate a new bill for a customer for a specific period
+      description: Generate a new bill for a customer for the current month
       parameters:
         - name: customer_id
           in: path
@@ -975,35 +968,17 @@ paths:
           schema:
             type: string
             format: uuid
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - from_date
-                - to_date
-              properties:
-                from_date:
-                  type: string
-                  format: date
-                  example: "2024-01-01"
-                to_date:
-                  type: string
-                  format: date
-                  example: "2024-01-31"
-                advanced_amount:
-                  type: integer
-                  default: 0
-                  example: 100
       responses:
         '201':
           description: Bill generated successfully
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/CustomerBill'
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Customer Bill Generated"
         '400':
           $ref: '#/components/responses/BadRequestError'
         '404':
@@ -1148,21 +1123,22 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    customer_id:
-                      type: string
-                      format: uuid
-                    customer_name:
-                      type: string
-                    due_amount:
-                      type: integer
-                    last_payment_date:
-                      type: string
-                      format: date-time
-                      nullable: true
+                type: object
+                properties:
+                  duelist_data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        customer_id:
+                          type: string
+                          format: uuid
+                        customer_name:
+                          type: string
+                        due:
+                          type: integer
+                  due_total:
+                    type: integer
         '404':
           $ref: '#/components/responses/NotFoundError'
         '401':
@@ -1182,10 +1158,7 @@ paths:
               schema:
                 type: object
                 properties:
-                  total_due:
-                    type: integer
-                    example: 15000
-                  customers_with_due:
+                  customer_due_list:
                     type: array
                     items:
                       type: object
@@ -1195,10 +1168,10 @@ paths:
                           format: uuid
                         customer_name:
                           type: string
-                        due_amount:
+                        due:
                           type: integer
-                        route:
-                          type: string
+                  due_total:
+                    type: integer
         '401':
           $ref: '#/components/responses/UnauthorizedError'
 
