@@ -1,5 +1,7 @@
 import datetime
 
+from django.core.cache import cache
+from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.core.cache import cache
@@ -25,15 +27,17 @@ from exception.views import *
 from exception.error_constant import *
 
 # Create your views here.
-''' To POST customer and get the complete list of all the customer from database 
+""" To POST customer and get the complete list of all the customer from database 
 Validation for POST has been done by the serializer by itself don't want to customize here.
-'''
+"""
+
+
 class CustomerListView(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser, IsAuthenticated]
 
     def get_serializer_class(self):
         method = self.request.method
-        if method == 'POST':
+        if method == "POST":
             return CustomerSerializer
         return CustomerSerializerList
 

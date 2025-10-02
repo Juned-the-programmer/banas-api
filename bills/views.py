@@ -16,7 +16,7 @@ from .task import bill_number_generator
 from .utils import get_dynamic_entries
 from exception.views import customer_not_found_exception
 
-#create your view here
+# create your view here
 
 # List all bills
 class BillListView(generics.ListAPIView):
@@ -55,7 +55,7 @@ class BillDetailView(generics.RetrieveAPIView):
         # Determine table name for historical data
         table_name = f"DailyEntry_{bill.bill_month.strftime('%B_%Y')}"
 
-        raw_data = get_dynamic_entries(bill.customer_name.id, table_name)
+        raw_data = get_dynamic_entries(bill.customer_name.id, from_date_new, to_date_new, table_name)
         daily_entry_serializer = DailyEntrySerializerGETDashboard(raw_data, many=True)
 
         return Response({

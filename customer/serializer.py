@@ -4,31 +4,34 @@ from dailyentry.models import customer_qr_code, DailyEntry
 from bills.models import CustomerBill
 from payment.models import CustomerPayment
 from globalserializers import CustomeDateField
+from route.serializers import RouteSerializerGET
+
 
 class CustomerSerializer(serializers.ModelSerializer):
-  route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(), many=False)
-  date_added = CustomeDateField()
-  date_updated = CustomeDateField()
-  class Meta:
-    model = Customer
-    fields = '__all__'
+    route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(), many=False)
+    date_added = CustomeDateField()
+    date_updated = CustomeDateField()
+
+    class Meta:
+        model = Customer
+        fields = "__all__"
 
 
 class CustomerSerializerList(serializers.ModelSerializer):
-  date_added = CustomeDateField()
-  date_updated = CustomeDateField()
-  route = serializers.StringRelatedField()
-  class Meta:
-    model = Customer
-    fields = ["id", "first_name", "last_name", "phone_no", "route", "active", "date_added", "date_updated"]
+    date_added = CustomeDateField()
+    date_updated = CustomeDateField()
+    route = serializers.StringRelatedField()
+    class Meta:
+        model = Customer
+        fields = ["id", "first_name", "last_name", "phone_no", "route", "active", "date_added", "date_updated"]
 
 ## Nested Serializers ##
     
 class CustomerAccountSerializer(serializers.ModelSerializer):
-  date = CustomeDateField()
-  class Meta:
-    model = CustomerAccount
-    fields = '__all__'
+    date = CustomeDateField()
+    class Meta:
+        model = CustomerAccount
+        fields = '__all__'
 
 class CustomerAccountNestedSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,7 +66,7 @@ class CustomerPaymentNestedSerializer(serializers.ModelSerializer):
         fields = ['id', 'customer_name', 'pending_amount', 'paid_amount', 'date', 'addedby', 'rounf_off_amount']
 
     def get_customer_name(self, obj):
-      return f"{obj.customer_name.first_name} {obj.customer_name.last_name}"
+        return f"{obj.customer_name.first_name} {obj.customer_name.last_name}"
 
 # Main customer serializer
 class CustomerDetailNestedSerializer(serializers.ModelSerializer):

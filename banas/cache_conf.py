@@ -1,5 +1,7 @@
 from django.core.cache import cache
+
 from customer.models import *
+
 
 def customer_cached_data():
     cache_key = "Customer"

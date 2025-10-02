@@ -1,5 +1,7 @@
 from rest_framework import serializers
+
 from .models import *
+
 
 class GenerateBillSerializer(serializers.ModelSerializer):
     """Serializer for creating/updating Customer Bills"""

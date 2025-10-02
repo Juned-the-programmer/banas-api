@@ -1,17 +1,20 @@
-from celery import shared_task
-import qrcode
-from django.utils import timezone
-from .models import customer_qr_code, DailyEntry_dashboard, customer_daily_entry_monthly
-from customer.models import Customer
-from django.conf import settings
-from django.db import connection
+from io import BytesIO
 import os
-from io import BytesIO
-from django.core.management import call_command
-from io import BytesIO
+
+from PIL import Image, ImageDraw, ImageFont
+from celery import shared_task
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from PIL import Image, ImageDraw, ImageFont
+from django.core.management import call_command
+from django.db import connection
+from django.utils import timezone
+import qrcode
+
+from customer.models import Customer
+
+from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer_qr_code
+
 
 @shared_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
@@ -61,17 +64,18 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
 
     # Save using default storage (S3 or local)
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
-    qr_codes_path = os.path.join('qr_codes', file_name)
+    qr_codes_path = os.path.join("qr_codes", file_name)
     saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.read()))
 
     # Save to DB
     customer_qr_code.objects.create(customer=customer_detail, qrcode=saved_path)
 
+
 @shared_task
 def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
     for entry in entry_data_list:
-        customer_id = entry['customer_id']
-        cooler_count = entry['cooler']
+        customer_id = entry["customer_id"]
+        cooler_count = entry["cooler"]
         customer_detail = customer_daily_entry_monthly.objects.get(customer=customer_id)
         customer_detail.coolers += int(cooler_count)
         customer_detail.save()
@@ -82,12 +86,14 @@ def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
         dailyentry_dashboard.coolers_count += int(cooler_count)
         dailyentry_dashboard.save()
 
+
 @shared_task
 def reset_dailentry_dashboard_values():
     daily_entry_dashboard = DailyEntry_dashboard.objects.first()
     daily_entry_dashboard.customer_count = 0
     daily_entry_dashboard.coolers_count = 0
     daily_entry_dashboard.save()
+
 
 @shared_task
 def batch_processing_for_daily_entry_ofn_monthly_basis():
@@ -121,11 +127,11 @@ def batch_processing_for_daily_entry_ofn_monthly_basis():
 
     with connection.cursor() as cursor:
         cursor.execute(insert_sql)
-    
+
     # Truncate the original table to free up space
     truncate_sql = "TRUNCATE TABLE dailyentry_dailyentry RESTART IDENTITY;"
-    
+
     with connection.cursor() as cursor:
         cursor.execute(truncate_sql)
-    
-    return f'Successfully processed entries into {table_name} and truncated the original table'
+
+    return f"Successfully processed entries into {table_name} and truncated the original table"

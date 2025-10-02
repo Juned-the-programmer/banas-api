@@ -1,3 +1,9 @@
+import datetime
+from datetime import date, time, timedelta
+
+from django.db import connection
+from django.db.models import Sum
+from django.http import JsonResponse
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.utils import timezone
@@ -38,7 +44,6 @@ class DailyEntryListCreateView(generics.ListCreateAPIView):
     def perform_create(self, serializer):
         serializer.save(addedby=self.request.user.username)
 
-
 # -------------------------------
 # Count summary for dashboard
 # -------------------------------
@@ -51,7 +56,6 @@ class DailyEntryCountView(generics.RetrieveAPIView):
             "today_customer_count": dashboard.customer_count if dashboard else 0,
             "today_coolers_total": dashboard.coolers_count if dashboard else 0
         })
-
 
 # -------------------------------
 # Retrieve, Update, Delete a single entry
@@ -164,7 +168,7 @@ def customer_qr_daily_entry(request, pk):
     if time(9, 0, 0) < current_time < time(18, 0, 0):
         return render(request, 'dailyentry/dailyentry.html')
     else:
-        return render(request, 'dailyentry/dailyentrytime.html')
+        return render(request, "dailyentry/dailyentrytime.html")
 
 
 # -------------------------------

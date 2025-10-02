@@ -1,7 +1,9 @@
 from rest_framework import serializers
-from .models import *
 from rest_framework.exceptions import ValidationError
+
 from globalserializers import CustomeDateField
+from .models import *
+
 
 class RouteSerializer(serializers.ModelSerializer):
     class Meta:

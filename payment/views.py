@@ -6,6 +6,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
+from banas.cache_conf import *
 from bills.models import CustomerBill
 from customer.models import Customer, CustomerAccount
 from route.models import Route
@@ -161,7 +162,6 @@ class DueListByRouteView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
-
         try:
             Route.objects.get(pk=pk)
         except Route.DoesNotExist:
@@ -190,7 +190,6 @@ class DueListByRouteView(generics.ListAPIView):
             {"duelist_data": data_list, "due_total": customer_due_list_total},
             status=status.HTTP_200_OK,
         )
-
 
 # -------------------------------
 # Total Due (All Customers)
