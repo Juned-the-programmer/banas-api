@@ -81,19 +81,30 @@ jobs:
           echo "❌ Bandit not available"
           exit 1
         fi
-        
-    - name: Dependency vulnerability scan (safety)
+    - name: Install jq
+      run: sudo apt-get update && sudo apt-get install -y jq
+
+    - name: Dependency vulnerability scan (OSV-Scanner)
       run: |
-        echo "🚫 Checking for known vulnerabilities in dependencies..."
-        if command -v safety &> /dev/null; then
-          echo "Using modern safety scan command..."
-          # Use the new scan command with proper output handling
-          # Valid output formats: json, spdx, html, screen, none
-          safety scan --output json --save-json safety-report.json || echo "⚠️ Safety found vulnerable dependencies (continuing...)"
-          safety scan --output screen || echo "⚠️ Dependency security scan completed with issues"
-          echo "✅ Dependency security scan completed"
+        echo "🚫 Checking for known vulnerabilities in dependencies with OSV-Scanner..."
+        
+        # Install OSV-Scanner (latest version)
+        OSV_VERSION="v0.5.0"
+        curl -sSL https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner-linux-amd64 -o osv-scanner
+        chmod +x osv-scanner
+        sudo mv osv-scanner /usr/local/bin/
+
+        # Scan the Python dependencies in requirements.txt
+        osv-scanner --file=requirements.txt --json > osv-report.json
+
+        # Check if vulnerabilities exist
+        VULN_COUNT=$(jq '.results | length' osv-report.json)
+        if [ "$VULN_COUNT" -gt 0 ]; then
+          echo "❌ Found $VULN_COUNT vulnerabilities in dependencies:"
+          jq '.results[] | {package: .package.name, version: .package.version, id: .id, details: .details}' osv-report.json
+          exit 1  # Fail the CI
         else
-          echo "⚠️ Safety not available, skipping dependency scan"
+          echo "✅ No known vulnerabilities found in dependencies"
         fi
         
     # ==================== DJANGO FRAMEWORK CHECKS ====================

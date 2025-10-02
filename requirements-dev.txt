@@ -8,7 +8,6 @@ flake8-isort==6.1.1
 
 # Security Scanning
 bandit[toml]>=1.7.0  # Security linting (with toml support)
-safety>=2.0.0        # Dependency vulnerability scanning
 
 # Testing and Coverage
 coverage==7.3.4
