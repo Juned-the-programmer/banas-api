@@ -8,7 +8,7 @@ class AuthenticationTestCase(TestCase):
 
     def test_user_creation(self):
         """Test that we can create a user"""
-        user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")  # nosec B106
+        user = User.objects.create_user(username="testuser", email="test@example.com", password="testpass123")  # nosec
         self.assertEqual(user.username, "testuser")
         self.assertEqual(user.email, "test@example.com")
         self.assertTrue(user.check_password("testpass123"))

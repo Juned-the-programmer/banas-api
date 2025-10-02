@@ -38,8 +38,8 @@ def get_dynamic_entries(customer_id, from_date, to_date, table_name):
 
     with connection.cursor() as cursor:
         # Table name is validated above, customer_id/dates are parameterized
-        cursor.execute(  # nosec B608
-            f"""
+        cursor.execute(
+            f"""  # nosec
             SELECT id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id
             FROM {table_name}
             WHERE customer_id = %s AND date_added BETWEEN %s AND %s

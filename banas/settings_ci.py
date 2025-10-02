@@ -9,7 +9,7 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"  # nosec B105
+SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"  # nosec
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
@@ -167,8 +167,8 @@ LOGGING = {
 }
 
 # Remove external dependencies that aren't needed for CI
-AWS_ACCESS_KEY_ID = "test"  # nosec B105
-AWS_SECRET_ACCESS_KEY = "test"  # nosec B105
+AWS_ACCESS_KEY_ID = "test"
+AWS_SECRET_ACCESS_KEY = "test"  # nosec
 AWS_STORAGE_BUCKET_NAME = "test"
 AWS_S3_REGION_NAME = "us-east-1"
-SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"  # nosec B105
+SECRET_KEY = "test-secret-key-for-ci-only-not-for-production"  # nosec

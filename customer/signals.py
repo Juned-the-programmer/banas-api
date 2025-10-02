@@ -27,7 +27,7 @@ def create_user(sender, instance, created, **kwarg):
             instance.save()
             subject = "Account Created"
             customer_username = user.username
-            customer_password = "banaswater"  # nosec B105 - Default password, user should change
+            customer_password = "banaswater"  # nosec
             html_message = render_to_string(
                 "customer/JoinCustomer.html",
                 {

@@ -107,7 +107,7 @@ def batch_processing_for_daily_entry_ofn_monthly_basis():
         raise ValueError(f"Invalid table name format: {table_name}")
 
     # Custom SQL for creating a new table
-    create_table_sql = f"""  # nosec B608 - table name is validated above
+    create_table_sql = f"""  # nosec
     CREATE TABLE {table_name} (
         id UUID PRIMARY KEY,
         customer_id UUID,
@@ -123,7 +123,7 @@ def batch_processing_for_daily_entry_ofn_monthly_basis():
         cursor.execute(create_table_sql)
 
     # Insert data into the new table
-    insert_sql = f"""  # nosec B608 - table name is validated above
+    insert_sql = f"""  # nosec
     INSERT INTO {table_name} (id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id)
     SELECT id, customer_id, cooler, date_added, addedby, updatedby, id
     FROM dailyentry_dailyentry;

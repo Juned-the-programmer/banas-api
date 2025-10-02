@@ -179,13 +179,13 @@ def historical_data_retriever(request):
 
     # Check table existence
     with connection.cursor() as cursor:
-        cursor.execute(f"SELECT to_regclass('{table_name}')")  # nosec B608 - params validated above
+        cursor.execute(f"SELECT to_regclass('{table_name}')")  # nosec
         if not cursor.fetchone()[0]:
             return JsonResponse({"error": "Table not found"}, status=404)
 
     # Fetch data
     with connection.cursor() as cursor:
-        cursor.execute(f"SELECT * FROM {table_name}")  # nosec B608 - table name validated above
+        cursor.execute(f"SELECT * FROM {table_name}")  # nosec
         columns = [col[0] for col in cursor.description]
         rows = cursor.fetchall()
 

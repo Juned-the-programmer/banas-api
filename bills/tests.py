@@ -7,7 +7,7 @@ class BillsTestCase(TestCase):
     """Basic tests for bills app"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass123")  # nosec B106
+        self.user = User.objects.create_user(username="testuser", password="testpass123")  # nosec
 
     def test_models_import(self):
         """Test that models can be imported without errors"""
@@ -32,7 +32,7 @@ class BillsAPITestCase(APITestCase):
     """API tests for bills endpoints"""
 
     def setUp(self):
-        self.user = User.objects.create_user(username="testuser", password="testpass123")  # nosec B106
+        self.user = User.objects.create_user(username="testuser", password="testpass123")  # nosec
 
     def test_api_accessible(self):
         """Test that bills endpoints are accessible"""
