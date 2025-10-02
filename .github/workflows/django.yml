@@ -82,36 +82,32 @@ jobs:
           exit 1
         fi
     
-    - name: Install OSV-Scanner
-      run: |
-        echo "📥 Installing OSV-Scanner..."
-        OSV_VERSION="v0.5.0"  # Replace with latest release if needed
-        curl -sSL https://github.com/google/osv-scanner/releases/download/${OSV_VERSION}/osv-scanner-linux-amd64 -o osv-scanner
-        chmod +x osv-scanner
-        sudo mv osv-scanner /usr/local/bin/osv-scanner
-        echo "✅ OSV-Scanner installed successfully"
-
     - name: Install jq
-      run: sudo apt-get update && sudo apt-get install -y jq
-
-    - name: Run dependency vulnerability scan
       run: |
-        echo "🚨 Scanning dependencies for vulnerabilities with OSV-Scanner..."
-        
-        # Run OSV-Scanner on requirements.txt
-        osv-scanner -r requirements.txt -o json > osv-report.json
-        
-        # Display a summary in CI logs
-        echo "🔍 Vulnerability Summary:"
-        cat osv-report.json | jq '.results[] | {package: .package.name, affected: .vulns[].id}'
-        
-        # Fail CI if any vulnerabilities exist
-        VULN_COUNT=$(jq '.results | length' osv-report.json)
+        sudo apt-get update
+        sudo apt-get install -y jq curl tar
+
+    - name: 📥 Install OSV-Scanner
+      run: |
+        echo "✅ Downloading latest OSV-Scanner release..."
+        curl -L -o osv-scanner.tar.gz https://github.com/google/osv-scanner/releases/latest/download/osv-scanner-linux.tar.gz
+        tar -xzf osv-scanner.tar.gz
+        sudo mv osv-scanner /usr/local/bin/
+        sudo chmod +x /usr/local/bin
+        osv-scanner --version
+
+    - name: 🚨 Scan dependencies for vulnerabilities with OSV-Scanner
+      run: |
+        echo "📦 Scanning Python dependencies in requirements.txt..."
+        osv-scanner --lockfile=requirements.txt --output=json > osv-report.json
+        VULN_COUNT=$(jq '.vulns | length' osv-report.json)
+        echo "Found $VULN_COUNT vulnerabilities."
         if [ "$VULN_COUNT" -gt 0 ]; then
-          echo "❌ $VULN_COUNT vulnerable dependencies found. Failing CI."
+          echo "❌ Vulnerabilities detected! Failing the build."
+          cat osv-report.json
           exit 1
         else
-          echo "✅ No known vulnerabilities found."
+          echo "✅ No known vulnerabilities detected."
         fi
         
     # ==================== DJANGO FRAMEWORK CHECKS ====================
