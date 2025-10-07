@@ -21,4 +21,4 @@ class CustomerPaymentSerializerGET(serializers.ModelSerializer):
 
     class Meta:
         model = CustomerPayment
-        fields = ["customer_name", "pending_amount", "paid_amount", "date", "addedby", "rounf_off_amount"]
+        fields = ["customer_name", "pending_amount", "paid_amount", "payment_method", "date", "addedby", "rounf_off_amount"]

@@ -13,6 +13,8 @@ class CustomerPayment(models.Model):
     pending_amount = models.IntegerField(null=True, blank=True)
     paid_amount = models.IntegerField()
     rounf_off_amount = models.IntegerField(default=0, null=True, blank=True)
+    payment_method = models.CharField(max_length=20, null=True, blank=True)
+    notes = models.CharField(max_length=100, null=True, blank=True)
     date = models.DateTimeField(auto_now_add=True)
     addedby = models.CharField(max_length=100, null=True, blank=True)
     updatedby = models.CharField(max_length=100, null=True, blank=True)
