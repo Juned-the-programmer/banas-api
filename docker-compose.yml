@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   api:
     build: .
@@ -21,6 +19,7 @@ services:
     ports:
       - "8000:8000"
     volumes:
+      - .:/app
       - ./media:/app/media
       - static_volume:/app/static
     deploy:

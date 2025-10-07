@@ -1,7 +1,6 @@
 import datetime
 from datetime import timedelta
 
-import pytz
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
@@ -41,16 +40,10 @@ class BillDetailView(generics.RetrieveAPIView):
         if not bill.from_date_as_date or not bill.to_date_as_date:
             return Response({"error": "Invalid date format in bill"}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Prepare dynamic daily entries
-
-        from_date_new = datetime.datetime.combine(bill.from_date_as_date, datetime.time.min).replace(tzinfo=pytz.UTC)
-
-        to_date_new = datetime.datetime.combine(bill.to_date_as_date, datetime.time.max).replace(tzinfo=pytz.UTC)
-
         # Determine table name for historical data
         table_name = f"DailyEntry_{bill.bill_month.strftime('%B_%Y')}"
 
-        raw_data = get_dynamic_entries(bill.customer_name.id, from_date_new, to_date_new, table_name)
+        raw_data = get_dynamic_entries(bill.customer_name.id, table_name)
         daily_entry_serializer = DailyEntrySerializerGETDashboard(raw_data, many=True)
 
         return Response({"bill": GenerateBillSerializerGET(bill).data, "daily_entry": daily_entry_serializer.data})
