@@ -44,7 +44,9 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
         font = ImageFont.load_default()
 
     name_text = f"{customer_detail.first_name} {customer_detail.last_name}"
-    text_w, text_h = draw.textsize(name_text, font=font)
+    # Use textbbox instead of deprecated textsize
+    bbox = draw.textbbox((0, 0), name_text, font=font)
+    text_w = bbox[2] - bbox[0]
     text_x = (a4_width - text_w) // 2
     draw.text((text_x, 200), name_text, font=font, fill="black")
 

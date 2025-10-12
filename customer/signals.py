@@ -15,16 +15,24 @@ from .task import send_async_email
 @receiver(post_save, sender=Customer)
 def create_user(sender, instance, created, **kwarg):
     if created:
+        username = instance.first_name.lower() + "_" + instance.last_name.lower()
+        
+        # Create user with or without email (email is optional)
+        user = User.objects.create(
+            username=username,
+            email=instance.email or "",  # Use empty string if no email
+            first_name=instance.first_name,
+            last_name=instance.last_name
+        )
+        user.set_password("banaswater")
+        user.save()
+        
+        # Link user to customer
+        instance.user = user
+        instance.save()
+        
+        # Send email only if customer has an email address
         if instance.email:
-            username = instance.first_name.lower() + "_" + instance.last_name.lower()
-            user = User.objects.create(
-                username=username, email=instance.email, first_name=instance.first_name, last_name=instance.last_name
-            )
-            user.set_password("banaswater")
-            user.save()
-            user_detail = User.objects.get(username=username)
-            instance.user = user_detail
-            instance.save()
             subject = "Account Created"
             customer_username = user.username
             customer_password = "banaswater"  # nosec
@@ -41,15 +49,6 @@ def create_user(sender, instance, created, **kwarg):
             send_async_email.delay(
                 subject, plain_text, settings.EMAIL_HOST_USER, [instance.email], html_message
             )  # Use this to send mail in async way.
-            # send_mail(subject=subject, message=plain_text, from_email=settings.EMAIL_HOST_USER, recipient_list=[instance.email], html_message=message , fail_silently=False)
-        else:
-            username = instance.first_name.lower() + instance.last_name.lower()
-            user = User.objects.create(username=username, first_name=instance.first_name, last_name=instance.last_name)
-            user.set_password("banaswater")
-            user.save()
-            user_detail = User.objects.get(username=username)
-            instance.user = user_detail
-            instance.save()
 
 
 @receiver(post_save, sender=Customer)

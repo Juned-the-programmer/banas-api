@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "storages",
     "drf_api_logger",
+    "contactUs"
 ]
 
 MIDDLEWARE = [
@@ -234,8 +235,8 @@ SIMPLE_JWT = {
 }
 
 # Email Setting
-EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
-EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.smtp.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.getenv("EMAIL_USERNAME")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_APP_PASSWORD")
