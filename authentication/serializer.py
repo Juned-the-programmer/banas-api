@@ -10,5 +10,5 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data.update({"last_name": self.user.last_name})
         data.update({"full_name": self.user.first_name + " " + self.user.last_name})
         data.update({"is_superuser": self.user.is_superuser})
-        data.update({"email": self.user.email})
+        data.update({"email": self.user.email or ""})  # Handle empty email
         return data

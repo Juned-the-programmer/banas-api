@@ -33,6 +33,7 @@ urlpatterns = [
     path("api/dailyentry/", include("dailyentry.urls")),
     path("api/bill/", include("bills.urls")),
     path("api/payment/", include("payment.urls")),
+    path("api/contactus/", include("contactUs.urls")),
     path("swagger/", schema_view.with_ui("swagger", cache_timeout=0), name="schema-swagger-ui"),
     path("reset_password/", auth_views.PasswordResetView.as_view(), name="reset_password"),
     path("reset_password_send/", auth_views.PasswordResetDoneView.as_view(), name="password_reset_done"),

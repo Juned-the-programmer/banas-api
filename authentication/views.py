@@ -105,7 +105,7 @@ def get_profile(request):
             "last_name": user.last_name,
             "full_name": user.first_name + " " + user.last_name,
             "is_superuser": user.is_superuser,
-            "email": user.email,
+            "email": user.email or "",  # Handle empty email
         },
         status=status.HTTP_200_OK,
     )
