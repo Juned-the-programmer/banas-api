@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "bulk_signals",
     "django_celery_beat",
     "storages",
+    "contactUs",
     # Note: Removed 'drf_api_logger' for CI
 ]
 
