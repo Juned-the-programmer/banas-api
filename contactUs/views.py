@@ -17,8 +17,7 @@ class ContactListCreateView(generics.ListCreateAPIView):
         serializer.is_valid(raise_exception=True)
         self.perform_create(serializer)
         return Response(
-            {"message": "Contact form submitted successfully!", "data": serializer.data},
-            status=status.HTTP_201_CREATED
+            {"message": "Contact form submitted successfully!", "data": serializer.data}, status=status.HTTP_201_CREATED
         )
 
 

@@ -16,21 +16,21 @@ from .task import send_async_email
 def create_user(sender, instance, created, **kwarg):
     if created:
         username = instance.first_name.lower() + "_" + instance.last_name.lower()
-        
+
         # Create user with or without email (email is optional)
         user = User.objects.create(
             username=username,
             email=instance.email or "",  # Use empty string if no email
             first_name=instance.first_name,
-            last_name=instance.last_name
+            last_name=instance.last_name,
         )
         user.set_password("banaswater")
         user.save()
-        
+
         # Link user to customer
         instance.user = user
         instance.save()
-        
+
         # Send email only if customer has an email address
         if instance.email:
             subject = "Account Created"
