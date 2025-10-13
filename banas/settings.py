@@ -258,11 +258,10 @@ AWS_QUERYSTRING_AUTH = False  # makes public URLs without ?AWSAccessKeyId
 DRF_API_LOGGER_DATABASE = True  # Store logs in database
 DRF_API_LOGGER_SIGNAL = True
 DRF_API_LOGGER_EXCLUDE_KEYS = ["password", "token", "access", "refresh"]  # Mask sensitive data
-DRF_API_LOGGER_REQUEST_BODY_LOG = True
-DRF_API_LOGGER_RESPONSE_BODY_LOG = True
-DRF_API_LOGGER_STATUS_CODES = ["2xx", "4xx", "5xx"]  # Which status codes to log
-DRF_API_LOGGER_PATH_TYPE = "FULL_PATH"  # or 'RAW_URI'
+DRF_API_LOGGER_SKIP_URL_NAME = []  # Skip logging for specific URL names
+DRF_API_LOGGER_SKIP_NAMESPACE = []  # Skip logging for specific namespaces
 DRF_API_LOGGER_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
+DRF_API_LOGGER_PATH_TYPE = "FULL_PATH"  # or 'RAW_URI'
 
 # Security-related toggles (configure via environment for production)
 # These defaults are safe for local/dev; set to secure values in prod env
