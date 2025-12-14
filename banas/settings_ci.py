@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     "django_celery_beat",
     "storages",
     "contactUs",
-    # Note: Removed 'drf_api_logger' for CI
 ]
 
 MIDDLEWARE = [

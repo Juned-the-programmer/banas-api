@@ -76,15 +76,26 @@ def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
     for entry in entry_data_list:
         customer_id = entry["customer_id"]
         cooler_count = entry["cooler"]
-        customer_detail = customer_daily_entry_monthly.objects.get(customer=customer_id)
+        # Use get_or_create to handle cases where the record doesn't exist
+        customer_detail, _ = customer_daily_entry_monthly.objects.get_or_create(
+            customer_id=customer_id,
+            defaults={"coolers": 0}
+        )
         customer_detail.coolers += int(cooler_count)
         customer_detail.save()
 
         # Update Dashboard counts
         dailyentry_dashboard = DailyEntry_dashboard.objects.first()
-        dailyentry_dashboard.customer_count += 1
-        dailyentry_dashboard.coolers_count += int(cooler_count)
-        dailyentry_dashboard.save()
+        if dailyentry_dashboard:
+            dailyentry_dashboard.customer_count += 1
+            dailyentry_dashboard.coolers_count += int(cooler_count)
+            dailyentry_dashboard.save()
+        else:
+            # Create dashboard if it doesn't exist
+            DailyEntry_dashboard.objects.create(
+                customer_count=1,
+                coolers_count=int(cooler_count)
+            )
 
 
 @shared_task

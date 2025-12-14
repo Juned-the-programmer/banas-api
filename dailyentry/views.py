@@ -36,7 +36,11 @@ class DailyEntryListCreateView(generics.ListCreateAPIView):
         return DailyEntry.objects.filter(date_added__date=today).select_related("customer")
 
     def perform_create(self, serializer):
-        serializer.save(addedby=self.request.user.username)
+        # Set date_added if not provided
+        if not serializer.validated_data.get('date_added'):
+            serializer.save(addedby=self.request.user.username, date_added=timezone.now())
+        else:
+            serializer.save(addedby=self.request.user.username)
 
 
 # -------------------------------

@@ -5,12 +5,12 @@ from .models import DailyEntry, pending_daily_entry
 
 # For create/update DailyEntry
 class DailyEntrySerializer(serializers.ModelSerializer):
-    customer = serializers.CharField(source="customer.get_full_name", read_only=True)
+    customer_name = serializers.CharField(source="customer.get_full_name", read_only=True)
 
     class Meta:
         model = DailyEntry
-        fields = ["id", "customer", "cooler", "date_added", "addedby", "updatedby"]
-        read_only_fields = ["id", "addedby", "updatedby"]
+        fields = ["id", "customer", "customer_name", "cooler", "date_added", "addedby", "updatedby"]
+        read_only_fields = ["id", "customer_name", "addedby", "updatedby"]
 
 
 # For single record retrieval

@@ -65,7 +65,6 @@ INSTALLED_APPS = [
     "bulk_signals",
     "django_celery_beat",
     "storages",
-    "drf_api_logger",
     "contactUs",
 ]
 
@@ -77,7 +76,6 @@ MIDDLEWARE = [
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "drf_api_logger.middleware.api_logger_middleware.APILoggerMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
@@ -124,7 +122,8 @@ DATABASES = {
         "NAME": config("DB_NAME"),
         "USER": config("DB_USER"),
         "PASSWORD": config("DB_PASSWORD"),
-        "HOST": config("DB_HOST"),
+        # "HOST": config("DB_HOST"),
+        "HOST": "host.docker.internal",
         "PORT": config("DB_PORT"),
     }
 }
@@ -253,15 +252,6 @@ AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
 AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")  # example, change to your bucket’s region
 AWS_QUERYSTRING_AUTH = False  # makes public URLs without ?AWSAccessKeyId
-
-# DRF API Logger Settings
-DRF_API_LOGGER_DATABASE = True  # Store logs in database
-DRF_API_LOGGER_SIGNAL = True
-DRF_API_LOGGER_EXCLUDE_KEYS = ["password", "token", "access", "refresh"]  # Mask sensitive data
-DRF_API_LOGGER_SKIP_URL_NAME = []  # Skip logging for specific URL names
-DRF_API_LOGGER_SKIP_NAMESPACE = []  # Skip logging for specific namespaces
-DRF_API_LOGGER_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"]
-DRF_API_LOGGER_PATH_TYPE = "FULL_PATH"  # or 'RAW_URI'
 
 # Security-related toggles (configure via environment for production)
 # These defaults are safe for local/dev; set to secure values in prod env
