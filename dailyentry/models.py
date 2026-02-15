@@ -20,7 +20,11 @@ class DailyEntry(models.Model):
         return str(self.customer)
 
     class Meta:
-        index_together = [["id", "customer"], ["customer", "date_added"], ["date_added"]]
+        indexes = [
+            models.Index(fields=["id", "customer"]),
+            models.Index(fields=["customer", "date_added"]),
+            models.Index(fields=["date_added"]),
+        ]
 
 
 class DailyEntry_dashboard(models.Model):
@@ -39,7 +43,9 @@ class customer_daily_entry_monthly(models.Model):
         return str(self.customer)
 
     class Meta:
-        index_together = [["customer"]]
+        indexes = [
+            models.Index(fields=["customer"]),
+        ]
 
 
 class customer_qr_code(models.Model):
@@ -51,7 +57,9 @@ class customer_qr_code(models.Model):
         return str(self.customer)
 
     class Meta:
-        index_together = [["customer"]]
+        indexes = [
+            models.Index(fields=["customer"]),
+        ]
 
 
 class pending_daily_entry(models.Model):
@@ -64,4 +72,6 @@ class pending_daily_entry(models.Model):
         return str(self.customer)
 
     class Meta:
-        index_together = [["id", "customer"]]
+        indexes = [
+            models.Index(fields=["id", "customer"]),
+        ]

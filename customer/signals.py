@@ -46,9 +46,14 @@ def create_user(sender, instance, created, **kwarg):
                 },
             )
             plain_text = strip_tags(html_message)
-            send_async_email.delay(
-                subject, plain_text, settings.EMAIL_HOST_USER, [instance.email], html_message
-            )  # Use this to send mail in async way.
+            # Use QStash task to send email asynchronously
+            send_async_email(
+                subject,
+                plain_text,
+                settings.EMAIL_HOST_USER,
+                [instance.email],
+                html_message
+            )
 
 
 @receiver(post_save, sender=Customer)
@@ -66,7 +71,8 @@ def customer_daily_entry(sender, instance, created, **kwargs):
 @receiver(post_save, sender=Customer)
 def customer_daily_entry_QR(sender, instance, created, **kwargs):
     if created:
-        generate_customer_qr_code_for_daily_entry_async.delay(instance.id)
+        # Use QStash task to generate QR code asynchronously
+        generate_customer_qr_code_for_daily_entry_async(instance.id)
 
 
 post_save.connect(customer_account, sender=Customer)

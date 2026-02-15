@@ -196,3 +196,40 @@ def historical_data_retriever(request):
     old_data = [dict(zip(columns, row)) for row in rows]
     serialized_data = DailyEntrySerializerGETDashboard(old_data, many=True)
     return JsonResponse({f"historical_{params}": serialized_data.data}, status=status.HTTP_200_OK, safe=False)
+
+
+# -------------------------------
+# Scheduled Task Endpoints (Called by QStash)
+# -------------------------------
+from django.views.decorators.csrf import csrf_exempt
+from .task import reset_dailentry_dashboard_values, batch_processing_for_daily_entry_on_monthly_basis
+
+
+@csrf_exempt
+def run_reset_dashboard_task(request):
+    """
+    HTTP endpoint for QStash to trigger dashboard reset.
+    Called via cron schedule: Daily at 00:01
+    """
+    if request.method == "POST":
+        try:
+            reset_dailentry_dashboard_values()
+            return JsonResponse({"status": "success", "message": "Dashboard reset completed"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"error": "Method not allowed"}, status=405)
+
+
+@csrf_exempt
+def run_monthly_batch_task(request):
+    """
+    HTTP endpoint for QStash to trigger monthly batch processing.
+    Called via cron schedule: Monthly on day 1 at 03:00
+    """
+    if request.method == "POST":
+        try:
+            batch_processing_for_daily_entry_on_monthly_basis()
+            return JsonResponse({"status": "success", "message": "Monthly batch processing completed"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"error": "Method not allowed"}, status=405)

@@ -2,7 +2,6 @@ from io import BytesIO
 import os
 
 from PIL import Image, ImageDraw, ImageFont
-from celery import shared_task
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import connection
@@ -10,12 +9,14 @@ from django.utils import timezone
 import qrcode
 
 from customer.models import Customer
+from banas.async_helpers import async_task
 
 from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer_qr_code
 
 
-@shared_task
+@async_task
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
+    """Generate QR code for customer daily entry - Django native task"""
     customer_detail = Customer.objects.get(id=customer_id)
     redirect_url = "https://banas.up.railway.app/api/dailyentry/customer/dailyentry/"
 
@@ -71,8 +72,9 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     customer_qr_code.objects.create(customer=customer_detail, qrcode=saved_path)
 
 
-@shared_task
+@async_task
 def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
+    """Bulk update customer daily entry to monthly table - Django native task"""
     for entry in entry_data_list:
         customer_id = entry["customer_id"]
         cooler_count = entry["cooler"]
@@ -98,16 +100,16 @@ def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
             )
 
 
-@shared_task
 def reset_dailentry_dashboard_values():
+    """Reset daily entry dashboard values - Django native scheduled task"""
     daily_entry_dashboard = DailyEntry_dashboard.objects.first()
     daily_entry_dashboard.customer_count = 0
     daily_entry_dashboard.coolers_count = 0
     daily_entry_dashboard.save()
 
 
-@shared_task
-def batch_processing_for_daily_entry_ofn_monthly_basis():
+def batch_processing_for_daily_entry_on_monthly_basis():
+    """Batch processing for daily entry on monthly basis - Django native scheduled task"""
     now = timezone.now()
     first_day_of_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     first_day_of_previous_month = (first_day_of_current_month - timezone.timedelta(days=1)).replace(day=1)
@@ -152,3 +154,4 @@ def batch_processing_for_daily_entry_ofn_monthly_basis():
         cursor.execute(truncate_sql)
 
     return f"Successfully processed entries into {table_name} and truncated the original table"
+

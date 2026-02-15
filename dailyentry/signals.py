@@ -35,7 +35,8 @@ def update_customer_daily_entry(sender, instance, created, **kwargs):
 def update_customer_daily_entry_bulk(sender, **kwargs):
     daily_entries = kwargs["objects"]
     entry_data_list = [{"customer_id": entry.customer.id, "cooler": entry.cooler} for entry in daily_entries]
-    update_customer_daily_entry_to_monthly_table_bulk.delay(entry_data_list)
+    # Use QStash task for bulk processing
+    update_customer_daily_entry_to_monthly_table_bulk(entry_data_list)
 
 
 post_save.connect(update_customer_daily_entry, sender=DailyEntry)

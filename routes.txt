@@ -7,18 +7,22 @@ For Password Reset (Send Email and rest)
 
 
 
-For Celery Tasks. 
+For Background Tasks (Upstash QStash):
 
-1) Activate VirtualEnv 
-2) redis-server || On windows install a redis-server on ubuntu using wsl and start the redis-server there
-3) celery -A banas worker -l info
-4) celery -A banas beat -l INFO
+1) Sign up at https://upstash.com/ and create a QStash project
+2) Get your QSTASH_TOKEN from the dashboard
+3) Set environment variable: QSTASH_TOKEN=your_token_here
+4) Configure scheduled tasks (one-time): python setup_qstash_schedules.py
+5) Tasks are automatically called via HTTP endpoints by QStash
 
+Task Endpoints:
+- /api/tasks/send-email/ - Send email asynchronously
+- /api/tasks/generate-qr-code/ - Generate QR code
+- /api/tasks/monthly-bill-check/ - Daily at 23:00 (scheduled)
+- /api/tasks/reset-dashboard/ - Daily at 00:01 (scheduled)
+- /api/tasks/monthly-batch-processing/ - Monthly on day 1 at 03:00 (scheduled)
 
-
-For Celery beat task : https://python.plainenglish.io/send-async-emails-in-your-django-app-with-celery-and-redis-137e0c454a0c [ We can use this for creating bills ]
-
-For Celery Mail one : https://realpython.com/asynchronous-tasks-with-django-and-celery/
+For more info: https://upstash.com/docs/qstash/overall/getstarted
 
 For login into the postgressql use this commands:
 

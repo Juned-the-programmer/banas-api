@@ -7,7 +7,7 @@ on:
     branches: [ "master", "main" ]
 
 env:
-  DJANGO_SETTINGS_MODULE: banas.settings_ci
+  ENVIRONMENT: ci
 
 jobs:
   test:
@@ -21,7 +21,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: '3.9'
+        python-version: '3.12'
         
     - name: Cache Python dependencies
       uses: actions/cache@v3
@@ -114,33 +114,33 @@ jobs:
     - name: Django system check
       run: |
         echo "🔧 Running Django system checks..."
-        python manage.py check --settings=banas.settings_ci
+        python manage.py check
         
     - name: Django security check
       run: |
         echo "🛡️ Running Django security checks..."
-        python manage.py check --deploy --settings=banas.settings_ci
+        python manage.py check --deploy
         
     - name: Check for missing migrations
       run: |
         echo "📋 Checking for missing migrations..."
-        python manage.py makemigrations --dry-run --check --settings=banas.settings_ci
+        python manage.py makemigrations --dry-run --check
         
     - name: Django migrate
       run: |
         echo "🗄️ Running Django migrations..."
-        python manage.py migrate --settings=banas.settings_ci
+        python manage.py migrate
         
     - name: Collect static files
       run: |
         echo "📁 Collecting static files..."
-        python manage.py collectstatic --noinput --settings=banas.settings_ci
+        python manage.py collectstatic --noinput
         
     # ==================== TESTING ====================
     - name: Run Django tests with coverage
       run: |
         echo "🧪 Running Django tests with coverage..."
-        coverage run --source='.' manage.py test --settings=banas.settings_ci
+        coverage run --source='.' manage.py test
         coverage report
         coverage xml
         
@@ -158,7 +158,7 @@ jobs:
         echo "📖 Validating API schema with drf-yasg..."
         python -c "
         import os
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'banas.settings_ci')
+        os.environ.setdefault('ENVIRONMENT', 'ci')
         import django
         django.setup()
         from drf_yasg.generators import OpenAPISchemaGenerator
@@ -185,7 +185,7 @@ jobs:
         python -c "
         import os
         import django
-        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'banas.settings_ci')
+        os.environ.setdefault('ENVIRONMENT', 'ci')
         django.setup()
         
         # Import all models from each app
@@ -251,7 +251,7 @@ jobs:
         
         # Create a test environment file
         cat > test.env << EOF
-        DJANGO_SETTINGS_MODULE=banas.settings_docker
+        ENVIRONMENT=ci
         SECRET_KEY=test-secret-key-for-docker-testing-only
         DEBUG=False
         EOF
@@ -324,15 +324,15 @@ jobs:
       run: |
         echo "📝 Creating test environment file..."
         cat > .env << EOF
-        DJANGO_SETTINGS_MODULE=banas.settings_docker
+        ENVIRONMENT=ci
         SECRET_KEY=test-secret-key-for-compose-testing
         DEBUG=False
         DB_NAME=test
         DB_USER=test
         DB_PASSWORD=test
-        DB_HOST=localhost
+        DB_HOST=db
         DB_PORT=5432
-        REDIS_URL=redis://localhost:6379
+        MEMCACHED_URL=memcached:11211
         AWS_ACCESS_KEY_ID=test
         AWS_SECRET_ACCESS_KEY=test
         AWS_STORAGE_BUCKET_NAME=test

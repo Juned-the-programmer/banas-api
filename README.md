@@ -1,6 +1,6 @@
 # Banas API
 
-A production-ready Django REST API for managing a milk delivery business: customers, daily entries, billing, payments, and route management. Includes JWT authentication, async task processing with Celery, Redis-backed caching/queues, S3-based media storage, and containerized deployment.
+A production-ready Django REST API for managing a milk delivery business: customers, daily entries, billing, payments, and route management. Includes JWT authentication, async task processing with Upstash QStash, Memcached caching, S3-based media storage, and containerized deployment.
 
 ## Features
 
@@ -10,7 +10,7 @@ A production-ready Django REST API for managing a milk delivery business: custom
 - Billing and payment workflows
 - Route management
 - Dashboard analytics
-- Caching and async background jobs (Celery + Redis)
+- Caching with Memcached and async background jobs with Upstash QStash
 - Swagger UI and OpenAPI schema
 - Docker and docker-compose for development and deployment
 
@@ -19,8 +19,8 @@ A production-ready Django REST API for managing a milk delivery business: custom
 - Django: Web framework providing the project structure, ORM, templating, and admin.
 - Django REST Framework (DRF): API layer for serializers, viewsets, and authentication integration.
 - SimpleJWT: JWT-based authentication, with access/refresh tokens and configurable lifetimes.
-- Celery: Distributed task queue for background processing (e.g., scheduled jobs, heavy tasks).
-- Redis: Message broker and cache backend used by Celery and Django caching.
+- Upstash QStash: Serverless HTTP-based task queue for background processing and scheduled jobs.
+- Memcached: High-performance cache backend for Django caching.
 - PostgreSQL: Relational database for reliable data persistence.
 - drf-yasg: Generates interactive Swagger UI and OpenAPI schemas for the API.
 - WhiteNoise: Efficient static files serving in production-like environments.
@@ -34,8 +34,9 @@ A production-ready Django REST API for managing a milk delivery business: custom
 
 ### Prerequisites
 
-- Docker (recommended) or Python 3.11+
-- Redis and PostgreSQL instances (docker-compose provides these)
+- Docker (recommended) or Python 3.12+
+- PostgreSQL database (managed externally or via docker-compose)
+- Upstash QStash account and token (for background tasks)
 - AWS S3 bucket and credentials (for media) or adjust settings for local media
 
 ### Environment Variables
@@ -53,7 +54,9 @@ DB_PASSWORD={{POSTGRES_PASSWORD}}
 DB_HOST=localhost
 DB_PORT=5432
 
-REDIS_URL=redis://localhost:6379/0
+QSTASH_TOKEN={{QSTASH_TOKEN}}
+BASE_URL=http://localhost:8000  # For local dev. For production, use your public URL
+MEMCACHED_URL=memcached:11211
 
 EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
 EMAIL_HOST=smtp.gmail.com

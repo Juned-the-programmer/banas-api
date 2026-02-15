@@ -103,3 +103,24 @@ class GenerateBillView(generics.CreateAPIView):
         customer_daily_entry.save()
 
         return Response({"message": "Customer Bill Generated"}, status=status.HTTP_201_CREATED)
+
+
+# Scheduled Task Endpoint (Called by QStash)
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from .task import generate_bill_at_the_end_of_month
+
+
+@csrf_exempt
+def run_monthly_bill_task(request):
+    """
+    HTTP endpoint for QStash to trigger monthly bill generation.
+    Called via cron schedule: Daily at 23:00
+    """
+    if request.method == "POST":
+        try:
+            generate_bill_at_the_end_of_month()
+            return JsonResponse({"status": "success", "message": "Monthly bill task completed"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+    return JsonResponse({"error": "Method not allowed"}, status=405)

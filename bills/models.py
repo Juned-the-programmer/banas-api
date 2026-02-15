@@ -28,7 +28,9 @@ class CustomerBill(models.Model):
         return f"{self.customer_name} - {self.bill_number}"
 
     class Meta:
-        index_together = [["id", "customer_name", "bill_number"]]
+        indexes = [
+            models.Index(fields=["id", "customer_name", "bill_number"]),
+        ]
 
     @property
     def from_date_as_date(self):

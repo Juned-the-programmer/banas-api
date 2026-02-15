@@ -35,10 +35,14 @@ SECRET_KEY = config(
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-CORS_ORIGIN_ALLOW_ALL = True
-ALLOWED_HOSTS = ["*"]
-CSRF_TRUSTED_ORIGINS = ["https://banas.up.railway.app", "http://localhost:8000"]
+# Environment-based configuration
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+DEBUG = ENVIRONMENT != "production"
+
+# CORS and Allowed Hosts
+CORS_ORIGIN_ALLOW_ALL = DEBUG
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",") if os.getenv("ALLOWED_HOSTS") else ["*"]
+CSRF_TRUSTED_ORIGINS = ["https://0bd8-2409-4090-108a-1c02-70a2-7104-c183-1f72.ngrok-free.app", "http://localhost:8000"]
 
 # APPEND_SLASH=False
 # Application definition
@@ -57,13 +61,11 @@ INSTALLED_APPS = [
     "dailyentry.apps.DailyentryConfig",
     "route.apps.RouteConfig",
     "payment.apps.PaymentConfig",
-    "django_celery_results",
     "rest_framework",
     "corsheaders",
     "import_export",
     "exception",
     "bulk_signals",
-    "django_celery_beat",
     "storages",
     "contactUs",
 ]
@@ -116,38 +118,51 @@ WSGI_APPLICATION = "banas.wsgi.application"
 # }
 
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": config("DB_NAME"),
-        "USER": config("DB_USER"),
-        "PASSWORD": config("DB_PASSWORD"),
-        # "HOST": config("DB_HOST"),
-        "HOST": "host.docker.internal",
-        "PORT": config("DB_PORT"),
+# Environment-based configuration
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+
+# Database Configuration
+if ENVIRONMENT == "ci":
+    # Use SQLite for CI/testing
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": ":memory:",
+        }
     }
-}
-
-CACHES = {
-    "default": {
-        "BACKEND": "django_redis.cache.RedisCache",
-        "LOCATION": config("REDIS_URL"),
-        "OPTIONS": {
-            "CLIENT_CLASS": "django_redis.client.DefaultClient",
-        },
+else:
+    # Use PostgreSQL for development/production
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DB_NAME", "banas"),
+            "USER": os.getenv("DB_USER", "postgres"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+        }
     }
-}
 
-# CELERY CONFIGURATION
-CELERY_BROKER_URL = config("REDIS_URL")
-CELERY_ACCEPT_CONTENT = {"application/json"}
-CELERY_TASK_SERIALIZER = "json"
-CELERY_RESULT_SERIALIZER = "json"
-CELERY_TIMEZONE = "Asia/Kolkata"
-CELERY_RESULT_BACKEND = "django-db"
-
-# CELERY BEAT CONFIGURATION
-CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers:DatabaseScheduler"
+# Cache Configuration - Upstash Redis (Serverless)
+if ENVIRONMENT == "ci":
+    # Use dummy cache for CI
+    CACHES = {
+        "default": {
+            "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        }
+    }
+else:
+    # Use Upstash Redis for development/production
+    CACHES = {
+        "default": {
+            "BACKEND": "django_redis.cache.RedisCache",
+            "LOCATION": os.getenv("UPSTASH_REDIS_URL", ""),
+            "OPTIONS": {
+                "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
+            }
+        }
+    }
 
 # Password validation
 # https://docs.djangoproject.com/en/4.0/ref/settings/#auth-password-validators
@@ -254,10 +269,44 @@ AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")  # example, change to your buc
 AWS_QUERYSTRING_AUTH = False  # makes public URLs without ?AWSAccessKeyId
 
 # Security-related toggles (configure via environment for production)
-# These defaults are safe for local/dev; set to secure values in prod env
-SECURE_HSTS_SECONDS = int(config("SECURE_HSTS_SECONDS", default=0))
-SECURE_HSTS_INCLUDE_SUBDOMAINS = config("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=False, cast=bool)
-SECURE_HSTS_PRELOAD = config("SECURE_HSTS_PRELOAD", default=False, cast=bool)
-SECURE_SSL_REDIRECT = config("SECURE_SSL_REDIRECT", default=False, cast=bool)
-SESSION_COOKIE_SECURE = config("SESSION_COOKIE_SECURE", default=False, cast=bool)
-CSRF_COOKIE_SECURE = config("CSRF_COOKIE_SECURE", default=False, cast=bool)
+if ENVIRONMENT == "production":
+    # SSL/HTTPS Settings
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    
+    # Security Headers
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_BROWSER_XSS_FILTER = True
+    X_FRAME_OPTIONS = "DENY"
+    
+    # HSTS Settings (HTTP Strict Transport Security)
+    SECURE_HSTS_SECONDS = 31536000  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    
+    # Content Security Policy
+    CSP_DEFAULT_SRC = ("'self'",)
+    CSP_SCRIPT_SRC = ("'self'",)
+    CSP_STYLE_SRC = ("'self'",)
+    CSP_IMG_SRC = ("'self'", "data:", "https:")
+    CSP_FONT_SRC = ("'self'",)
+    CSP_CONNECT_SRC = ("'self'",)
+else:
+    # Development settings - less restrictive
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    X_FRAME_OPTIONS = "SAMEORIGIN"
+
+
+# Background Tasks Configuration
+# Using Upstash QStash for scheduled tasks and threading for async tasks
+# See: https://upstash.com/docs/qstash/overall/getstarted
+QSTASH_TOKEN = os.getenv("QSTASH_TOKEN", "")
+QSTASH_CURRENT_SIGNING_KEY = os.getenv("QSTASH_CURRENT_SIGNING_KEY", "")
+QSTASH_NEXT_SIGNING_KEY = os.getenv("QSTASH_NEXT_SIGNING_KEY", "")
+BASE_URL = os.getenv("BASE_URL", "")
+
+

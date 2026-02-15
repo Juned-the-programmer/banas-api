@@ -42,7 +42,10 @@ class Customer(models.Model):
         return f"{self.first_name} {self.last_name}"
 
     class Meta:
-        index_together = [["id"]]
+        indexes = [
+            models.Index(fields=["id"]),
+        ]
+
 
 
 class CustomerAccount(models.Model):
@@ -60,7 +63,9 @@ class CustomerAccount(models.Model):
         return str(self.customer_name)
 
     class Meta:
-        index_together = [["id", "customer_name", "due"]]
+        indexes = [
+             models.Index(fields=["id", "customer_name", "due"]),
+        ]
 
     @classmethod
     def calculate_total_due(cls):

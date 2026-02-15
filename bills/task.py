@@ -2,7 +2,6 @@ from calendar import monthrange
 import datetime
 from datetime import timedelta
 
-from celery import shared_task
 from django.utils import timezone
 
 from banas.cache_conf import customer_cached_data
@@ -13,16 +12,21 @@ from dailyentry.models import customer_daily_entry_monthly
 from .models import Bill_number_generator, CustomerBill
 
 
-@shared_task
-def run_monthly_task():
-    now = timezone.now()
-
-    if now.day == monthrange(now.year, now.month)[1]:
-        generate_bill_at_the_end_of_month.apply_async()
-
-
-@shared_task
 def generate_bill_at_the_end_of_month():
+    """Generate bills at the end of month - Called via QStash HTTP endpoint"""
+    
+    # Check if today is actually the last day of the month
+    today = timezone.now().date()
+    tomorrow = today + timezone.timedelta(days=1)
+    
+    if tomorrow.month != today.month:
+        # It's the last day! Proceed with bill generation
+        pass
+    else:
+        # Not the last day, skip
+        print(f"Skipping bill generation - today ({today}) is not the last day of the month")
+        return
+    
     # today date
     today_date = datetime.datetime.now()
 
@@ -69,3 +73,4 @@ def generate_bill_at_the_end_of_month():
         customer_daily_entry.save()
 
     Bill_number_generator.objects.all().delete()
+

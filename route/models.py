@@ -24,4 +24,4 @@ class Route(models.Model):
         return str(self.route_name)
 
     class Meta:
-        index_together = [["id"]]
+        indexes = [models.Index(fields=["id"])]

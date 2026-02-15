@@ -24,4 +24,6 @@ class CustomerPayment(models.Model):
         return str(self.customer_name)
 
     class Meta:
-        index_together = [["id", "customer_name"]]
+        indexes = [
+            models.Index(fields=["id", "customer_name"]),
+        ]
