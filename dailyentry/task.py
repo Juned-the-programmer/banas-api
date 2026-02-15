@@ -11,6 +11,7 @@ import qrcode
 from customer.models import Customer
 from banas.async_helpers import async_task
 
+from django.conf import settings
 from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer_qr_code
 
 
@@ -18,7 +19,8 @@ from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
     """Generate QR code for customer daily entry - Django native task"""
     customer_detail = Customer.objects.get(id=customer_id)
-    redirect_url = "https://banas.up.railway.app/api/dailyentry/customer/dailyentry/"
+    base_url = getattr(settings, "BASE_URL", "").rstrip("/")
+    redirect_url = f"{base_url}/api/dailyentry/customer/dailyentry/"
 
     # Generate QR code
     qr = qrcode.QRCode(
