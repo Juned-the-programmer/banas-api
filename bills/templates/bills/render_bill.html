@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice - {{ bill.bill_number }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #10b981;
+            /* Emerald 500 */
+            --primary-dark: #059669;
+            /* Emerald 600 */
+            --bg-body: #f8fafc;
+            /* Slate 50 */
+            --surface: #ffffff;
+            --text-main: #0f172a;
+            /* Slate 900 */
+            --text-muted: #64748b;
+            /* Slate 500 */
+            --text-light: #94a3b8;
+            /* Slate 400 */
+            --border-color: #e2e8f0;
+            /* Slate 200 */
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            padding: 2rem 1rem;
+        }
+
+        /* Container & Glassmorphism */
+        .invoice-wrapper {
+            max-width: 850px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 24px;
+            padding: 40px 50px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            position: relative;
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out forwards;
+        }
+
+        /* Top Decorative Gradient Bar */
+        .invoice-wrapper::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, #34d399, #059669);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Header Area */
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 40px;
+            padding-bottom: 30px;
+            border-bottom: 2px dashed var(--border-color);
+        }
+
+        .brand-sec h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            letter-spacing: -0.5px;
+            margin-bottom: 4px;
+        }
+
+        .brand-sec p {
+            color: var(--text-muted);
+            font-size: 14px;
+        }
+
+        .invoice-title {
+            text-align: right;
+        }
+
+        .invoice-title h2 {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -1px;
+            text-transform: uppercase;
+        }
+
+        .invoice-title p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .info-box {
+            background: #f8fafc;
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .info-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .info-value {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .info-value.large {
+            font-size: 20px;
+            color: var(--primary-dark);
+        }
+
+        /* Table Area */
+        .table-section h3 {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--text-main);
+        }
+
+        .entry-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 40px;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .entry-table th {
+            background-color: #f1f5f9;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 12px;
+            letter-spacing: 0.5px;
+            padding: 16px;
+            text-align: left;
+        }
+
+        .entry-table td {
+            padding: 16px;
+            font-size: 14px;
+            color: var(--text-main);
+            border-top: 1px solid var(--border-color);
+            transition: background 0.2s ease;
+        }
+
+        .entry-table tbody tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        .entry-table td:last-child,
+        .entry-table th:last-child {
+            text-align: right;
+        }
+
+        /* Summary Area */
+        .summary-wrapper {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .summary-card {
+            width: 350px;
+            background: #f8fafc;
+            border-radius: 16px;
+            padding: 24px;
+            border: 1px solid var(--border-color);
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 15px;
+            color: var(--text-muted);
+        }
+
+        .summary-row.total-row {
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 2px dashed var(--border-color);
+            color: var(--text-main);
+            font-weight: 700;
+            font-size: 22px;
+        }
+
+        .summary-row .val {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .summary-row.total-row .val {
+            color: var(--primary-dark);
+        }
+
+        /* Actions */
+        .actions {
+            margin-top: 50px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-print {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            border-radius: 999px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-print:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .invoice-wrapper {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .invoice-wrapper::before {
+                display: none;
+            }
+
+            .actions {
+                display: none;
+            }
+
+            .info-box,
+            .summary-card {
+                background: transparent;
+                padding: 0;
+                border: none;
+            }
+
+            .summary-card {
+                width: 300px;
+            }
+
+            .invoice-header {
+                padding-bottom: 20px;
+                margin-bottom: 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="invoice-wrapper">
+        <!-- Header -->
+        <header class="invoice-header">
+            <div class="brand-sec">
+                <h1>Banas Water</h1>
+                <p>Premium Drinking Water Delivery</p>
+            </div>
+            <div class="invoice-title">
+                <h2>INVOICE</h2>
+                <p>#{{ bill.bill_number }}</p>
+            </div>
+        </header>
+
+        <!-- Info Grid -->
+        <div class="info-grid">
+            <div class="info-box">
+                <div class="info-label">Billed To</div>
+                <div class="info-value large">{{ bill.customer_name.first_name }} {{ bill.customer_name.last_name }}
+                </div>
+                {% if bill.customer_name.phone_no %}
+                <div class="info-value" style="margin-top: 4px; font-weight: 400; color: var(--text-muted);">
+                    +91 {{ bill.customer_name.phone_no }}
+                </div>
+                {% endif %}
+                {% if bill.customer_name.route %}
+                <div class="info-value" style="margin-top: 2px; font-weight: 400; color: var(--text-muted);">
+                    Route: {{ bill.customer_name.route.route_name }}
+                </div>
+                {% endif %}
+            </div>
+            <div class="info-box" style="text-align: right;">
+                <div class="info-label">Billing Period</div>
+                <div class="info-value">{{ bill.from_date|date:"d M, Y" }}</div>
+                <div class="info-label" style="margin: 8px 0 2px;">To</div>
+                <div class="info-value">{{ bill.to_date|date:"d M, Y" }}</div>
+            </div>
+        </div>
+
+        <!-- Daily Entries -->
+        <div class="table-section">
+            <h3>Daily Delivery Logs</h3>
+            <table class="entry-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Coolers Delivered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entry in daily_entries %}
+                    <tr>
+                        <td>{{ entry.date_added|date:"l, F d, Y" }}</td>
+                        <td><span style="font-weight: 600; color: var(--primary-dark);">{{ entry.cooler }}</span>
+                            Coolers</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2" style="text-align: center; color: var(--text-light); padding: 30px;">
+                            No deliveries recorded for this period.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Summary -->
+        <div class="summary-wrapper">
+            <div class="summary-card">
+                <div class="summary-row">
+                    <span>Total Coolers Delivered</span>
+                    <span class="val">{{ bill.coolers }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Rate per Cooler</span>
+                    <span class="val">₹{{ bill.rate }}</span>
+                </div>
+                <div class="summary-row">
+                    <span>Current Month Total</span>
+                    <span class="val">₹{{ bill.amount }}</span>
+                </div>
+
+                {% if bill.pending_amount > 0 %}
+                <div class="summary-row" style="margin-top: 8px; color: #ef4444;">
+                    <span>Previous Due</span>
+                    <span class="val" style="color: #ef4444;">+ ₹{{ bill.pending_amount }}</span>
+                </div>
+                {% endif %}
+
+                <div class="summary-row total-row">
+                    <span>Total Payable</span>
+                    <span class="val">₹{{ bill.bill_amount }}</span>
+                </div>
+
+                <p style="text-align: center; font-size: 11px; color: var(--text-light); margin-top: 20px;">
+                    Generated on {{ bill.date|date:"F d, Y" }}
+                </p>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button class="btn-print" onclick="window.print()">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round" viewBox="0 0 24 24">
+                    <path d="M6 9V2h12v7"></path>
+                    <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"></path>
+                    <path d="M6 14h12v8H6z"></path>
+                </svg>
+                Print Invoice
+            </button>
+        </div>
+
+    </div>
+
+</body>
+
+</html>

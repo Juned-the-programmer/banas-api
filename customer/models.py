@@ -1,4 +1,4 @@
-import uuid
+import uuid6
 
 from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, RegexValidator
@@ -26,7 +26,7 @@ class Customer(models.Model):
     addedby = models.CharField(max_length=100, null=True, blank=True)
     updatedby = models.CharField(max_length=100, null=True, blank=True)
     active = models.BooleanField(default=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid6.uuid7, unique=True, primary_key=True, editable=False)
 
     def __str__(self):
         return "{} {}".format(self.first_name, self.last_name)
@@ -52,7 +52,7 @@ class CustomerAccount(models.Model):
     date = models.DateTimeField(auto_now_add=True)
     addedby = models.CharField(max_length=100, null=True, blank=True)
     updatedby = models.CharField(max_length=100, null=True, blank=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid6.uuid7, unique=True, primary_key=True, editable=False)
 
     def __str__(self):
         return str(self.customer_name)

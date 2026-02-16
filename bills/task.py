@@ -1,4 +1,5 @@
 import logging
+import uuid6
 from datetime import timedelta, datetime
 
 from django.core.cache import cache
@@ -138,9 +139,11 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
         sequence += 1
         
         bill_total = (coolers * rate) + int(due)
+        bill_id = uuid6.uuid7()
 
         bills_to_create.append(
             CustomerBill(
+                id=bill_id,
                 bill_number=f"{bill_prefix}{str(sequence).zfill(4)}",
                 customer_name=customer,
                 from_date=first_date,
@@ -163,12 +166,14 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
         
         # Enqueue WhatsApp Message for Bill Generation
         if customer.phone_no:
+            invoice_link = f"{settings.BASE_URL.rstrip('/')}/api/bill/invoice/{bill_id}/"
             message_body = (
                 f"Dear {customer.first_name} {customer.last_name},\n"
                 f"Your Water Cooler bill for {month_name} has been generated.\n"
                 f"Total Coolers: {coolers}\n"
                 f"Previous Due: ₹{due}\n"
                 f"Total Amount Payable: ₹{bill_total}\n\n"
+                f"View your detailed invoice here:\n{invoice_link}\n\n"
                 "Please pay at your earliest convenience."
             )
             enqueue_whatsapp_message(customer.phone_no, message_body)

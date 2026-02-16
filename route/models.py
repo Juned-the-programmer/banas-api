@@ -1,4 +1,4 @@
-import uuid
+import uuid6
 
 from django.db import models
 from django.utils import timezone
@@ -11,7 +11,7 @@ class Route(models.Model):
     date_updated = models.DateTimeField(auto_now=True)
     addedby = models.CharField(max_length=100, null=True, blank=True)
     updatedby = models.CharField(max_length=100, null=True, blank=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid6.uuid7, unique=True, primary_key=True, editable=False)
 
     def save(self, *args, **kwargs):
         if not self.pk:

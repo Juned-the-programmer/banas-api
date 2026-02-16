@@ -1,4 +1,4 @@
-import uuid
+import uuid6
 
 from django.db import models
 
@@ -14,7 +14,7 @@ class DailyEntry(models.Model):
     date_added = models.DateTimeField(null=True, blank=True)
     addedby = models.CharField(max_length=100, null=True, blank=True)
     updatedby = models.CharField(max_length=100, null=True, blank=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid6.uuid7, unique=True, primary_key=True, editable=False)
 
     def __str__(self):
         return str(self.customer)
@@ -65,7 +65,7 @@ class pending_daily_entry(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True)
     coolers = models.IntegerField(default=0, null=True, blank=True)
     date_added = models.DateTimeField(auto_now_add=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid6.uuid7, unique=True, primary_key=True, editable=False)
 
     def __str__(self):
         return str(self.customer)

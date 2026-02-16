@@ -49,5 +49,5 @@ django-bulk-signals
 #new Relic
 newrelic
 
-#Supabase
-supabase
+#UUID7
+uuid6

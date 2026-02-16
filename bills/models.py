@@ -1,5 +1,5 @@
 import datetime
-import uuid
+import uuid6
 
 from django.db import models
 
@@ -22,7 +22,7 @@ class CustomerBill(models.Model):
     paid = models.BooleanField(default=False, null=True, blank=True)
     addedby = models.CharField(max_length=100, null=True, blank=True)
     updatedby = models.CharField(max_length=100, null=True, blank=True)
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid6.uuid7, unique=True, primary_key=True, editable=False)
 
     def __str__(self):
         return f"{self.customer_name} - {self.bill_number}"
@@ -37,7 +37,7 @@ class CustomerBill(models.Model):
 
 class Bill_number_generator(models.Model):
     bill_number = models.IntegerField()
-    id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
+    id = models.UUIDField(default=uuid6.uuid7, unique=True, primary_key=True, editable=False)
 
     def __str__(self):
         return str(self.bill_number)

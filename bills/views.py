@@ -130,6 +130,39 @@ class GenerateBillView(generics.CreateAPIView):
         return Response({"message": "Customer Bill Generated"}, status=status.HTTP_201_CREATED)
 
 
+class RenderBillView(generics.RetrieveAPIView):
+    serializer_class = GenerateBillSerializerGET
+    queryset = CustomerBill.objects.select_related("customer_name")
+    lookup_field = "pk"
+    authentication_classes = []
+    permission_classes = []
+
+    def retrieve(self, request, *args, **kwargs):
+        bill = self.get_object()
+
+        start_datetime = timezone.make_aware(
+            datetime.datetime.combine(bill.from_date, datetime.time.min)
+        )
+
+        end_datetime = timezone.make_aware(
+            datetime.datetime.combine(bill.to_date, datetime.time.max)
+        )
+
+        daily_entries = DailyEntry.objects.filter(
+            customer=bill.customer_name,
+            date_added__gte=start_datetime,
+            date_added__lte=end_datetime
+        ).order_by('date_added')
+
+        from django.shortcuts import render
+
+        context = {
+            "bill": bill,
+            "daily_entries": daily_entries
+        }
+
+        return render(request, "bills/render_bill.html", context)
+
 
 # -----------------------------------------------------------------------
 # Scheduled Task Endpoints (Called by QStash)
