@@ -3,8 +3,6 @@ import os
 from io import BytesIO
 
 from django.conf import settings
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.core.mail import EmailMultiAlternatives, send_mail
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
@@ -54,49 +52,24 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     a4_img = Image.new("RGB", (a4_width, a4_height), "white")
     draw = ImageDraw.Draw(a4_img)
 
-    # 1. Font Management - Auto-download reliable TrueType font
-    font_filename = "Roboto-Bold.ttf"
-    font_path = os.path.join(settings.BASE_DIR, font_filename)
-    if not os.path.exists(font_path):
-        import urllib.request
-        logger.info(f"Downloading {font_filename} from Google Fonts...")
-        # Direct link to Roboto Bold TTF
-        url = "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Bold.ttf"
-        try:
-            urllib.request.urlretrieve(url, font_path)
-            logger.info("Font downloaded successfully.")
-        except Exception as e:
-            logger.error(f"Failed to download font: {e}")
-
+    # Customer name at top centre
     try:
-        font_large = ImageFont.truetype(font_path, 180)  # Huge font for Name
-        font_medium = ImageFont.truetype(font_path, 140) # Large font for Footer
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 120)
     except OSError:
-        logger.warning(f"Could not load {font_filename}, falling back to default tiny font.")
-        font_large = ImageFont.load_default()
-        font_medium = ImageFont.load_default()
+        font = ImageFont.load_default()
 
-    # 2. Draw Customer Name (Top Centered)
     name_text = f"{customer_detail.first_name} {customer_detail.last_name}"
-    bbox_name = draw.textbbox((0, 0), name_text, font=font_large)
-    name_w = bbox_name[2] - bbox_name[0]
-    name_x = (a4_width - name_w) // 2
-    draw.text((name_x, 300), name_text, font=font_large, fill="black")
+    bbox = draw.textbbox((0, 0), name_text, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_x = (a4_width - text_w) // 2
+    draw.text((text_x, 200), name_text, font=font, fill="black")
 
-    # 3. Resize QR and paste in center
-    qr_size = 1400
+    # Resize QR and paste in centre
+    qr_size = 1200
     qr_img = qr_img.resize((qr_size, qr_size), Image.LANCZOS)
     qr_x = (a4_width - qr_size) // 2
     qr_y = (a4_height - qr_size) // 2
     a4_img.paste(qr_img, (qr_x, qr_y))
-
-    # 4. Draw "Banas Water" Footer (Bottom Centered, below QR)
-    footer_text = "Banas Water"
-    bbox_footer = draw.textbbox((0, 0), footer_text, font=font_medium)
-    footer_w = bbox_footer[2] - bbox_footer[0]
-    footer_x = (a4_width - footer_w) // 2
-    footer_y = qr_y + qr_size + 200 # 200px below the QR code image
-    draw.text((footer_x, footer_y), footer_text, font=font_medium, fill="black")
 
     # Render to in-memory buffer
     buffer = BytesIO()
@@ -106,16 +79,17 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
     qr_codes_path = f"qr_codes/{file_name}"
 
-    # Save to configured storage backend (e.g., Supabase S3)
-    if default_storage.exists(qr_codes_path):
-        default_storage.delete(qr_codes_path)
-    
-    saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.getvalue()))
+    # Save to local disk under media/qr_codes/
+    local_dir = os.path.join("media", "qr_codes")
+    os.makedirs(local_dir, exist_ok=True)
+    local_path = os.path.join(local_dir, file_name)
+    with open(local_path, "wb") as f:
+        f.write(buffer.getvalue())
 
-    # Persist the reference in DB 
+    # Persist the reference in DB (update if already exists)
     customer_qr_code.objects.update_or_create(
         customer=customer_detail,
-        defaults={"qrcode": saved_path},
+        defaults={"qrcode": qr_codes_path},
     )
 
-    logger.info("QR code saved to storage for customer %s → %s", customer_id, saved_path)
+    logger.info("QR code saved locally for customer %s → %s", customer_id, local_path)
