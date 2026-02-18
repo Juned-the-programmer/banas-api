@@ -6,6 +6,8 @@ from .models import DailyEntry, DailyEntry_dashboard, customer_daily_entry_month
 
 @receiver(post_save, sender=DailyEntry)
 def update_customer_daily_entry(sender, instance, created, **kwargs):
+    if kwargs.get('raw'):
+        return
     if created and instance.customer:
         # Use get_or_create to handle cases where the record doesn't exist
         customer_detail, _ = customer_daily_entry_monthly.objects.get_or_create(

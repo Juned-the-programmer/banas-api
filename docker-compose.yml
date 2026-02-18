@@ -1,14 +1,7 @@
 services:
   web:
     build: .
-    command: >
-      sh -c "python manage.py migrate &&
-             gunicorn banas.wsgi:application --bind 0.0.0.0:8000 --workers 2
-             --access-logfile - 
-             --error-logfile - 
-             --capture-output 
-             --log-level info
-             --enable-stdio-inheritance"
+    command: sh -c "python manage.py migrate && gunicorn banas.wsgi:application --bind 0.0.0.0:8000 --workers 2 --timeout 120 --access-logfile - --error-logfile - --capture-output --log-level info --enable-stdio-inheritance"
     env_file:
       - .env
     environment:
@@ -28,7 +21,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 512M
+          memory: 1G
           cpus: "1.0"
     restart: unless-stopped
     logging:

@@ -19,3 +19,18 @@ docker-compose run api python manage.py runserver 0.0.0.0:8000 -> To run the ser
 docker-compose run api python manage.py createsuperuser -> To create the superuser.
 
 docker-compose run api python manage.py collectstatic -> To collect the static files.
+
+Steps to Resotre the Database :
+
+1) Backup
+    
+    - api/backup/ GET -> Download the zip file, By clicking on Arrow beside Send to Send and Download.
+
+2) Restore
+    
+    - api/backup/restore/ POST -> Upload the zip file.
+    - Under body form-data key as file and type as file and upload the zip file.
+    - Click on Send button to restore the database.
+    - Make sure to just do the Migration before Restoring.
+    - Don't do any operation before Migrations.
+    

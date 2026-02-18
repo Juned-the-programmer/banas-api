@@ -12,7 +12,9 @@ from .task import send_async_email, generate_customer_qr_code_for_daily_entry_as
 
 
 @receiver(post_save, sender=Customer)
-def create_user(sender, instance, created, **kwarg):
+def create_user(sender, instance, created, **kwargs):
+    if kwargs.get('raw'):
+        return
     if created:
         username = instance.first_name.lower() + "_" + instance.last_name.lower()
 
@@ -57,18 +59,24 @@ def create_user(sender, instance, created, **kwarg):
 
 @receiver(post_save, sender=Customer)
 def customer_account(sender, instance, created, **kwargs):
+    if kwargs.get('raw'):
+        return
     if created:
         CustomerAccount.objects.create(customer_name=instance, addedby="Signals")
 
 
 @receiver(post_save, sender=Customer)
 def customer_daily_entry(sender, instance, created, **kwargs):
+    if kwargs.get('raw'):
+        return
     if created:
         customer_daily_entry_monthly.objects.create(customer=instance)
 
 
 @receiver(post_save, sender=Customer)
 def customer_daily_entry_QR(sender, instance, created, **kwargs):
+    if kwargs.get('raw'):
+        return
     if created:
         # Use QStash task to generate QR code asynchronously
         generate_customer_qr_code_for_daily_entry_async(instance.id)
