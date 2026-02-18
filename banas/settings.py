@@ -42,7 +42,7 @@ DEBUG = ENVIRONMENT != "production"
 # CORS and Allowed Hosts
 CORS_ORIGIN_ALLOW_ALL = DEBUG
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",") if os.getenv("ALLOWED_HOSTS") else ["*"]
-CSRF_TRUSTED_ORIGINS = ["https://0bd8-2409-4090-108a-1c02-70a2-7104-c183-1f72.ngrok-free.app", "http://localhost:8000"]
+CSRF_TRUSTED_ORIGINS = ["https://banas-api.onrender.com", "http://localhost:8000"]
 
 # APPEND_SLASH=False
 # Application definition
@@ -211,8 +211,6 @@ STATICFILES_FINDERS = [
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# Media files
-MEDIA_URL = f"https://{config('AWS_STORAGE_BUCKET_NAME')}.s3.{config('AWS_S3_REGION_NAME')}.amazonaws.com/"
 # MEDIA_ROOT = "media/"
 
 # Default primary key field type
@@ -258,15 +256,21 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_USERNAME")
 
-# AWS credentials
+# --- Local file storage (active) ---
+MEDIA_ROOT = BASE_DIR / "media"
+MEDIA_URL = "/media/"
 
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-
-AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")  # example, change to your bucket’s region
-AWS_QUERYSTRING_AUTH = False  # makes public URLs without ?AWSAccessKeyId
+# --- S3/Backblaze B2 storage (commented out — uncomment when ready for production) ---
+# DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+# AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
+# AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
+# AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
+# AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")
+# AWS_S3_ENDPOINT_URL = f'https://s3.{AWS_S3_REGION_NAME}.backblazeb2.com'
+# AWS_S3_SIGNATURE_VERSION = 's3v4'
+# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.backblazeb2.com'
+# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+# AWS_QUERYSTRING_AUTH = False
 
 # Security-related toggles (configure via environment for production)
 if ENVIRONMENT == "production":

@@ -1,23 +1,30 @@
 from io import BytesIO
+import logging
 import os
 
 from PIL import Image, ImageDraw, ImageFont
+from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.db import connection
 from django.utils import timezone
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
 import qrcode
 
 from customer.models import Customer
 from banas.async_helpers import async_task
 
-from django.conf import settings
 from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer_qr_code
 
+logger = logging.getLogger(__name__)
 
-@async_task
+
+@async_task("/api/tasks/generate-qr/")
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
-    """Generate QR code for customer daily entry - Django native task"""
+    """Generate QR code for customer daily entry - runs via QStash in production, thread locally"""
     customer_detail = Customer.objects.get(id=customer_id)
     base_url = getattr(settings, "BASE_URL", "").rstrip("/")
     redirect_url = f"{base_url}/api/dailyentry/customer/dailyentry/"
@@ -65,18 +72,28 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     a4_img.save(buffer, format="PNG")
     buffer.seek(0)
 
-    # Save using default storage (S3 or local)
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
-    qr_codes_path = os.path.join("qr_codes", file_name)
-    saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.read()))
+    qr_codes_path = f"qr_codes/{file_name}"
+
+    # --- Local storage (active) ---
+    import os
+    local_dir = os.path.join("media", "qr_codes")
+    os.makedirs(local_dir, exist_ok=True)
+    local_path = os.path.join(local_dir, file_name)
+    with open(local_path, "wb") as f:
+        f.write(buffer.getvalue())
+    saved_path = qr_codes_path
+
+    # --- S3/Backblaze storage (commented out — uncomment when ready) ---
+    # saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.getvalue()))
 
     # Save to DB
     customer_qr_code.objects.create(customer=customer_detail, qrcode=saved_path)
 
 
-@async_task
+@async_task("/api/tasks/bulk-daily-entry/")
 def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
-    """Bulk update customer daily entry to monthly table - Django native task"""
+    """Bulk update customer daily entry to monthly table - runs via QStash in production, thread locally"""
     for entry in entry_data_list:
         customer_id = entry["customer_id"]
         cooler_count = entry["cooler"]
@@ -157,3 +174,31 @@ def batch_processing_for_daily_entry_on_monthly_basis():
 
     return f"Successfully processed entries into {table_name} and truncated the original table"
 
+
+# -----------------------------------------------------------------------
+# QStash HTTP Callback Endpoint
+# -----------------------------------------------------------------------
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def task_bulk_daily_entry(request):
+    """
+    QStash callback: Bulk update customer daily entry to monthly table.
+    Payload: { args: [entry_data_list] }
+    """
+    try:
+        data = request.data
+        args = data.get("args", [])
+        kwargs = data.get("kwargs", {})
+
+        entry_data_list = args[0] if args else kwargs.get("entry_data_list")
+        if not entry_data_list:
+            return Response({"error": "Missing entry_data_list"}, status=status.HTTP_400_BAD_REQUEST)
+
+        update_customer_daily_entry_to_monthly_table_bulk.__wrapped__(entry_data_list)
+        logger.info(f"Bulk daily entry task completed for {len(entry_data_list)} entries")
+        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Bulk daily entry task failed: {e}", exc_info=True)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
