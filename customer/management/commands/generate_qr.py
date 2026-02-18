@@ -1,7 +1,7 @@
 from django.core.management.base import BaseCommand
 
 from customer.models import Customer
-from dailyentry.task import generate_customer_qr_code_for_daily_entry_async
+from customer.task import generate_customer_qr_code_for_daily_entry_async
 
 
 class Command(BaseCommand):

@@ -6,10 +6,9 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
 from dailyentry.models import customer_daily_entry_monthly
-from dailyentry.task import generate_customer_qr_code_for_daily_entry_async
 
 from .models import Customer, CustomerAccount
-from .task import send_async_email
+from .task import send_async_email, generate_customer_qr_code_for_daily_entry_async
 
 
 @receiver(post_save, sender=Customer)
