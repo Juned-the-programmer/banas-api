@@ -1,9 +1,7 @@
-from bulk_signals import signals
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
 from .models import DailyEntry, DailyEntry_dashboard, customer_daily_entry_monthly
-from .task import update_customer_daily_entry_to_monthly_table_bulk
 
 
 @receiver(post_save, sender=DailyEntry)
@@ -29,14 +27,6 @@ def update_customer_daily_entry(sender, instance, created, **kwargs):
                 customer_count=1,
                 coolers_count=int(instance.cooler)
             )
-
-
-@receiver(signals.post_bulk_create, sender=DailyEntry)
-def update_customer_daily_entry_bulk(sender, **kwargs):
-    daily_entries = kwargs["objects"]
-    entry_data_list = [{"customer_id": entry.customer.id, "cooler": entry.cooler} for entry in daily_entries]
-    # Use QStash task for bulk processing
-    update_customer_daily_entry_to_monthly_table_bulk(entry_data_list)
 
 
 post_save.connect(update_customer_daily_entry, sender=DailyEntry)

@@ -12,6 +12,7 @@ from rest_framework.response import Response
 
 from banas.cache_conf import customer_cached_data
 from customer.models import Customer
+from dailyentry.task import verify_and_commit_pending_entries, bulk_import_daily_entries
 
 from .models import DailyEntry, DailyEntry_dashboard, customer_qr_code, pending_daily_entry
 from .serializer import (
@@ -83,14 +84,11 @@ class DailyEntryBulkImportView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
-        addedby = request.user.username
-        daily_entries = [
-            DailyEntry(customer=item["customer"], cooler=item["cooler"], addedby=addedby, date_added=timezone.now())
-            for item in serializer.validated_data
-        ]
-        DailyEntry.objects.bulk_create(daily_entries)
+        # Enqueue to QStash — task handles all DB writes
+        entries = [{"customer": str(item["customer"].id), "cooler": item["cooler"]} for item in serializer.validated_data]
+        bulk_import_daily_entries(entries)
 
-        return Response({"message": "Bulk Import success!"}, status=status.HTTP_201_CREATED)
+        return Response({"message": "Bulk import queued!"}, status=status.HTTP_202_ACCEPTED)
 
 
 # -------------------------------
@@ -104,36 +102,19 @@ class VerifyPendingDailyEntryView(generics.CreateAPIView):
         serializer = self.get_serializer(data=request.data, many=True)
         serializer.is_valid(raise_exception=True)
 
-        daily_entries = []
-        pending_ids = []
+        # Enqueue to QStash — task handles all DB writes
+        entries = [
+            {
+                "id": str(item.get("id", "")),
+                "customer": str(item.get("customer", "")),
+                "coolers": item.get("coolers"),
+                "date_added": item.get("date_added").isoformat() if item.get("date_added") else None,
+            }
+            for item in serializer.validated_data
+        ]
+        verify_and_commit_pending_entries(entries)
 
-        customer_data = customer_cached_data()
-
-        for item in serializer.validated_data:
-            customer_id = item.get("customer")
-            cooler = item.get("coolers")
-            date_added = item.get("date_added")
-            pending_id = item.get("pending_id")
-            pending_ids.append(pending_id)
-
-            try:
-                customer = customer_data.get(id=customer_id)
-                daily_entries.append(
-                    DailyEntry(
-                        customer=customer,
-                        cooler=cooler,
-                        addedby=f"{customer.first_name} {customer.last_name}",
-                        date_added=date_added,
-                    )
-                )
-            except Customer.DoesNotExist:
-                return Response({"error": f"Customer {customer_id} not found"}, status=status.HTTP_400_BAD_REQUEST)
-
-        if daily_entries:
-            DailyEntry.objects.bulk_create(daily_entries)
-            pending_daily_entry.objects.filter(id__in=pending_ids).delete()
-
-        return Response({"message": "Verified Successfully!"}, status=status.HTTP_200_OK)
+        return Response({"message": "Verification queued!"}, status=status.HTTP_202_ACCEPTED)
 
 
 # -------------------------------

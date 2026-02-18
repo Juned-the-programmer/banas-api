@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .task import task_bulk_daily_entry
+from .qstah import task_verify_pending_daily_entries, task_bulk_import_daily_entries
 
 urlpatterns = [
     # CBVs for daily entry
@@ -19,5 +19,6 @@ urlpatterns = [
     path("tasks/reset-dashboard/", views.run_reset_dashboard_task, name="reset-dashboard-task"),
     path("tasks/monthly-batch-processing/", views.run_monthly_batch_task, name="monthly-batch-task"),
     # Async task endpoints (called by QStash)
-    path("tasks/bulk-daily-entry/", task_bulk_daily_entry, name="task-bulk-daily-entry"),
+    path("tasks/verify-pending/", task_verify_pending_daily_entries, name="task-verify-pending"),
+    path("tasks/bulk-import/", task_bulk_import_daily_entries, name="task-bulk-import"),
 ]

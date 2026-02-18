@@ -21,104 +21,9 @@ from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer
 
 logger = logging.getLogger(__name__)
 
-
-@async_task("/api/customer/tasks/generate-qr/")
-def generate_customer_qr_code_for_daily_entry_async(customer_id):
-    """Generate QR code for customer daily entry - runs via QStash in production, thread locally"""
-    customer_detail = Customer.objects.get(id=customer_id)
-    base_url = getattr(settings, "BASE_URL", "").rstrip("/")
-    redirect_url = f"{base_url}/api/dailyentry/customer/dailyentry/"
-
-    # Generate QR code
-    qr = qrcode.QRCode(
-        version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    qr.add_data(redirect_url)
-    qr.add_data(customer_detail.id)
-    qr.make(fit=True)
-    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
-
-    # Create A4 canvas (in pixels)
-    # A4 size at 300 DPI = 2480x3508 pixels
-    a4_width, a4_height = 2480, 3508
-    a4_img = Image.new("RGB", (a4_width, a4_height), "white")
-    draw = ImageDraw.Draw(a4_img)
-
-    # Add Customer Name at top center
-    try:
-        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 120)  # Bold font
-    except:
-        font = ImageFont.load_default()
-
-    name_text = f"{customer_detail.first_name} {customer_detail.last_name}"
-    # Use textbbox instead of deprecated textsize
-    bbox = draw.textbbox((0, 0), name_text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_x = (a4_width - text_w) // 2
-    draw.text((text_x, 200), name_text, font=font, fill="black")
-
-    # Resize QR code and paste in center
-    qr_size = 1200  # large enough for A4
-    qr_img = qr_img.resize((qr_size, qr_size), Image.LANCZOS)
-    qr_x = (a4_width - qr_size) // 2
-    qr_y = (a4_height - qr_size) // 2
-    a4_img.paste(qr_img, (qr_x, qr_y))
-
-    # Save final image to memory
-    buffer = BytesIO()
-    a4_img.save(buffer, format="PNG")
-    buffer.seek(0)
-
-    file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
-    qr_codes_path = f"qr_codes/{file_name}"
-
-    # --- Local storage (active) ---
-    import os
-    local_dir = os.path.join("media", "qr_codes")
-    os.makedirs(local_dir, exist_ok=True)
-    local_path = os.path.join(local_dir, file_name)
-    with open(local_path, "wb") as f:
-        f.write(buffer.getvalue())
-    saved_path = qr_codes_path
-
-    # --- S3/Backblaze storage (commented out — uncomment when ready) ---
-    # saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.getvalue()))
-
-    # Save to DB
-    customer_qr_code.objects.create(customer=customer_detail, qrcode=saved_path)
-
-
-@async_task("/api/dailyentry/tasks/bulk-daily-entry/")
-def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
-    """Bulk update customer daily entry to monthly table - runs via QStash in production, thread locally"""
-    for entry in entry_data_list:
-        customer_id = entry["customer_id"]
-        cooler_count = entry["cooler"]
-        # Use get_or_create to handle cases where the record doesn't exist
-        customer_detail, _ = customer_daily_entry_monthly.objects.get_or_create(
-            customer_id=customer_id,
-            defaults={"coolers": 0}
-        )
-        customer_detail.coolers += int(cooler_count)
-        customer_detail.save()
-
-        # Update Dashboard counts
-        dailyentry_dashboard = DailyEntry_dashboard.objects.first()
-        if dailyentry_dashboard:
-            dailyentry_dashboard.customer_count += 1
-            dailyentry_dashboard.coolers_count += int(cooler_count)
-            dailyentry_dashboard.save()
-        else:
-            # Create dashboard if it doesn't exist
-            DailyEntry_dashboard.objects.create(
-                customer_count=1,
-                coolers_count=int(cooler_count)
-            )
-
-
+# -----------------------------------------------------------------------
+# Reset daily entry dashboard values
+# -----------------------------------------------------------------------
 def reset_dailentry_dashboard_values():
     """Reset daily entry dashboard values - Django native scheduled task"""
     daily_entry_dashboard = DailyEntry_dashboard.objects.first()
@@ -126,7 +31,9 @@ def reset_dailentry_dashboard_values():
     daily_entry_dashboard.coolers_count = 0
     daily_entry_dashboard.save()
 
-
+# -----------------------------------------------------------------------
+# Batch processing for daily entry on monthly basis
+# -----------------------------------------------------------------------
 def batch_processing_for_daily_entry_on_monthly_basis():
     """Batch processing for daily entry on monthly basis - Django native scheduled task"""
     now = timezone.now()
@@ -176,29 +83,93 @@ def batch_processing_for_daily_entry_on_monthly_basis():
 
 
 # -----------------------------------------------------------------------
-# QStash HTTP Callback Endpoint
+#  Verify & Commit Pending Entries (triggered by VerifyPendingDailyEntryView)
 # -----------------------------------------------------------------------
-
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def task_bulk_daily_entry(request):
+@async_task("/api/dailyentry/tasks/verify-pending/")
+def verify_and_commit_pending_entries(entries):
     """
-    QStash callback: Bulk update customer daily entry to monthly table.
-    Payload: { args: [entry_data_list] }
+    Verifies pending daily entries submitted via QR scan:
+    - Creates DailyEntry records (addedby = customer name)
+    - Deletes the pending_daily_entry records
+    - Updates customer_daily_entry_monthly cooler counts
+    - Updates DailyEntry_dashboard
+    Payload: [{ id, customer, coolers, date_added }, ...]
     """
-    try:
-        data = request.data
-        args = data.get("args", [])
-        kwargs = data.get("kwargs", {})
+    from .models import DailyEntry, pending_daily_entry
 
-        entry_data_list = args[0] if args else kwargs.get("entry_data_list")
-        if not entry_data_list:
-            return Response({"error": "Missing entry_data_list"}, status=status.HTTP_400_BAD_REQUEST)
+    daily_entries = []
+    pending_ids = []
 
-        update_customer_daily_entry_to_monthly_table_bulk.__wrapped__(entry_data_list)
-        logger.info(f"Bulk daily entry task completed for {len(entry_data_list)} entries")
-        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+    for item in entries:
+        pending_ids.append(item["id"])
+        customer = Customer.objects.get(id=item["customer"])
+        daily_entries.append(
+            DailyEntry(
+                customer=customer,
+                cooler=item["coolers"],
+                addedby=f"{customer.first_name} {customer.last_name}",
+                date_added=item["date_added"],
+            )
+        )
 
-    except Exception as e:
-        logger.error(f"Bulk daily entry task failed: {e}", exc_info=True)
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    if daily_entries:
+        DailyEntry.objects.bulk_create(daily_entries)
+        pending_daily_entry.objects.filter(id__in=pending_ids).delete()
+        _update_monthly_and_dashboard(daily_entries)
+
+    logger.info(f"verify_and_commit_pending_entries: committed {len(daily_entries)} entries")
+
+
+# -----------------------------------------------------------------------
+# Bulk Import Daily Entries (triggered by DailyEntryBulkImportView)
+# -----------------------------------------------------------------------
+@async_task("/api/dailyentry/tasks/bulk-import/")
+def bulk_import_daily_entries(entries):
+    """
+    Directly imports daily entries from admin:
+    - Creates DailyEntry records (addedby = "admin")
+    - Updates customer_daily_entry_monthly cooler counts
+    - Updates DailyEntry_dashboard
+    Payload: [{ customer, cooler }, ...]
+    """
+    from .models import DailyEntry
+
+    daily_entries = [
+        DailyEntry(
+            customer=Customer.objects.get(id=item["customer"]),
+            cooler=item["cooler"],
+            addedby="admin",
+            date_added=timezone.now(),
+        )
+        for item in entries
+    ]
+
+    DailyEntry.objects.bulk_create(daily_entries)
+    _update_monthly_and_dashboard(daily_entries)
+
+    logger.info(f"bulk_import_daily_entries: imported {len(daily_entries)} entries")
+
+
+# -----------------------------------------------------------------------
+# Shared helper: update monthly table + dashboard
+# -----------------------------------------------------------------------
+def _update_monthly_and_dashboard(daily_entries):
+    """Update customer_daily_entry_monthly and DailyEntry_dashboard for a list of DailyEntry objects."""
+    for entry in daily_entries:
+        customer_detail, _ = customer_daily_entry_monthly.objects.get_or_create(
+            customer=entry.customer,
+            defaults={"coolers": 0}
+        )
+        customer_detail.coolers += int(entry.cooler)
+        customer_detail.save()
+
+    dashboard = DailyEntry_dashboard.objects.first()
+    if dashboard:
+        dashboard.customer_count += len(daily_entries)
+        dashboard.coolers_count += sum(int(e.cooler) for e in daily_entries)
+        dashboard.save()
+    else:
+        DailyEntry_dashboard.objects.create(
+            customer_count=len(daily_entries),
+            coolers_count=sum(int(e.cooler) for e in daily_entries)
+        )

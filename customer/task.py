@@ -24,63 +24,70 @@ def send_async_email(subject, message, sender, recipient_list, html_message):
     mail.attach_alternative(html_message, "text/html")
     mail.send()
 
+@async_task("/api/customer/tasks/generate-qr/")
+def generate_customer_qr_code_for_daily_entry_async(customer_id):
+    """Generate QR code for customer daily entry - runs via QStash in production, thread locally"""
+    customer_detail = Customer.objects.get(id=customer_id)
+    base_url = getattr(settings, "BASE_URL", "").rstrip("/")
+    redirect_url = f"{base_url}/api/dailyentry/customer/dailyentry/"
 
-# -----------------------------------------------------------------------
-# QStash HTTP Callback Endpoint
-# -----------------------------------------------------------------------
+    # Generate QR code
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=4,
+    )
+    qr.add_data(redirect_url)
+    qr.add_data(customer_detail.id)
+    qr.make(fit=True)
+    qr_img = qr.make_image(fill_color="black", back_color="white").convert("RGB")
 
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def task_send_email(request):
-    """
-    QStash callback: Send email.
-    Payload: { args: [subject, message, sender, recipient_list, html_message] }
-    """
+    # Create A4 canvas (in pixels)
+    # A4 size at 300 DPI = 2480x3508 pixels
+    a4_width, a4_height = 2480, 3508
+    a4_img = Image.new("RGB", (a4_width, a4_height), "white")
+    draw = ImageDraw.Draw(a4_img)
+
+    # Add Customer Name at top center
     try:
-        data = request.data
-        args = data.get("args", [])
-        kwargs = data.get("kwargs", {})
+        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 120)  # Bold font
+    except:
+        font = ImageFont.load_default()
 
-        subject      = args[0] if len(args) > 0 else kwargs.get("subject")
-        message      = args[1] if len(args) > 1 else kwargs.get("message")
-        sender       = args[2] if len(args) > 2 else kwargs.get("sender")
-        recipient_list = args[3] if len(args) > 3 else kwargs.get("recipient_list")
-        html_message = args[4] if len(args) > 4 else kwargs.get("html_message")
+    name_text = f"{customer_detail.first_name} {customer_detail.last_name}"
+    # Use textbbox instead of deprecated textsize
+    bbox = draw.textbbox((0, 0), name_text, font=font)
+    text_w = bbox[2] - bbox[0]
+    text_x = (a4_width - text_w) // 2
+    draw.text((text_x, 200), name_text, font=font, fill="black")
 
-        if not all([subject, message, sender, recipient_list, html_message]):
-            return Response({"error": "Missing required fields"}, status=status.HTTP_400_BAD_REQUEST)
+    # Resize QR code and paste in center
+    qr_size = 1200  # large enough for A4
+    qr_img = qr_img.resize((qr_size, qr_size), Image.LANCZOS)
+    qr_x = (a4_width - qr_size) // 2
+    qr_y = (a4_height - qr_size) // 2
+    a4_img.paste(qr_img, (qr_x, qr_y))
 
-        send_async_email.__wrapped__(subject, message, sender, recipient_list, html_message)
-        logger.info(f"Email task completed for: {recipient_list}")
-        return Response({"status": "ok"}, status=status.HTTP_200_OK)
+    # Save final image to memory
+    buffer = BytesIO()
+    a4_img.save(buffer, format="PNG")
+    buffer.seek(0)
 
-    except Exception as e:
-        logger.error(f"Email task failed: {e}", exc_info=True)
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
+    qr_codes_path = f"qr_codes/{file_name}"
 
+    # --- Local storage (active) ---
+    import os
+    local_dir = os.path.join("media", "qr_codes")
+    os.makedirs(local_dir, exist_ok=True)
+    local_path = os.path.join(local_dir, file_name)
+    with open(local_path, "wb") as f:
+        f.write(buffer.getvalue())
+    saved_path = qr_codes_path
 
-@api_view(["POST"])
-@permission_classes([AllowAny])
-def task_generate_qr(request):
-    """
-    QStash callback: Generate QR code for a customer.
-    Payload: { args: [customer_id] }
-    """
-    from dailyentry.task import generate_customer_qr_code_for_daily_entry_async
+    # --- S3/Backblaze storage (commented out — uncomment when ready) ---
+    # saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.getvalue()))
 
-    try:
-        data = request.data
-        args = data.get("args", [])
-        kwargs = data.get("kwargs", {})
-
-        customer_id = args[0] if args else kwargs.get("customer_id")
-        if not customer_id:
-            return Response({"error": "Missing customer_id"}, status=status.HTTP_400_BAD_REQUEST)
-
-        generate_customer_qr_code_for_daily_entry_async.__wrapped__(customer_id)
-        logger.info(f"QR code task completed for customer: {customer_id}")
-        return Response({"status": "ok"}, status=status.HTTP_200_OK)
-
-    except Exception as e:
-        logger.error(f"QR code task failed: {e}", exc_info=True)
-        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    # Save to DB
+    customer_qr_code.objects.create(customer=customer_detail, qrcode=saved_path)
