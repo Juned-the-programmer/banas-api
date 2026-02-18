@@ -22,7 +22,7 @@ from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer
 logger = logging.getLogger(__name__)
 
 
-@async_task("/api/tasks/generate-qr/")
+@async_task("/api/customer/tasks/generate-qr/")
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
     """Generate QR code for customer daily entry - runs via QStash in production, thread locally"""
     customer_detail = Customer.objects.get(id=customer_id)
@@ -91,7 +91,7 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     customer_qr_code.objects.create(customer=customer_detail, qrcode=saved_path)
 
 
-@async_task("/api/tasks/bulk-daily-entry/")
+@async_task("/api/dailyentry/tasks/bulk-daily-entry/")
 def update_customer_daily_entry_to_monthly_table_bulk(entry_data_list):
     """Bulk update customer daily entry to monthly table - runs via QStash in production, thread locally"""
     for entry in entry_data_list:
