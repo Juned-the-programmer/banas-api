@@ -85,7 +85,7 @@ def batch_processing_for_daily_entry_on_monthly_basis():
 # -----------------------------------------------------------------------
 #  Verify & Commit Pending Entries (triggered by VerifyPendingDailyEntryView)
 # -----------------------------------------------------------------------
-@async_task("/api/dailyentry/tasks/verify-pending/")
+@async_task("/api/dailyentry/tasks/verify-pending/", queue="verify-pending")
 def verify_and_commit_pending_entries(entries):
     """
     Verifies pending daily entries submitted via QR scan:
@@ -123,7 +123,7 @@ def verify_and_commit_pending_entries(entries):
 # -----------------------------------------------------------------------
 # Bulk Import Daily Entries (triggered by DailyEntryBulkImportView)
 # -----------------------------------------------------------------------
-@async_task("/api/dailyentry/tasks/bulk-import/")
+@async_task("/api/dailyentry/tasks/bulk-import/", queue="bulk-import")
 def bulk_import_daily_entries(entries):
     """
     Directly imports daily entries from admin:

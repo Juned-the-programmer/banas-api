@@ -16,7 +16,7 @@ logger = logging.getLogger(__name__)
 # Async Task (triggered by signals)
 # -----------------------------------------------------------------------
 
-@async_task("/api/customer/tasks/send-email/")
+@async_task("/api/customer/tasks/send-email/", queue="send-email")
 def send_async_email(subject, message, sender, recipient_list, html_message):
     """Send email asynchronously - runs via QStash in production, thread locally"""
     send_mail(subject, message, sender, recipient_list, html_message)
@@ -24,7 +24,7 @@ def send_async_email(subject, message, sender, recipient_list, html_message):
     mail.attach_alternative(html_message, "text/html")
     mail.send()
 
-@async_task("/api/customer/tasks/generate-qr/")
+@async_task("/api/customer/tasks/generate-qr/", queue="generate-qr")
 def generate_customer_qr_code_for_daily_entry_async(customer_id):
     """Generate QR code for customer daily entry - runs via QStash in production, thread locally"""
     customer_detail = Customer.objects.get(id=customer_id)
