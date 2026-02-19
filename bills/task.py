@@ -102,26 +102,27 @@ def dispatch_monthly_bill_batches():
 # -----------------------------------------------------------------------
 def process_bill_batch_core(customer_ids, first_date, last_date):
 
-    customers = Customer.objects.in_bulk(customer_ids)
-    accounts = CustomerAccount.objects.in_bulk(
-        customer_ids, field_name="customer_name_id"
+    customers_queryset = Customer.objects.filter(id__in=customer_ids).select_related(
+        'customeraccount', 
+        'customer_daily_entry_monthly'
     )
-    entries = customer_daily_entry_monthly.objects.in_bulk(
-        customer_ids, field_name="customer_id"
-    )
+
+    customer_map = {str(c.id): c for c in customers_queryset}
 
     base_bill_number = bill_number_generator()
     bill_prefix = base_bill_number[:-4]
     sequence = int(base_bill_number[-4:])
+
+    month_name = datetime.strptime(first_date, "%Y-%m-%d").strftime("%B %Y")
 
     bills_to_create: list = []
     accounts_to_update: list = []
     entries_to_update: list = []
 
     for cid in customer_ids:
-        customer = customers.get(cid)
-        account = accounts.get(cid)
-        entry = entries.get(cid)
+        customer = customer_map.get(str(cid))
+        account = customer.customeraccount
+        entry = customer.customer_daily_entry_monthly
 
         if not customer or not account or not entry:
             logger.warning(
@@ -162,9 +163,6 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
         
         # Enqueue WhatsApp Message for Bill Generation
         if customer.phone_no:
-            # Convert string date to datetime object for formatting
-            first_date_dt = datetime.strptime(first_date, "%Y-%m-%d")
-            month_name = first_date_dt.strftime("%B %Y")
             message_body = (
                 f"Dear {customer.first_name} {customer.last_name},\n"
                 f"Your Water Cooler bill for {month_name} has been generated.\n"
@@ -191,9 +189,6 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
 
         # RESET monthly coolers for all entries in one round-trip
         customer_daily_entry_monthly.objects.bulk_update(entries_to_update, ["coolers"], batch_size=500)
-
-        # Clear the bill number generator used for this batch
-        Bill_number_generator.objects.all().delete()
 
     cache.delete("total_pending_due")
     total_pending_due_cached()
