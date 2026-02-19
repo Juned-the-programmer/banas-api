@@ -268,8 +268,11 @@ STORAGES = {
             "bucket_name": config("SUPABASE_STORAGE_BUCKET_NAME", default=""),
             "region_name": config("SUPABASE_S3_REGION_NAME", default=""),
             "endpoint_url": config("SUPABASE_S3_ENDPOINT_URL", default=""),
-            "default_acl": "public-read",
-            "querystring_auth": False,
+            "default_acl": None,            
+            "addressing_style": "path",      
+            "querystring_auth": False,      
+            "file_overwrite": True,  
+            "location": "media",       
         },
     },
     "staticfiles": {
