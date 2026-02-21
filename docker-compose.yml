@@ -15,7 +15,7 @@ services:
       - ENVIRONMENT=development
       # Add these New Relic variables here
       - NEW_RELIC_LICENSE_KEY=${NEW_RELIC_LICENSE_KEY}
-      - NEW_RELIC_APP_NAME=Banas-API
+      - NEW_RELIC_APP_NAME=${NEW_RELIC_APP_NAME}
       - NEW_RELIC_LOG=stdout
     ports:
       - "8000:8000"
