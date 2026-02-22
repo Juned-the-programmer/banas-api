@@ -22,18 +22,11 @@ class Customer(models.Model):
     email = models.EmailField(validators=[email_validator], null=True, blank=True)
     rate = models.IntegerField()
     date_added = models.DateTimeField(auto_now_add=True)
-    date_updated = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
     addedby = models.CharField(max_length=100, null=True, blank=True)
     updatedby = models.CharField(max_length=100, null=True, blank=True)
     active = models.BooleanField(default=True)
     id = models.UUIDField(default=uuid.uuid4, unique=True, primary_key=True, editable=False)
-
-    def save(self, *args, **kwargs):
-        if not self.pk:
-            self.date_added = timezone.now()
-
-        self.date_updated = timezone.now()
-        return super().save(*args, **kwargs)
 
     def __str__(self):
         return "{} {}".format(self.first_name, self.last_name)
@@ -43,7 +36,9 @@ class Customer(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["id"]),
+            models.Index(fields=["route", "active"]),
+            models.Index(fields=["first_name", "last_name"]),
+            models.Index(fields=["-date_added"])
         ]
 
 
@@ -64,7 +59,7 @@ class CustomerAccount(models.Model):
 
     class Meta:
         indexes = [
-             models.Index(fields=["id", "customer_name", "due"]),
+             models.Index(fields=["customer_name", "due"]),
         ]
 
     @classmethod

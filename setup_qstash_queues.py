@@ -30,6 +30,7 @@ def setup_queues():
         ("generate-qr",    2, "Generate customer QR codes (I/O bound)"),
         ("verify-pending", 1, "Verify & commit pending daily entries (DB writes, ordered)"),
         ("bulk-import",    1, "Bulk import daily entries from admin (DB writes, ordered)"),
+        ("bill-batch",     1, "Process monthly bill batch per customer chunk (DB writes, ordered)"),
     ]
 
     print(f"🔧 Configuring {len(queues)} QStash queues...\n")

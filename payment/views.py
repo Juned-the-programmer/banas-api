@@ -1,6 +1,7 @@
 import datetime
 from datetime import date, timedelta
 
+from django.core.cache import cache
 from django.db.models import Sum
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
@@ -73,6 +74,10 @@ class PaymentListCreateView(generics.ListCreateAPIView):
         # Save payment record with pending amount BEFORE payment was made
         serializer.save(addedby=request.user.username, pending_amount=pending_amount_before_payment)
         customer.save()
+
+        # Invalidate the due cache — next dashboard call will recompute from DB
+        cache.delete("total_pending_due")
+        total_pending_due_cached()
 
         return Response(
             {"detail": "Bill Paid and Customer Account Updated"},

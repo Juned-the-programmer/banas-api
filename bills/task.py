@@ -1,76 +1,187 @@
-from calendar import monthrange
-import datetime
+import logging
 from datetime import timedelta
 
+from django.core.cache import cache
+from django.db import transaction
 from django.utils import timezone
 
-from banas.cache_conf import customer_cached_data
+from banas.cache_conf import total_pending_due_cached
 from bills.utils import bill_number_generator
-from customer.models import CustomerAccount
+from customer.models import Customer, CustomerAccount
 from dailyentry.models import customer_daily_entry_monthly
 
 from .models import Bill_number_generator, CustomerBill
 
+logger = logging.getLogger(__name__)
 
-def generate_bill_at_the_end_of_month():
-    """Generate bills at the end of month - Called via QStash HTTP endpoint"""
+BILL_BATCH_SIZE = 100   # customers per QStash message
+BILL_BATCH_QUEUE = "bill-batch"
+WORKER_PATH = "/api/bill/tasks/process-bill-batch/"
+
+
+def _chunk(lst, size):
+    """Split a list into chunks of `size`."""
+    for i in range(0, len(lst), size):
+        yield lst[i : i + size]
+
+
+# -----------------------------------------------------------------------
+# Dispatcher helper — contains the fan-out logic (called by the view)
+# -----------------------------------------------------------------------
+def dispatch_monthly_bill_batches():
     
-    # Check if today is actually the last day of the month
-    today = timezone.now().date()
+    today = timezone.localdate()
     tomorrow = today + timezone.timedelta(days=1)
-    
-    if tomorrow.month != today.month:
-        # It's the last day! Proceed with bill generation
-        pass
-    else:
-        # Not the last day, skip
-        print(f"Skipping bill generation - today ({today}) is not the last day of the month")
-        return
-    
-    # today date
-    today_date = datetime.datetime.now()
 
-    # Last day of month
-    next_month = today_date.replace(day=28) + timedelta(days=4)
-    last_date = next_month - timedelta(days=next_month.day)
+    if tomorrow.month == today.month:
+        return {
+            "skipped": True,
+            "message": f"Not the last day of the month ({today})",
+        }
 
-    # First day of month
-    first_date = datetime.datetime.today().replace(day=1).date()
+    first_date = str(today.replace(day=1))  
+    last_date = str(today)                  
 
-    # Bill number
-    bill_number = bill_number_generator()
-    last_four_digits = bill_number[-4:]
+    customer_ids = list(
+        Customer.objects.filter(active=True).values_list("id", flat=True)
+    )
+    if not customer_ids:
+        return {"skipped": True, "message": "No active customers"}
 
-    for instance in customer_cached_data():
-        customer_daily_entry = customer_daily_entry_monthly.objects.get(customer=instance.id)
-        customer_account = CustomerAccount.objects.get(customer_name=instance.id)
+    # Invalidate the due cache before any batch mutates CustomerAccount.due
+    cache.delete("total_pending_due")
 
-        coolers_total = customer_daily_entry.coolers
-        customer_due = customer_account.due
+    from django.conf import settings
+    from banas.qstash import qstash_client
 
-        new_last_four_digits = str(int(last_four_digits) + 1).zfill(4)
-        new_bill_number = bill_number[:-4] + new_last_four_digits
-        last_four_digits = new_last_four_digits
+    base_url = getattr(settings, "BASE_URL", "").rstrip("/")
+    worker_url = f"{base_url}{WORKER_PATH}"
 
-        CustomerBill.objects.create(
-            bill_number=str(new_bill_number),
-            customer_name=instance,
-            from_date=first_date,
-            to_date=last_date.date(),
-            coolers=coolers_total,
-            Rate=int(instance.rate),
-            Amount=int(coolers_total) * int(instance.rate),
-            Pending_amount=int(customer_due),
-            Advanced_amount=int(0),
-            Total=int(coolers_total) * int(instance.rate) + int(customer_due),
-            addedby="Automation Task",
+    batches_queued = 0
+    chunks = list(_chunk([str(cid) for cid in customer_ids], BILL_BATCH_SIZE))
+
+    for chunk in chunks:
+        payload = {
+            "customer_ids": chunk,
+            "first_date": first_date,
+            "last_date": last_date,
+        }
+        try:
+            if qstash_client:
+                # Named queue → ordered delivery, concurrency control, retries
+                qstash_client.message.enqueue_json(
+                    queue=BILL_BATCH_QUEUE,
+                    url=worker_url,
+                    body=payload,
+                    retries=3,
+                )
+            else:
+                # Local dev fallback — process synchronously in same thread
+                process_bill_batch_core(chunk, first_date, last_date)
+            batches_queued += 1
+        except Exception as exc:
+            logger.error(
+                "dispatch_monthly_bill_batches: failed to enqueue batch %d — %s",
+                batches_queued + 1, exc, exc_info=True,
+            )
+
+    logger.info(
+        "Monthly bill dispatcher: %d batches queued for %s–%s",
+        batches_queued, first_date, last_date,
+    )
+    return {
+        "skipped": False,
+        "batches_queued": batches_queued,
+        "customers_total": len(customer_ids),
+        "billing_period": {"from": first_date, "to": last_date},
+    }
+
+
+# -----------------------------------------------------------------------
+# Worker core — the actual DB work for one batch (called by the view)
+# -----------------------------------------------------------------------
+def process_bill_batch_core(customer_ids, first_date, last_date):
+
+    customers = Customer.objects.in_bulk(customer_ids)
+    accounts = CustomerAccount.objects.in_bulk(
+        customer_ids, field_name="customer_name_id"
+    )
+    entries = customer_daily_entry_monthly.objects.in_bulk(
+        customer_ids, field_name="customer_id"
+    )
+
+    base_bill_number = bill_number_generator()
+    bill_prefix = base_bill_number[:-4]
+    sequence = int(base_bill_number[-4:])
+
+    bills_to_create: list = []
+    accounts_to_update: list = []
+    entries_to_update: list = []
+
+    for cid in customer_ids:
+        customer = customers.get(cid)
+        account = accounts.get(cid)
+        entry = entries.get(cid)
+
+        if not customer or not account or not entry:
+            logger.warning(
+                "process_bill_batch_core: skipping customer %s — missing %s",
+                cid,
+                [name for name, obj in [("customer", customer), ("account", account), ("entry", entry)] if not obj],
+            )
+            continue
+
+        coolers = entry.coolers
+        rate = int(customer.rate)
+        due = account.due
+        sequence += 1
+
+        bills_to_create.append(
+            CustomerBill(
+                bill_number=f"{bill_prefix}{str(sequence).zfill(4)}",
+                customer_name=customer,
+                from_date=first_date,
+                to_date=last_date,
+                coolers=coolers,
+                Rate=rate,
+                Amount=coolers * rate,
+                Pending_amount=due,
+                Advanced_amount=0,
+                Total=(coolers * rate) + due,
+                addedby="Automation Task",
+            )
         )
 
-        customer_account.due = int(coolers_total) * int(instance.rate) + int(customer_due)
-        customer_account.save()
+        account.due = (coolers * rate) + due 
+        accounts_to_update.append(account)
 
-        customer_daily_entry.coolers = 0
-        customer_daily_entry.save()
+        entry.coolers = 0                      
+        entries_to_update.append(entry)
 
-    Bill_number_generator.objects.all().delete()
+    if not bills_to_create:
+        logger.info("process_bill_batch_core: nothing to write for this batch.")
+        return
 
+    # ------------------------------------------------------------------
+    # 3. Atomic write: 3 queries total
+    # ------------------------------------------------------------------
+    with transaction.atomic():
+        # INSERT all bills in one round-trip
+        CustomerBill.objects.bulk_create(bills_to_create, batch_size=500)
+
+        # UPDATE due balances for all accounts in one round-trip
+        CustomerAccount.objects.bulk_update(accounts_to_update, ["due"], batch_size=500)
+
+        # RESET monthly coolers for all entries in one round-trip
+        customer_daily_entry_monthly.objects.bulk_update(entries_to_update, ["coolers"], batch_size=500)
+
+        # Clear the bill number generator used for this batch
+        Bill_number_generator.objects.all().delete()
+
+    cache.delete("total_pending_due")
+    total_pending_due_cached()
+
+    logger.info(
+        "process_bill_batch_core: committed %d bills (%s – %s)",
+        len(bills_to_create), first_date, last_date,
+    )

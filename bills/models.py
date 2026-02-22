@@ -10,8 +10,8 @@ from customer.models import Customer
 class CustomerBill(models.Model):
     customer_name = models.ForeignKey(Customer, on_delete=models.SET_NULL, null=True, blank=True, related_name="customer_bill")
     bill_number = models.CharField(max_length=20, null=True, blank=True)
-    from_date = models.CharField(max_length=20)
-    to_date = models.CharField(max_length=20)
+    from_date = models.DateField()
+    to_date = models.DateField()
     coolers = models.IntegerField(default=0, null=True, blank=True)
     Rate = models.IntegerField(default=0, null=True, blank=True)
     Amount = models.IntegerField(default=0, null=True, blank=True)
@@ -29,31 +29,10 @@ class CustomerBill(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["id", "customer_name", "bill_number"]),
+            models.Index(fields=["bill_number"]),
+            models.Index(fields=["customer_name", "-from_date"]),
+            models.Index(fields=["from_date", "to_date"]),
         ]
-
-    @property
-    def from_date_as_date(self):
-        """Return from_date as datetime.date object"""
-        try:
-            return datetime.datetime.strptime(self.from_date, "%Y-%m-%d").date()
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def to_date_as_date(self):
-        """Return to_date as datetime.date object"""
-        try:
-            return datetime.datetime.strptime(self.to_date, "%Y-%m-%d").date()
-        except (ValueError, TypeError):
-            return None
-
-    @property
-    def bill_month(self):
-        """Return the bill month for table naming"""
-        if self.from_date_as_date:
-            return self.from_date_as_date.replace(day=1)
-        return None
 
 
 class Bill_number_generator(models.Model):

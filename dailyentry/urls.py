@@ -14,10 +14,8 @@ urlpatterns = [
     # FBVs for QR and historical (still required)
     path("customer/dailyentry/<str:pk>", views.customer_qr_daily_entry, name="customer_qr_daily_entry_no_slash"),
     path("customer/dailyentry/<str:pk>/", views.customer_qr_daily_entry, name="customer_qr_daily_entry"),
-    path("historical/", views.historical_data_retriever, name="historical_data_retriever"),
     # Scheduled task endpoints (called by QStash)
     path("tasks/reset-dashboard/", views.run_reset_dashboard_task, name="reset-dashboard-task"),
-    path("tasks/monthly-batch-processing/", views.run_monthly_batch_task, name="monthly-batch-task"),
     # Async task endpoints (called by QStash)
     path("tasks/verify-pending/", task_verify_pending_daily_entries, name="task-verify-pending"),
     path("tasks/bulk-import/", task_bulk_import_daily_entries, name="task-bulk-import"),

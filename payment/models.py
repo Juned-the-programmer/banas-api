@@ -25,5 +25,6 @@ class CustomerPayment(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["id", "customer_name"]),
+            models.Index(fields=["customer_name", "-date"]),
+            models.Index(fields=["date"]),
         ]

@@ -21,8 +21,7 @@ class DailyEntry(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["id", "customer"]),
-            models.Index(fields=["customer", "date_added"]),
+            models.Index(fields=["customer", "-date_added"]),
             models.Index(fields=["date_added"]),
         ]
 
@@ -73,5 +72,6 @@ class pending_daily_entry(models.Model):
 
     class Meta:
         indexes = [
-            models.Index(fields=["id", "customer"]),
+            models.Index(fields=["customer", "-date_added"]),
+            models.Index(fields=["date_added"]),
         ]

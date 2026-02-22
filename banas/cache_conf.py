@@ -1,6 +1,7 @@
 from django.core.cache import cache
+from django.db.models import Sum
 
-from customer.models import Customer
+from customer.models import Customer, CustomerAccount
 
 
 def customer_cached_data():
@@ -14,3 +15,15 @@ def customer_cached_data():
         customer_data = cache_customer_data
 
     return customer_data
+
+
+def total_pending_due_cached():
+    """Cache the total outstanding due amount. TTL 5 min — invalidate after any payment."""
+    cache_key = "total_pending_due"
+    cached = cache.get(cache_key)
+
+    if cached is None:
+        cached = CustomerAccount.calculate_total_due()
+        cache.set(cache_key, cached, timeout=None)
+
+    return cached

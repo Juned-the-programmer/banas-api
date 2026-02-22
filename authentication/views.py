@@ -1,17 +1,15 @@
-import datetime
-from datetime import timedelta
 import os
 
 from django.conf import settings
 from django.contrib.auth.models import User
-from django.db.models import Sum
 from django.http import JsonResponse
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from dailyentry.models import DailyEntry
+from banas.cache_conf import customer_cached_data, total_pending_due_cached
+from dailyentry.models import DailyEntry_dashboard
 
 from .serializer import CustomTokenObtainPairSerializer
 
@@ -40,56 +38,31 @@ def list_qr_codes(request):
     return JsonResponse({"files": files_list})
 
 
-@api_view(["GET", "POST"])
+@api_view(["GET"])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def dashboard(request):
-    if request.method == "GET":
-        today_date = datetime.date.today()
+    # Active customer count — derived from the cached customer queryset (no DB hit)
+    customers = customer_cached_data()
+    total_active_customers = sum(1 for c in customers if c.active)
 
-        data_list = []
+    # Today's delivery counters — direct ORM (single-row table, very cheap)
+    dashboard_record = DailyEntry_dashboard.objects.first()
+    today_customer_count = dashboard_record.customer_count if dashboard_record else 0
+    today_coolers_count = dashboard_record.coolers_count if dashboard_record else 0
 
-        for i in range(0, 7):
-            daily_entry = DailyEntry.objects.filter(date_added=today_date - timedelta(days=i)).aggregate(Sum("cooler"))
-            coolers_total = daily_entry["cooler__sum"]
+    # Total outstanding due — cached, refreshes every 5 min
+    total_pending_due = total_pending_due_cached()
 
-            if coolers_total is None:
-                coolers = 0
-            else:
-                coolers = coolers_total
+    return JsonResponse(
+        {
+            "total_active_customers": total_active_customers,
+            "today_customer_count": today_customer_count,
+            "today_coolers_count": today_coolers_count,
+            "total_pending_due": total_pending_due,
+        },
+        status=status.HTTP_200_OK,
+    )
 
-            data_list.append({"date": str(today_date - timedelta(days=i)), "coolers": coolers})
-
-        return JsonResponse(data_list, status=status.HTTP_200_OK, safe=False)
-
-    if request.method == "POST":
-        date_data = request.data
-        data_values = list(date_data.values())
-
-        try:
-            # Configuring date
-            from_date = datetime.datetime.strptime(data_values[0], "%Y-%m-%d")
-            to_date = datetime.datetime.strptime(data_values[1], "%Y-%m-%d")
-            days = to_date - from_date
-
-            data_list = []
-
-            for i in range(0, int(days.days)):
-                daily_entry = DailyEntry.objects.filter(date_added=to_date - timedelta(days=i)).aggregate(Sum("cooler"))
-                coolers_total = daily_entry["cooler__sum"]
-
-                if coolers_total is None:
-                    coolers = 0
-                else:
-                    coolers = coolers_total
-
-                data_list.append({"date": str(to_date - timedelta(days=i)), "coolers": coolers})
-
-            return JsonResponse(data_list, status=status.HTTP_200_OK, safe=False)
-
-        except (ValueError, TypeError):
-            return JsonResponse(
-                {"message": "Invalid date format. Please use YYYY-MM-DD format."}, status=status.HTTP_400_BAD_REQUEST
-            )
 
 
 @api_view(["GET"])
@@ -109,3 +82,4 @@ def get_profile(request):
         },
         status=status.HTTP_200_OK,
     )
+

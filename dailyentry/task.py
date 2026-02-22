@@ -6,7 +6,7 @@ from PIL import Image, ImageDraw, ImageFont
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-from django.db import connection
+
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
@@ -31,55 +31,6 @@ def reset_dailentry_dashboard_values():
     daily_entry_dashboard.coolers_count = 0
     daily_entry_dashboard.save()
 
-# -----------------------------------------------------------------------
-# Batch processing for daily entry on monthly basis
-# -----------------------------------------------------------------------
-def batch_processing_for_daily_entry_on_monthly_basis():
-    """Batch processing for daily entry on monthly basis - Django native scheduled task"""
-    now = timezone.now()
-    first_day_of_current_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    first_day_of_previous_month = (first_day_of_current_month - timezone.timedelta(days=1)).replace(day=1)
-    table_name = f'DailyEntry_{first_day_of_previous_month.strftime("%B_%Y")}'
-
-    # Validate table name format to prevent SQL injection
-    import re
-
-    if not re.match(r"^DailyEntry_[A-Za-z]+_\d{4}$", table_name):
-        raise ValueError(f"Invalid table name format: {table_name}")
-
-    # Custom SQL for creating a new table
-    create_table_sql = f"""  # nosec
-    CREATE TABLE {table_name} (
-        id UUID PRIMARY KEY,
-        customer_id UUID,
-        cooler INTEGER,
-        date_added TIMESTAMP,
-        addedby VARCHAR(100),
-        updatedby VARCHAR(100),
-        original_entry_id UUID
-    );
-    """
-
-    with connection.cursor() as cursor:
-        cursor.execute(create_table_sql)
-
-    # Insert data into the new table
-    insert_sql = f"""  # nosec
-    INSERT INTO {table_name} (id, customer_id, cooler, date_added, addedby, updatedby, original_entry_id)
-    SELECT id, customer_id, cooler, date_added, addedby, updatedby, id
-    FROM dailyentry_dailyentry;
-    """
-
-    with connection.cursor() as cursor:
-        cursor.execute(insert_sql)
-
-    # Truncate the original table to free up space
-    truncate_sql = "TRUNCATE TABLE dailyentry_dailyentry RESTART IDENTITY;"
-
-    with connection.cursor() as cursor:
-        cursor.execute(truncate_sql)
-
-    return f"Successfully processed entries into {table_name} and truncated the original table"
 
 
 # -----------------------------------------------------------------------

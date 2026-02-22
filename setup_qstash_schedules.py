@@ -35,17 +35,12 @@ def setup_schedules():
         (
             f"{base_url}/api/bill/tasks/monthly-bill-check/",
             "0 23 28-31 * *",
-            "Generate Bills (Days 28-31 at 23:00)"
+            "Monthly Bill Dispatcher (Days 28-31 at 23:00 — fans out to bill-batch queue)"
         ),
         (
             f"{base_url}/api/dailyentry/tasks/reset-dashboard/",
             "1 0 * * *",
-            "Reset Dashboard (Daily at 00:01)"
-        ),
-        (
-            f"{base_url}/api/dailyentry/tasks/monthly-batch-processing/",
-            "0 3 1 * *",
-            "Monthly Batch Processing (Day 1 at 03:00)"
+            "Reset Dashboard Counters (Daily at 00:01)"
         ),
     ]
 

@@ -33,8 +33,10 @@ class DailyEntryListCreateView(generics.ListCreateAPIView):
     permission_classes = [IsAdminUser, IsAuthenticated]
 
     def get_queryset(self):
-        today = datetime.datetime.now().date()
-        return DailyEntry.objects.filter(date_added__date=today).select_related("customer")
+        today = timezone.localdate()
+        start_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.min))
+        end_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.max))
+        return DailyEntry.objects.filter(date_added__gte=start_of_day,date_added__lte=end_of_day).select_related("customer")
 
     def perform_create(self, serializer):
         # Set date_added if not provided
@@ -145,45 +147,11 @@ def customer_qr_daily_entry(request, pk):
     else:
         return render(request, "dailyentry/dailyentrytime.html")
 
-
-# -------------------------------
-# Historical data retriever
-# -------------------------------
-@api_view(["GET"])
-@permission_classes([IsAdminUser, IsAuthenticated])
-def historical_data_retriever(request):
-    params = request.GET.get("historical")
-
-    # Validate params to prevent SQL injection
-    import re
-
-    if not params or not re.match(r"^[A-Za-z]+_\d{4}$", params):
-        return JsonResponse({"error": "Invalid historical parameter format"}, status=400)
-
-    table_name = f"dailyentry_{params}"
-
-    # Check table existence
-    with connection.cursor() as cursor:
-        cursor.execute(f"SELECT to_regclass('{table_name}')")  # nosec
-        if not cursor.fetchone()[0]:
-            return JsonResponse({"error": "Table not found"}, status=404)
-
-    # Fetch data
-    with connection.cursor() as cursor:
-        cursor.execute(f"SELECT * FROM {table_name}")  # nosec
-        columns = [col[0] for col in cursor.description]
-        rows = cursor.fetchall()
-
-    old_data = [dict(zip(columns, row)) for row in rows]
-    serialized_data = DailyEntrySerializerGETDashboard(old_data, many=True)
-    return JsonResponse({f"historical_{params}": serialized_data.data}, status=status.HTTP_200_OK, safe=False)
-
-
 # -------------------------------
 # Scheduled Task Endpoints (Called by QStash)
 # -------------------------------
 from django.views.decorators.csrf import csrf_exempt
-from .task import reset_dailentry_dashboard_values, batch_processing_for_daily_entry_on_monthly_basis
+from .task import reset_dailentry_dashboard_values
 
 
 @csrf_exempt
@@ -200,17 +168,3 @@ def run_reset_dashboard_task(request):
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
     return JsonResponse({"error": "Method not allowed"}, status=405)
 
-
-@csrf_exempt
-def run_monthly_batch_task(request):
-    """
-    HTTP endpoint for QStash to trigger monthly batch processing.
-    Called via cron schedule: Monthly on day 1 at 03:00
-    """
-    if request.method == "POST":
-        try:
-            batch_processing_for_daily_entry_on_monthly_basis()
-            return JsonResponse({"status": "success", "message": "Monthly batch processing completed"})
-        except Exception as e:
-            return JsonResponse({"status": "error", "message": str(e)}, status=500)
-    return JsonResponse({"error": "Method not allowed"}, status=405)
