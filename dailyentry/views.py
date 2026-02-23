@@ -150,8 +150,8 @@ class MissingDailyEntryView(APIView):
         missing = (
             qs.annotate(
                 today_entries=Count(
-                    "dailyentry",
-                    filter=Q(dailyentry__date_added__gte=start, dailyentry__date_added__lte=end),
+                    "customer_daily_entry",
+                    filter=Q(customer_daily_entry__date_added__gte=start, customer_daily_entry__date_added__lte=end),
                 )
             )
             .filter(today_entries=0)
