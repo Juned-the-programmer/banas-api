@@ -11,6 +11,7 @@ docker-compose run api python manage.py makemigrations -> To make the migrations
 docker-compose run api python manage.py migrate -> To run the migrations.
 docker-compose run api python setup_qstash_schedules.py -> To setup the qstash schedules [Once].
 docker-compose run api python setup_qstash_queues.py -> To setup the qstash queues [Once].
+docker-compose run api python manage.py generate_qr <customer_uuid_here> -> To generate the qr code for the customer.
 
 docker-compose run api python manage.py runserver 0.0.0.0:8000 -> To run the server.
 

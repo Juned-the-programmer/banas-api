@@ -2,6 +2,7 @@ import datetime
 from datetime import time
 
 from django.db import connection
+from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -9,6 +10,7 @@ from rest_framework import generics, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from banas.cache_conf import customer_cached_data
 from customer.models import Customer
@@ -126,6 +128,46 @@ class PendingDailyEntryListView(generics.ListAPIView):
     serializer_class = PendingDailyEntrySerializer
     permission_classes = [IsAdminUser, IsAuthenticated]
     queryset = pending_daily_entry.objects.select_related("customer")
+
+
+# -------------------------------
+# List missing daily entries for today
+# -------------------------------
+class MissingDailyEntryView(APIView):
+    permission_classes = [IsAdminUser, IsAuthenticated]
+
+    def get(self, request):
+        route_id = request.query_params.get("route")
+
+        today = timezone.localdate()
+        start = timezone.make_aware(datetime.datetime.combine(today, datetime.time.min))
+        end = timezone.make_aware(datetime.datetime.combine(today, datetime.time.max))
+
+        qs = Customer.objects.filter(active=True)
+        if route_id:
+            qs = qs.filter(route_id=route_id)
+
+        missing = (
+            qs.annotate(
+                today_entries=Count(
+                    "dailyentry",
+                    filter=Q(dailyentry__date_added__gte=start, dailyentry__date_added__lte=end),
+                )
+            )
+            .filter(today_entries=0)
+            .values("id", "first_name", "last_name")
+        )
+
+        missing_list = list(missing)
+
+        return Response(
+            {
+                "date": today,
+                "route": route_id,
+                "missing_count": len(missing_list),
+                "customers": missing_list,
+            }
+        )
 
 
 # -------------------------------

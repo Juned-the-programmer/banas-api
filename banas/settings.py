@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     "bulk_signals",
     "storages",
     "contactUs",
+    "backup",
 ]
 
 MIDDLEWARE = [

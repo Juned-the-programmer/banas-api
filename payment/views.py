@@ -1,11 +1,13 @@
 import datetime
 from datetime import date, timedelta
+from django.utils import timezone
 
 from django.core.cache import cache
 from django.db.models import Sum
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
+from django.db import transaction
 
 from banas.cache_conf import customer_cached_data
 from bills.models import CustomerBill
@@ -25,7 +27,14 @@ class PaymentListCreateView(generics.ListCreateAPIView):
     serializer_class = CustomerPaymentSerializer
 
     def get_queryset(self):
-        return CustomerPayment.objects.select_related("customer_name").all()
+        today = timezone.localdate()
+        first_day = today.replace(day=1)
+        
+        # We query the range to use the index efficiently
+        return CustomerPayment.objects.select_related("customer_name").filter(
+            date__date__gte=first_day,
+            date__date__lte=today
+        ).order_by("-date")
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -34,7 +43,7 @@ class PaymentListCreateView(generics.ListCreateAPIView):
         total_paid_amount = queryset.aggregate(Sum("paid_amount"))["paid_amount__sum"] or 0
 
         return Response(
-            {"data": serializer.data, "total paid amount": total_paid_amount},
+            {"payments": serializer.data, "total paid amount": total_paid_amount},
             status=status.HTTP_200_OK,
         )
 
@@ -58,22 +67,23 @@ class PaymentListCreateView(generics.ListCreateAPIView):
         except CustomerAccount.DoesNotExist:
             return customer_not_found_exception(pk)
 
-        # Capture pending amount BEFORE updating
-        pending_amount_before_payment = int(customer.due)
+        with transaction.atomic():
+            # Capture pending amount BEFORE updating
+            pending_amount_before_payment = int(customer.due)
 
-        # Update customer account
-        customer.due = int(customer.due) - int(data_values[1]) - int(round_off)
-        customer.total_paid = int(customer.total_paid) + int(data_values[1])
-        customer.updatedby = request.user.username
+            # Update customer account
+            customer.due = int(customer.due) - int(data_values[1]) - int(round_off)
+            customer.total_paid = int(customer.total_paid) + int(data_values[1])
+            customer.updatedby = request.user.username
 
-        # Mark unpaid bill of prev month as paid if exists
-        CustomerBill.objects.filter(customer_name=pk, paid=False, from_date=start_day).update(
-            paid=True, updatedby=request.user.username
-        )
+            # Mark unpaid bill of prev month as paid if exists
+            CustomerBill.objects.filter(customer_name=pk, paid=False, from_date=start_day).update(
+                paid=True, updatedby=request.user.username
+            )
 
-        # Save payment record with pending amount BEFORE payment was made
-        serializer.save(addedby=request.user.username, pending_amount=pending_amount_before_payment)
-        customer.save()
+            # Save payment record with pending amount BEFORE payment was made
+            serializer.save(addedby=request.user.username, pending_amount=pending_amount_before_payment)
+            customer.save()
 
         # Invalidate the due cache — next dashboard call will recompute from DB
         cache.delete("total_pending_due")
@@ -111,7 +121,7 @@ class CustomerPaymentListView(generics.ListAPIView):
         total_paid_amount = customer.customer_account.total_paid or 0
 
         return Response(
-            {"data": serializer.data, "total paid amount": total_paid_amount},
+            {"payments": serializer.data, "total paid amount": total_paid_amount},
             status=status.HTTP_200_OK,
         )
 
@@ -125,16 +135,14 @@ class PaymentListByRouteView(generics.ListAPIView):
 
     def get_queryset(self):
         pk = self.kwargs.get("pk")
-        today_date = datetime.datetime.now()
-        next_month = today_date.replace(day=28) + timedelta(days=4)
-        last_date = next_month - timedelta(days=next_month.day)
-        first_date = today_date.replace(day=1).date()
+        today = timezone.localdate()
+        first_day = today.replace(day=1)
 
         return CustomerPayment.objects.select_related("customer_name").filter(
-            customer_name__id__in=Customer.objects.filter(route=pk),
-            date__gte=first_date,
-            date__lte=last_date.date(),
-        )
+            customer_name__route_id=pk,
+            date__gte=first_day,
+            date__lte=today
+        ).order_by("-date")
 
     def list(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
@@ -150,7 +158,7 @@ class PaymentListByRouteView(generics.ListAPIView):
         total_paid_amount = queryset.aggregate(Sum("paid_amount"))["paid_amount__sum"] or 0
 
         return Response(
-            {"data": serializer.data, "total paid amount": total_paid_amount},
+            {"payments": serializer.data, "total paid amount": total_paid_amount},
             status=status.HTTP_200_OK,
         )
 
@@ -163,14 +171,13 @@ class DueListByRouteView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
-        try:
-            Route.objects.get(pk=pk)
-        except Route.DoesNotExist:
+        if not Route.objects.filter(pk=pk).exists():
             return route_not_found_exception(pk)
 
-        customer_due_list = CustomerAccount.objects.select_related("customer_name").filter(
-            customer_name__id__in=Customer.objects.filter(route=pk)
-        )
+        customer_accounts = CustomerAccount.objects.select_related("customer_name").filter(
+            customer_name__route_id=pk,
+            customer_name__active=True
+        ).order_by('customer_name__first_name')
 
         data_list = [
             {
@@ -178,17 +185,14 @@ class DueListByRouteView(generics.ListAPIView):
                 "customer_name": f"{acc.customer_name.first_name} {acc.customer_name.last_name}",
                 "due": acc.due,
             }
-            for acc in customer_due_list
+            for acc in customer_accounts
         ]
 
         # Aggregate total due by route
-        total_due_by_route = CustomerAccount.calculate_total_due_route()
-        customer_due_list_total = next(
-            (route["total_due"] for route in total_due_by_route if str(route["customer_name__route"]) == str(pk)), 0
-        )
+        due_total = customer_accounts.aggregate(Sum("due"))["due__sum"] or 0
 
         return Response(
-            {"duelist_data": data_list, "due_total": customer_due_list_total},
+            {"customer_due_list": data_list, "due_total": due_total},
             status=status.HTTP_200_OK,
         )
 
@@ -200,20 +204,27 @@ class DueListView(generics.ListAPIView):
     permission_classes = [IsAdminUser, IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        customerdue = CustomerAccount.objects.select_related("customer_name").all()
+        customer_due_qs = CustomerAccount.objects.filter(
+            customer_name__active=True
+        ).values(
+            "customer_name__id", 
+            "customer_name__first_name", 
+            "customer_name__last_name", 
+            "due"
+        ).order_by("customer_name__first_name")
 
         data_list = [
             {
-                "customer_id": acc.customer_name.id,
-                "customer_name": f"{acc.customer_name.first_name} {acc.customer_name.last_name}",
-                "due": acc.due,
+                "customer_id": item["customer_name__id"],
+                "customer_name": f"{item['customer_name__first_name']} {item['customer_name__last_name']}",
+                "due": item["due"],
             }
-            for acc in customerdue
+            for item in customer_due_qs
         ]
 
-        customer_due_list_total = CustomerAccount.calculate_total_due() or 0
+        due_total = CustomerAccount.calculate_total_due()
 
         return Response(
-            {"customer_due_list": data_list, "due_total": customer_due_list_total},
+            {"customer_due_list": data_list, "due_total": due_total},
             status=status.HTTP_200_OK,
         )

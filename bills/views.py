@@ -25,7 +25,15 @@ class BillListView(generics.ListAPIView):
     permission_classes = [IsAdminUser, IsAuthenticated]
 
     def get_queryset(self):
-        return CustomerBill.objects.select_related("customer_name").all()
+        today = timezone.localdate()
+        first_day_of_current_month = today.replace(day=1)
+        last_day_of_prev_month = first_day_of_current_month - timedelta(days=1)
+        first_day_of_prev_month = last_day_of_prev_month.replace(day=1)
+        
+        return CustomerBill.objects.select_related("customer_name").filter(
+            from_date__gte=first_day_of_prev_month,
+            to_date__lte=last_day_of_prev_month
+        ).order_by("customer_name__first_name")
 
 
 # Retrieve a bill + its daily entries
