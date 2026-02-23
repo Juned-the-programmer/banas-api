@@ -49,26 +49,7 @@ class CustomerByRouteView(ListAPIView):
         # Use cached data to avoid DB hits
         return customer_cached_data().filter(route=route_id, active=True)
 
-
-""" Get the customer details and update customer details """
-
-
-class CustomerDetialUpdateView(RetrieveUpdateAPIView):
-    serializer_class = CustomerSerializer
-    permission_classes = [IsAdminUser, IsAuthenticated]
-    lookup_field = "pk"
-
-    def get_queryset(self):
-        # Always use cache instead of DB
-        return customer_cached_data()
-
-    def perform_update(self, serializer):
-        serializer.save(updatedby=self.request.user.username)
-        cache.delete("Customer")
-        customer_cached_data()
-
-
-class CustomerAccountUpdateView(UpdateAPIView):
+class CustomerAccountUpdateView(RetrieveUpdateAPIView):
     serializer_class = CustomerAccountSerializer
     permission_classes = [IsAdminUser, IsAuthenticated]
     lookup_field = "pk"
