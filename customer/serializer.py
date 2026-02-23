@@ -29,6 +29,14 @@ class CustomerSerializerList(serializers.ModelSerializer):
         fields = ["id", "first_name", "last_name", "phone_no", "route", "active", "date_added", "date_updated"]
 
 
+class CustomerUpdateSerializer(serializers.ModelSerializer):
+    route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(), many=False)
+
+    class Meta:
+        model = Customer
+        fields = ["first_name", "last_name", "rate", "route", "phone_no", "email", "sequence_no", "active"]
+
+
 ## Nested Serializers ##
 
 
