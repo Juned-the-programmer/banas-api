@@ -1,14 +1,17 @@
 import logging
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
+from django.conf import settings
 
 from banas.cache_conf import total_pending_due_cached
 from bills.utils import bill_number_generator
 from customer.models import Customer, CustomerAccount
 from dailyentry.models import customer_daily_entry_monthly
+from customer.whatsapp import enqueue_whatsapp_message
+from banas.qstash import qstash_client
 
 from .models import Bill_number_generator, CustomerBill
 
@@ -50,9 +53,6 @@ def dispatch_monthly_bill_batches():
 
     # Invalidate the due cache before any batch mutates CustomerAccount.due
     cache.delete("total_pending_due")
-
-    from django.conf import settings
-    from banas.qstash import qstash_client
 
     base_url = getattr(settings, "BASE_URL", "").rstrip("/")
     worker_url = f"{base_url}{WORKER_PATH}"
@@ -135,6 +135,8 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
         rate = int(customer.rate)
         due = account.due
         sequence += 1
+        
+        bill_total = (coolers * rate) + int(due)
 
         bills_to_create.append(
             CustomerBill(
@@ -157,6 +159,21 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
 
         entry.coolers = 0                      
         entries_to_update.append(entry)
+        
+        # Enqueue WhatsApp Message for Bill Generation
+        if customer.phone_no:
+            # Convert string date to datetime object for formatting
+            first_date_dt = datetime.strptime(first_date, "%Y-%m-%d")
+            month_name = first_date_dt.strftime("%B %Y")
+            message_body = (
+                f"Dear {customer.first_name} {customer.last_name},\n"
+                f"Your Water Cooler bill for {month_name} has been generated.\n"
+                f"Total Coolers: {coolers}\n"
+                f"Previous Due: ₹{due}\n"
+                f"Total Amount Payable: ₹{bill_total}\n\n"
+                "Please pay at your earliest convenience."
+            )
+            enqueue_whatsapp_message(customer.phone_no, message_body)
 
     if not bills_to_create:
         logger.info("process_bill_batch_core: nothing to write for this batch.")

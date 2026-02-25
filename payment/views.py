@@ -18,6 +18,7 @@ from banas.cache_conf import total_pending_due_cached
 
 from .models import CustomerPayment
 from .serializer import CustomerPaymentSerializer, CustomerPaymentSerializerGET
+from customer.whatsapp import enqueue_whatsapp_message
 
 
 # -------------------------------
@@ -85,6 +86,16 @@ class PaymentListCreateView(generics.ListCreateAPIView):
             # Save payment record with pending amount BEFORE payment was made
             serializer.save(addedby=request.user.username, pending_amount=pending_amount_before_payment)
             customer.save()
+
+        # Enqueue WhatsApp Message
+        customer_phone = customer.customer_name.phone_no
+        message_body = (
+            f"Dear {customer.customer_name.first_name} {customer.customer_name.last_name},\n"
+            f"We have received a payment of ₹{data_values[1]} towards your account.\n"
+            f"Your current pending due is ₹{customer.due}.\n\n"
+            "Thank you for your payment."
+        )
+        enqueue_whatsapp_message(customer_phone, message_body)
 
         # Invalidate the due cache — next dashboard call will recompute from DB
         cache.delete("total_pending_due")

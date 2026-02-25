@@ -315,6 +315,11 @@ QSTASH_CURRENT_SIGNING_KEY = os.getenv("QSTASH_CURRENT_SIGNING_KEY", "")
 QSTASH_NEXT_SIGNING_KEY = os.getenv("QSTASH_NEXT_SIGNING_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "")
 
+# Evolution API / WhatsApp Config
+EVOLUTION_BASE_URL = os.getenv("EVOLUTION_BASE_URL", "https://evolution-api-ypyb.onrender.com")
+EVOLUTION_INSTANCE_NAME = os.getenv("EVOLUTION_INSTANCE_NAME", "")
+EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "")
+
 
 # -----------------------------------------------------------------------
 # Global Logging Configuration

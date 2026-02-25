@@ -4,6 +4,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework import status
 import logging
+import time
+import requests
+from django.conf import settings
 
 logger = logging.getLogger(__name__)
 
@@ -60,4 +63,53 @@ def task_generate_qr(request):
 
     except Exception as e:
         logger.error(f"QR code task failed: {e}", exc_info=True)
+        return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(["POST"])
+@permission_classes([AllowAny])
+def task_send_whatsapp(request):
+    """
+    QStash callback: Sends a WhatsApp message via Evolution API.
+    Payload: {"phone": "91...", "message": "..."}
+    """
+    try:
+        data = request.data
+        phone = data.get("phone")
+        message = data.get("message")
+
+        if not phone or not message:
+            return Response({"error": "Missing phone or message"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 1. Prepare Evolution API Payload
+        url = f"{settings.EVOLUTION_BASE_URL}/message/sendText/{settings.EVOLUTION_INSTANCE_NAME}"
+        headers = {
+            "apikey": settings.EVOLUTION_API_KEY,
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "number": phone,
+            "text": message
+        }
+
+        # 2. Fire Request
+        response = requests.post(url, json=payload, headers=headers)
+        
+        # We don't fail the task if the user's number is invalid (400), but we log it.
+        # If the Evolution API goes down (500), we raise an exception so QStash retries later.
+        if response.status_code >= 500:
+            response.raise_for_status()
+            
+        logger.info(f"WhatsApp sent to {phone} | Evolution Status: {response.status_code}")
+
+        # 3. PACING DELAY (Crucial for anti-ban)
+        # We block this worker for 3 seconds before returning 200 OK.
+        # Since queue parallelism=1, QStash will physically wait 3 seconds before sending the next one.
+        time.sleep(3)
+
+        return Response({"status": "ok", "evolution_status": response.status_code}, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"WhatsApp task failed: {str(e)}", exc_info=True)
+        # A 500 tells QStash to hold the message and retry it according to the retry schedule
         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

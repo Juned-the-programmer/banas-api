@@ -31,6 +31,7 @@ def setup_queues():
         ("verify-pending", 1, "Verify & commit pending daily entries (DB writes, ordered)"),
         ("bulk-import",    1, "Bulk import daily entries from admin (DB writes, ordered)"),
         ("bill-batch",     1, "Process monthly bill batch per customer chunk (DB writes, ordered)"),
+        ("whatsapp-messages", 1, "Paced WhatsApp messaging via Evolution API (Strictly ordered, 3s delay)"),
     ]
 
     print(f"🔧 Configuring {len(queues)} QStash queues...\n")

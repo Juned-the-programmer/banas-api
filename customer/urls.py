@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .qstash import task_send_email, task_generate_qr
+from .qstash import task_send_email, task_generate_qr, task_send_whatsapp
 
 urlpatterns = [
     path("", views.CustomerListView.as_view()),
@@ -12,4 +12,5 @@ urlpatterns = [
     # Async task endpoints (called by QStash)
     path("tasks/send-email/", task_send_email, name="task-send-email"),
     path("tasks/generate-qr/", task_generate_qr, name="task-generate-qr"),
+    path("tasks/send-whatsapp/", task_send_whatsapp, name="task-send-whatsapp"),
 ]
