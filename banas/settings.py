@@ -262,16 +262,20 @@ DEFAULT_FROM_EMAIL = os.getenv("EMAIL_USERNAME")
 STORAGES = {
     "default": {
         "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": config("SUPABASE_ACCESS_KEY_ID", default=""),
+            "secret_key": config("SUPABASE_SECRET_ACCESS_KEY", default=""),
+            "bucket_name": config("SUPABASE_STORAGE_BUCKET_NAME", default=""),
+            "region_name": config("SUPABASE_S3_REGION_NAME", default=""),
+            "endpoint_url": config("SUPABASE_S3_ENDPOINT_URL", default=""),
+            "default_acl": "public-read",
+            "querystring_auth": False,
+        },
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-AWS_ACCESS_KEY_ID = config("SUPABASE_ACCESS_KEY_ID", default="")
-AWS_SECRET_ACCESS_KEY = config("SUPABASE_SECRET_ACCESS_KEY", default="")
-AWS_STORAGE_BUCKET_NAME = config("SUPABASE_STORAGE_BUCKET_NAME", default="")
-AWS_S3_REGION_NAME = config("SUPABASE_S3_REGION_NAME", default="")
-AWS_S3_ENDPOINT_URL = config("SUPABASE_S3_ENDPOINT_URL", default="")
 
 # Security-related toggles (configure via environment for production)
 if ENVIRONMENT == "production":
