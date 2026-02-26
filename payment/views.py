@@ -87,15 +87,20 @@ class PaymentListCreateView(generics.ListCreateAPIView):
             serializer.save(addedby=request.user.username, pending_amount=pending_amount_before_payment)
             customer.save()
 
-        # Enqueue WhatsApp Message
-        customer_phone = customer.customer_name.phone_no
-        message_body = (
-            f"Dear {customer.customer_name.first_name} {customer.customer_name.last_name},\n"
-            f"We have received a payment of ₹{data_values[1]} towards your account.\n"
-            f"Your current pending due is ₹{customer.due}.\n\n"
-            "Thank you for your payment."
-        )
-        enqueue_whatsapp_message(customer_phone, message_body)
+        # Safely enqueue WhatsApp message AFTER successful DB commit
+        try:
+            customer_phone = customer.customer_name.phone_no
+            message_body = (
+                f"Dear {customer.customer_name.first_name} {customer.customer_name.last_name},\n"
+                f"We have received a payment of ₹{data_values[1]} towards your account.\n"
+                f"Your current pending due is ₹{customer.due}.\n\n"
+                "Thank you for your payment."
+            )
+            enqueue_whatsapp_message(customer_phone, message_body)
+        except Exception as e:
+            # We log it, but we DO NOT fail the view. Payment is already committed.
+            import logging
+            logging.error(f"Post-payment WhatsApp dispatch failed: {e}")
 
         # Invalidate the due cache — next dashboard call will recompute from DB
         cache.delete("total_pending_due")

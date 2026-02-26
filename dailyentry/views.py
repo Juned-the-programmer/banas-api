@@ -174,20 +174,91 @@ class MissingDailyEntryView(APIView):
 # Customer QR daily entry (function-based)
 # -------------------------------
 def customer_qr_daily_entry(request, pk):
-    if request.method == "POST":
-        qr_code_pin = customer_qr_code.objects.get(customer=pk).qrcode_pin
+    try:
+        customer_obj = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
+        return render(request, "dailyentry/dailyentrytime.html", {"error": "Customer not found."})
 
-        if qr_code_pin == int(request.POST.get("pin", 0)):
-            pending_daily_entry_customer = pending_daily_entry(
-                customer=Customer.objects.get(id=pk), coolers=int(request.POST.get("coolers", 0))
-            )
-            pending_daily_entry_customer.save()
+    context = {
+        "customer": customer_obj,
+        "error_message": None,
+        "success_message": None,
+    }
+
+    if request.method == "POST":
+        try:
+            qr_data = customer_qr_code.objects.get(customer=pk)
+            qr_code_pin = qr_data.qrcode_pin
+        except customer_qr_code.DoesNotExist:
+            qr_code_pin = None
+
+        submitted_pin = request.POST.get("pin", "")
+        
+        try:
+            submitted_pin_int = int(submitted_pin)
+        except ValueError:
+            submitted_pin_int = None
+
+        if qr_code_pin is not None and qr_code_pin == submitted_pin_int:
+            coolers_val = request.POST.get("coolers", "0")
+            try:
+                pending_daily_entry_customer = pending_daily_entry(
+                    customer=customer_obj, 
+                    coolers=int(coolers_val)
+                )
+                pending_daily_entry_customer.save()
+                context["success_message"] = f"Successfully recorded {coolers_val} coolers!"
+            except ValueError:
+                context["error_message"] = "Invalid cooler quantity."
+        else:
+            context["error_message"] = "Incorrect PIN."
 
     current_time = datetime.datetime.now().time()
-    if time(9, 0, 0) < current_time < time(18, 0, 0):
-        return render(request, "dailyentry/dailyentry.html")
+    
+    # Check if within valid hours (9 AM to 6 PM)
+    if time(9, 0, 0) <= current_time <= time(18, 0, 0):
+        return render(request, "dailyentry/dailyentry.html", context)
     else:
-        return render(request, "dailyentry/dailyentrytime.html")
+        # Pass context so we can say "Dear Juned, portal closed"
+        return render(request, "dailyentry/dailyentrytime.html", context)
+
+
+# -------------------------------
+# Customer Update PIN (function-based)
+# -------------------------------
+def customer_update_pin(request, pk):
+    try:
+        customer_obj = Customer.objects.get(id=pk)
+    except Customer.DoesNotExist:
+        return render(request, "dailyentry/dailyentrytime.html", {"error": "Customer not found."})
+
+    context = {
+        "customer": customer_obj,
+        "error_message": None,
+        "success_message": None,
+    }
+
+    if request.method == "POST":
+        current_pin_input = request.POST.get("current_pin", "")
+        new_pin_input = request.POST.get("new_pin", "")
+
+        try:
+            qr_data = customer_qr_code.objects.get(customer=pk)
+            # Verify current PIN matches
+            if int(current_pin_input) == qr_data.qrcode_pin:
+                # Update to new PIN
+                qr_data.qrcode_pin = int(new_pin_input)
+                qr_data.save()
+                context["success_message"] = "Your PIN has been successfully updated! You can now use it for daily entries."
+            else:
+                context["error_message"] = "The current PIN you entered is incorrect."
+        except customer_qr_code.DoesNotExist:
+             context["error_message"] = "No PIN is configured for this account yet."
+        except ValueError:
+             context["error_message"] = "PIN must be a valid number."
+
+    return render(request, "dailyentry/update_pin.html", context)
+
 
 # -------------------------------
 # Scheduled Task Endpoints (Called by QStash)

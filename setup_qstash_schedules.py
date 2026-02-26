@@ -55,6 +55,7 @@ def setup_schedules():
                 destination=url,
                 cron=cron,
                 retries=3,
+                headers={"Upstash-Timezone": "Asia/Kolkata"},
             )
             print(f"   ✅ Success\n")
         except Exception as e:

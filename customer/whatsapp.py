@@ -45,20 +45,23 @@ def enqueue_whatsapp_message(phone: str, message: str) -> None:
         "message": message
     }
     
-    webhook_url = f"{settings.BASE_URL}api/customer/tasks/send-whatsapp/"
+    webhook_url = f"{settings.BASE_URL.rstrip('/')}/api/customer/tasks/send-whatsapp/"
 
     try:
         # We don't use the async_helpers decorator here because we explicitly
         # want to send it to the named pace-controlled queue.
         if qstash_client:
-            res = qstash_client.message.enqueue_json(
-                url=webhook_url,
-                body=payload,
-                queue="whatsapp-messages",
-            )
-            logger.info(f"Enqueued WhatsApp message to {formatted_phone}: {res.message_id}")
+            try:
+                res = qstash_client.message.enqueue_json(
+                    url=webhook_url,
+                    body=payload,
+                    queue="whatsapp-messages",
+                )
+                logger.info(f"Enqueued WhatsApp message to {formatted_phone}: {res.message_id}")
+            except Exception as e:
+                 logger.error(f"Failed to enqueue WhatsApp message to QStash for {formatted_phone}: {str(e)}", exc_info=True)
         else:
             logger.info(f"[LOCAL DEV] Enqueue WhatsApp message to {formatted_phone}: {message[:30]}...")
             
     except Exception as e:
-        logger.error(f"Failed to enqueue WhatsApp message to {formatted_phone}: {str(e)}", exc_info=True)
+        logger.error(f"Failed to prep WhatsApp message for {formatted_phone}: {str(e)}", exc_info=True)
