@@ -12,7 +12,7 @@ from route.models import Route
 # Create your models here.
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="customer", null=True, blank=True)
-    phone_regex = RegexValidator(regex=r"^[789]\d{9}$", message="Invalid phone number")
+    phone_regex = RegexValidator(regex=r"^[6789]\d{9}$", message="Invalid phone number")
     email_validator = EmailValidator(message="Enter Valid Email Address")
     sequence_no = models.IntegerField(null=True, blank=True)
     first_name = models.CharField(max_length=200)
