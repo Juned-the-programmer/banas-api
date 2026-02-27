@@ -52,24 +52,49 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     a4_img = Image.new("RGB", (a4_width, a4_height), "white")
     draw = ImageDraw.Draw(a4_img)
 
-    # Customer name at top centre
+    # 1. Font Management - Auto-download reliable TrueType font
+    font_filename = "Roboto-Bold.ttf"
+    font_path = os.path.join(settings.BASE_DIR, font_filename)
+    if not os.path.exists(font_path):
+        import urllib.request
+        logger.info(f"Downloading {font_filename} from Google Fonts...")
+        # Direct link to Roboto Bold TTF
+        url = "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Bold.ttf"
+        try:
+            urllib.request.urlretrieve(url, font_path)
+            logger.info("Font downloaded successfully.")
+        except Exception as e:
+            logger.error(f"Failed to download font: {e}")
+
     try:
-        font = ImageFont.truetype("DejaVuSans-Bold.ttf", 120)
+        font_large = ImageFont.truetype(font_path, 180)  # Huge font for Name
+        font_medium = ImageFont.truetype(font_path, 140) # Large font for Footer
     except OSError:
-        font = ImageFont.load_default()
+        logger.warning(f"Could not load {font_filename}, falling back to default tiny font.")
+        font_large = ImageFont.load_default()
+        font_medium = ImageFont.load_default()
 
+    # 2. Draw Customer Name (Top Centered)
     name_text = f"{customer_detail.first_name} {customer_detail.last_name}"
-    bbox = draw.textbbox((0, 0), name_text, font=font)
-    text_w = bbox[2] - bbox[0]
-    text_x = (a4_width - text_w) // 2
-    draw.text((text_x, 200), name_text, font=font, fill="black")
+    bbox_name = draw.textbbox((0, 0), name_text, font=font_large)
+    name_w = bbox_name[2] - bbox_name[0]
+    name_x = (a4_width - name_w) // 2
+    draw.text((name_x, 300), name_text, font=font_large, fill="black")
 
-    # Resize QR and paste in centre
-    qr_size = 1200
+    # 3. Resize QR and paste in center
+    qr_size = 1400
     qr_img = qr_img.resize((qr_size, qr_size), Image.LANCZOS)
     qr_x = (a4_width - qr_size) // 2
     qr_y = (a4_height - qr_size) // 2
     a4_img.paste(qr_img, (qr_x, qr_y))
+
+    # 4. Draw "Banas Water" Footer (Bottom Centered, below QR)
+    footer_text = "Banas Water"
+    bbox_footer = draw.textbbox((0, 0), footer_text, font=font_medium)
+    footer_w = bbox_footer[2] - bbox_footer[0]
+    footer_x = (a4_width - footer_w) // 2
+    footer_y = qr_y + qr_size + 200 # 200px below the QR code image
+    draw.text((footer_x, footer_y), footer_text, font=font_medium, fill="black")
 
     # Render to in-memory buffer
     buffer = BytesIO()
