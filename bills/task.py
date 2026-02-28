@@ -103,7 +103,7 @@ def dispatch_monthly_bill_batches():
 def process_bill_batch_core(customer_ids, first_date, last_date):
 
     customers_queryset = Customer.objects.filter(id__in=customer_ids).select_related(
-        'customeraccount', 
+        'customer_account', 
         'customer_daily_entry_monthly'
     )
 
@@ -121,7 +121,7 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
 
     for cid in customer_ids:
         customer = customer_map.get(str(cid))
-        account = customer.customeraccount
+        account = customer.customer_account
         entry = customer.customer_daily_entry_monthly
 
         if not customer or not account or not entry:
