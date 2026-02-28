@@ -23,11 +23,15 @@ WORKDIR /app
 # Copy Python packages AND binaries
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
+COPY --from=builder /usr/local/bin/newrelic-admin /usr/local/bin/newrelic-admin
 
 # Copy app code
 COPY . .
 
+# New Relic Environment Variables
+ENV NEW_RELIC_CONFIG_FILE=/app/newrelic.ini
 ENV PORT=8000
+
 # Create non-root user
 RUN addgroup --system appuser && \
     adduser --system --ingroup appuser appuser && \
@@ -41,4 +45,4 @@ USER appuser
 RUN python -c "import django; print(f'Django {django.__version__}')" && \
     gunicorn --version
 
-CMD gunicorn banas.wsgi:application --bind 0.0.0.0:$PORT --workers=4
+CMD ["newrelic-admin", "run-program", "gunicorn", "banas.wsgi:application", "--bind", "0.0.0.0:8000", "--workers=4"]

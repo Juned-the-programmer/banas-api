@@ -45,3 +45,6 @@ python-decouple
 
 # Bulk Operations
 django-bulk-signals
+
+#new Relic
+newrelic
