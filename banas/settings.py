@@ -211,8 +211,6 @@ STATICFILES_FINDERS = [
     "django.contrib.staticfiles.finders.AppDirectoriesFinder",
 ]
 
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
-
 # MEDIA_ROOT = "media/"
 
 # Default primary key field type
@@ -258,21 +256,22 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_USERNAME")
 
-# --- Local file storage (active) ---
-MEDIA_ROOT = BASE_DIR / "media"
-MEDIA_URL = "/media/"
+# --- Local file storage (disabled, using Supabase) ---
 
-# --- S3/Backblaze B2 storage (commented out — uncomment when ready for production) ---
-# DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-# AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
-# AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
-# AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
-# AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME")
-# AWS_S3_ENDPOINT_URL = f'https://s3.{AWS_S3_REGION_NAME}.backblazeb2.com'
-# AWS_S3_SIGNATURE_VERSION = 's3v4'
-# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.backblazeb2.com'
-# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
-# AWS_QUERYSTRING_AUTH = False
+# --- S3/Supabase storage ---
+STORAGES = {
+    "default": {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+    },
+    "staticfiles": {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
+    },
+}
+AWS_ACCESS_KEY_ID = config("SUPABASE_ACCESS_KEY_ID", default="")
+AWS_SECRET_ACCESS_KEY = config("SUPABASE_SECRET_ACCESS_KEY", default="")
+AWS_STORAGE_BUCKET_NAME = config("SUPABASE_STORAGE_BUCKET_NAME", default="")
+AWS_S3_REGION_NAME = config("SUPABASE_S3_REGION_NAME", default="")
+AWS_S3_ENDPOINT_URL = config("SUPABASE_S3_ENDPOINT_URL", default="")
 
 # Security-related toggles (configure via environment for production)
 if ENVIRONMENT == "production":
