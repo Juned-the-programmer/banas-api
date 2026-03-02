@@ -3,6 +3,8 @@ import os
 from io import BytesIO
 
 from django.conf import settings
+from django.core.files.base import ContentFile
+from django.core.files.storage import default_storage
 from django.core.mail import EmailMultiAlternatives, send_mail
 from PIL import Image, ImageDraw, ImageFont
 import qrcode
@@ -104,17 +106,13 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
     qr_codes_path = f"qr_codes/{file_name}"
 
-    # Save to local disk under media/qr_codes/
-    local_dir = os.path.join("media", "qr_codes")
-    os.makedirs(local_dir, exist_ok=True)
-    local_path = os.path.join(local_dir, file_name)
-    with open(local_path, "wb") as f:
-        f.write(buffer.getvalue())
+    # Upload directly to Supabase S3 via the configured default storage backend
+    saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.getvalue()))
 
     # Persist the reference in DB (update if already exists)
     customer_qr_code.objects.update_or_create(
         customer=customer_detail,
-        defaults={"qrcode": qr_codes_path},
+        defaults={"qrcode": saved_path},
     )
 
-    logger.info("QR code saved locally for customer %s → %s", customer_id, local_path)
+    logger.info("QR code uploaded to Supabase for customer %s → %s", customer_id, saved_path)

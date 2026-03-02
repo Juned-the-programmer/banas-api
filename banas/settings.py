@@ -142,6 +142,11 @@ else:
             "PASSWORD": os.getenv("DB_PASSWORD", ""),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
+            "DISABLE_SERVER_SIDE_CURSORS": True,
+            "OPTIONS": {
+                "sslmode": "require",
+                "prepare_threshold": None,
+            },
         }
     }
 
@@ -256,24 +261,25 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_USERNAME")
 
-# --- Local file storage (active) ---
-MEDIA_ROOT = BASE_DIR / "media"
-MEDIA_URL = "/media/"
-
-# --- S3/Supabase storage ---
+# --- Supabase S3 storage ---
 STORAGES = {
     "default": {
-        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "access_key": config("SUPABASE_ACCESS_KEY_ID", default=""),
+            "secret_key": config("SUPABASE_SECRET_ACCESS_KEY", default=""),
+            "bucket_name": config("SUPABASE_STORAGE_BUCKET_NAME", default=""),
+            "region_name": config("SUPABASE_S3_REGION_NAME", default=""),
+            "endpoint_url": config("SUPABASE_S3_ENDPOINT_URL", default=""),
+            "file_overwrite": False,
+            "default_acl": "public-read",
+            "querystring_auth": False,
+        },
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
     },
 }
-AWS_ACCESS_KEY_ID = config("SUPABASE_ACCESS_KEY_ID", default="")
-AWS_SECRET_ACCESS_KEY = config("SUPABASE_SECRET_ACCESS_KEY", default="")
-AWS_STORAGE_BUCKET_NAME = config("SUPABASE_STORAGE_BUCKET_NAME", default="")
-AWS_S3_REGION_NAME = config("SUPABASE_S3_REGION_NAME", default="")
-AWS_S3_ENDPOINT_URL = config("SUPABASE_S3_ENDPOINT_URL", default="")
 
 # Security-related toggles (configure via environment for production)
 if ENVIRONMENT == "production":
