@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .qstah import task_verify_pending_daily_entries, task_bulk_import_daily_entries
+from .qstah import task_bulk_import_daily_entries, task_verify_pending_daily_entries
 
 urlpatterns = [
     # CBVs for daily entry
@@ -14,7 +14,9 @@ urlpatterns = [
     path("today/missing/", views.MissingDailyEntryView.as_view(), name="missing_daily_entry"),
     # FBVs for QR and historical (still required)
     path("customer/dailyentry/<str:pk>", views.customer_qr_daily_entry, name="customer_qr_daily_entry_no_slash"),
-    path("customer/dailyentry/<str:pk>/", views.customer_qr_daily_entry, name="dailyentry_qr"),  # Updated name to match template
+    path(
+        "customer/dailyentry/<str:pk>/", views.customer_qr_daily_entry, name="dailyentry_qr"
+    ),  # Updated name to match template
     path("change-pin/<str:pk>/", views.customer_update_pin, name="change-pin"),
     # Scheduled task endpoints (called by QStash)
     path("tasks/reset-dashboard/", views.run_reset_dashboard_task, name="reset-dashboard-task"),

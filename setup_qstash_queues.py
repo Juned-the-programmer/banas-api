@@ -4,8 +4,10 @@ Run this after deploying to configure queues in QStash.
 
 Usage: python setup_qstash_queues.py
 """
+
 import os
 import sys
+
 import django
 
 # Setup Django environment
@@ -26,11 +28,11 @@ def setup_queues():
     # parallelism=1 for DB-heavy tasks (prevents race conditions)
     # parallelism>1 for I/O-bound tasks (email, QR generation)
     queues = [
-        ("send-email",     2, "Send async emails (I/O bound, safe to parallelize)"),
-        ("generate-qr",    2, "Generate customer QR codes (I/O bound)"),
+        ("send-email", 2, "Send async emails (I/O bound, safe to parallelize)"),
+        ("generate-qr", 2, "Generate customer QR codes (I/O bound)"),
         ("verify-pending", 1, "Verify & commit pending daily entries (DB writes, ordered)"),
-        ("bulk-import",    1, "Bulk import daily entries from admin (DB writes, ordered)"),
-        ("bill-batch",     1, "Process monthly bill batch per customer chunk (DB writes, ordered)"),
+        ("bulk-import", 1, "Bulk import daily entries from admin (DB writes, ordered)"),
+        ("bill-batch", 1, "Process monthly bill batch per customer chunk (DB writes, ordered)"),
         ("whatsapp-messages", 1, "Paced WhatsApp messaging via Evolution API (Strictly ordered, 3s delay)"),
     ]
 

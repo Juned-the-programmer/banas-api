@@ -1,24 +1,24 @@
+from datetime import datetime, timedelta
 import logging
-import uuid6
-from datetime import timedelta, datetime
 
+from django.conf import settings
 from django.core.cache import cache
 from django.db import transaction
 from django.utils import timezone
-from django.conf import settings
+import uuid6
 
 from banas.cache_conf import total_pending_due_cached
+from banas.qstash import qstash_client
 from bills.utils import bill_number_generator
 from customer.models import Customer, CustomerAccount
-from dailyentry.models import customer_daily_entry_monthly
 from customer.whatsapp import enqueue_whatsapp_message
-from banas.qstash import qstash_client
+from dailyentry.models import customer_daily_entry_monthly
 
 from .models import Bill_number_generator, CustomerBill
 
 logger = logging.getLogger(__name__)
 
-BILL_BATCH_SIZE = 100   # customers per QStash message
+BILL_BATCH_SIZE = 100  # customers per QStash message
 BILL_BATCH_QUEUE = "bill-batch"
 WORKER_PATH = "/api/bill/tasks/process-bill-batch/"
 
@@ -33,7 +33,7 @@ def _chunk(lst, size):
 # Dispatcher helper — contains the fan-out logic (called by the view)
 # -----------------------------------------------------------------------
 def dispatch_monthly_bill_batches():
-    
+
     today = timezone.localdate()
     tomorrow = today + timezone.timedelta(days=1)
 
@@ -43,12 +43,10 @@ def dispatch_monthly_bill_batches():
             "message": f"Not the last day of the month ({today})",
         }
 
-    first_date = str(today.replace(day=1))  
-    last_date = str(today)                  
+    first_date = str(today.replace(day=1))
+    last_date = str(today)
 
-    customer_ids = list(
-        Customer.objects.filter(active=True).values_list("id", flat=True)
-    )
+    customer_ids = list(Customer.objects.filter(active=True).values_list("id", flat=True))
     if not customer_ids:
         return {"skipped": True, "message": "No active customers"}
 
@@ -83,12 +81,16 @@ def dispatch_monthly_bill_batches():
         except Exception as exc:
             logger.error(
                 "dispatch_monthly_bill_batches: failed to enqueue batch %d — %s",
-                batches_queued + 1, exc, exc_info=True,
+                batches_queued + 1,
+                exc,
+                exc_info=True,
             )
 
     logger.info(
         "Monthly bill dispatcher: %d batches queued for %s–%s",
-        batches_queued, first_date, last_date,
+        batches_queued,
+        first_date,
+        last_date,
     )
     return {
         "skipped": False,
@@ -104,8 +106,7 @@ def dispatch_monthly_bill_batches():
 def process_bill_batch_core(customer_ids, first_date, last_date):
 
     customers_queryset = Customer.objects.filter(id__in=customer_ids).select_related(
-        'customer_account', 
-        'customer_daily_entry_monthly'
+        "customer_account", "customer_daily_entry_monthly"
     )
 
     customer_map = {str(c.id): c for c in customers_queryset}
@@ -137,7 +138,7 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
         rate = int(customer.rate)
         due = account.due
         sequence += 1
-        
+
         bill_total = (coolers * rate) + int(due)
         bill_id = uuid6.uuid7()
 
@@ -158,12 +159,12 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
             )
         )
 
-        account.due = (coolers * rate) + due 
+        account.due = (coolers * rate) + due
         accounts_to_update.append(account)
 
-        entry.coolers = 0                      
+        entry.coolers = 0
         entries_to_update.append(entry)
-        
+
         # Enqueue WhatsApp Message for Bill Generation
         if customer.phone_no:
             invoice_link = f"{settings.BASE_URL.rstrip('/')}/api/bill/invoice/{bill_id}/"
@@ -200,5 +201,7 @@ def process_bill_batch_core(customer_ids, first_date, last_date):
 
     logger.info(
         "process_bill_batch_core: committed %d bills (%s – %s)",
-        len(bills_to_create), first_date, last_date,
+        len(bills_to_create),
+        first_date,
+        last_date,
     )

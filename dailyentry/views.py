@@ -14,7 +14,7 @@ from rest_framework.views import APIView
 
 from banas.cache_conf import customer_cached_data
 from customer.models import Customer
-from dailyentry.task import verify_and_commit_pending_entries, bulk_import_daily_entries
+from dailyentry.task import bulk_import_daily_entries, verify_and_commit_pending_entries
 
 from .models import DailyEntry, DailyEntry_dashboard, customer_qr_code, pending_daily_entry
 from .serializer import (
@@ -38,11 +38,11 @@ class DailyEntryListCreateView(generics.ListCreateAPIView):
         today = timezone.localdate()
         start_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.min))
         end_of_day = timezone.make_aware(datetime.datetime.combine(today, datetime.time.max))
-        return DailyEntry.objects.filter(date_added__gte=start_of_day,date_added__lte=end_of_day).select_related("customer")
+        return DailyEntry.objects.filter(date_added__gte=start_of_day, date_added__lte=end_of_day).select_related("customer")
 
     def perform_create(self, serializer):
         # Set date_added if not provided
-        if not serializer.validated_data.get('date_added'):
+        if not serializer.validated_data.get("date_added"):
             serializer.save(addedby=self.request.user.username, date_added=timezone.now())
         else:
             serializer.save(addedby=self.request.user.username)
@@ -193,7 +193,7 @@ def customer_qr_daily_entry(request, pk):
             qr_code_pin = None
 
         submitted_pin = request.POST.get("pin", "")
-        
+
         try:
             submitted_pin_int = int(submitted_pin)
         except ValueError:
@@ -202,10 +202,7 @@ def customer_qr_daily_entry(request, pk):
         if qr_code_pin is not None and qr_code_pin == submitted_pin_int:
             coolers_val = request.POST.get("coolers", "0")
             try:
-                pending_daily_entry_customer = pending_daily_entry(
-                    customer=customer_obj, 
-                    coolers=int(coolers_val)
-                )
+                pending_daily_entry_customer = pending_daily_entry(customer=customer_obj, coolers=int(coolers_val))
                 pending_daily_entry_customer.save()
                 context["success_message"] = f"Successfully recorded {coolers_val} coolers!"
             except ValueError:
@@ -214,7 +211,7 @@ def customer_qr_daily_entry(request, pk):
             context["error_message"] = "Incorrect PIN."
 
     current_time = datetime.datetime.now().time()
-    
+
     # Check if within valid hours (9 AM to 6 PM)
     if time(9, 0, 0) <= current_time <= time(18, 0, 0):
         return render(request, "dailyentry/dailyentry.html", context)
@@ -253,9 +250,9 @@ def customer_update_pin(request, pk):
             else:
                 context["error_message"] = "The current PIN you entered is incorrect."
         except customer_qr_code.DoesNotExist:
-             context["error_message"] = "No PIN is configured for this account yet."
+            context["error_message"] = "No PIN is configured for this account yet."
         except ValueError:
-             context["error_message"] = "PIN must be a valid number."
+            context["error_message"] = "PIN must be a valid number."
 
     return render(request, "dailyentry/update_pin.html", context)
 
@@ -264,6 +261,7 @@ def customer_update_pin(request, pk):
 # Scheduled Task Endpoints (Called by QStash)
 # -------------------------------
 from django.views.decorators.csrf import csrf_exempt
+
 from .task import reset_dailentry_dashboard_values
 
 
@@ -280,4 +278,3 @@ def run_reset_dashboard_task(request):
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
     return JsonResponse({"error": "Method not allowed"}, status=405)
-

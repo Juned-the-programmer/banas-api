@@ -6,20 +6,20 @@ from PIL import Image, ImageDraw, ImageFont
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
-
 from django.utils import timezone
+import qrcode
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-import qrcode
 
-from customer.models import Customer
 from banas.async_helpers import async_task
+from customer.models import Customer
 
 from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer_qr_code
 
 logger = logging.getLogger(__name__)
+
 
 # -----------------------------------------------------------------------
 # Reset daily entry dashboard values
@@ -30,7 +30,6 @@ def reset_dailentry_dashboard_values():
     daily_entry_dashboard.customer_count = 0
     daily_entry_dashboard.coolers_count = 0
     daily_entry_dashboard.save()
-
 
 
 # -----------------------------------------------------------------------
@@ -108,8 +107,7 @@ def _update_monthly_and_dashboard(daily_entries):
     """Update customer_daily_entry_monthly and DailyEntry_dashboard for a list of DailyEntry objects."""
     for entry in daily_entries:
         customer_detail, _ = customer_daily_entry_monthly.objects.get_or_create(
-            customer=entry.customer,
-            defaults={"coolers": 0}
+            customer=entry.customer, defaults={"coolers": 0}
         )
         customer_detail.coolers += int(entry.cooler)
         customer_detail.save()
@@ -121,6 +119,5 @@ def _update_monthly_and_dashboard(daily_entries):
         dashboard.save()
     else:
         DailyEntry_dashboard.objects.create(
-            customer_count=len(daily_entries),
-            coolers_count=sum(int(e.cooler) for e in daily_entries)
+            customer_count=len(daily_entries), coolers_count=sum(int(e.cooler) for e in daily_entries)
         )

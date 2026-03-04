@@ -4,11 +4,13 @@ import time
 
 logger = logging.getLogger("banas.api")
 
+
 class APILoggerMiddleware:
     """
     Middleware to log all incoming API requests and their responses.
     Logs method, path, query params, body size, and response time.
     """
+
     def __init__(self, get_response):
         self.get_response = get_response
         self.sensitive_keys = {"password", "token", "access", "refresh", "authorization"}
@@ -34,11 +36,11 @@ class APILoggerMiddleware:
         # ---------------------------
 
         duration_ms = int((time.time() - start_time) * 1000)
-        
+
         # Build the log message
         user = request.user.username if hasattr(request, "user") and request.user.is_authenticated else "Anonymous"
         ip_addr = self._get_client_ip(request)
-        
+
         log_data = {
             "method": request.method,
             "path": request.path,
@@ -53,7 +55,9 @@ class APILoggerMiddleware:
             log_data["body"] = request_body
 
         # Log at appropriate level
-        log_message = f"[{request.method}] {request.path} | HTTP {response.status_code} | {duration_ms}ms | User: {user} | IP: {ip_addr}"
+        log_message = (
+            f"[{request.method}] {request.path} | HTTP {response.status_code} | {duration_ms}ms | User: {user} | IP: {ip_addr}"
+        )
 
         if response.status_code >= 500:
             logger.error(f"SERVER ERROR: {log_message} | Data: {log_data}")
@@ -79,7 +83,7 @@ class APILoggerMiddleware:
         return data
 
     def _get_client_ip(self, request):
-        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
         if x_forwarded_for:
-            return x_forwarded_for.split(',')[0]
-        return request.META.get('REMOTE_ADDR')
+            return x_forwarded_for.split(",")[0]
+        return request.META.get("REMOTE_ADDR")

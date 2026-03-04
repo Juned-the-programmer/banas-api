@@ -1,14 +1,17 @@
-from .task import send_async_email, generate_customer_qr_code_for_daily_entry_async
+import logging
+import time
+
+from django.conf import settings
+import requests
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import status
-import logging
-import time
-import requests
-from django.conf import settings
+
+from .task import generate_customer_qr_code_for_daily_entry_async, send_async_email
 
 logger = logging.getLogger(__name__)
+
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
@@ -22,9 +25,9 @@ def task_send_email(request):
         args = data.get("args", [])
         kwargs = data.get("kwargs", {})
 
-        subject      = args[0] if len(args) > 0 else kwargs.get("subject")
-        message      = args[1] if len(args) > 1 else kwargs.get("message")
-        sender       = args[2] if len(args) > 2 else kwargs.get("sender")
+        subject = args[0] if len(args) > 0 else kwargs.get("subject")
+        message = args[1] if len(args) > 1 else kwargs.get("message")
+        sender = args[2] if len(args) > 2 else kwargs.get("sender")
         recipient_list = args[3] if len(args) > 3 else kwargs.get("recipient_list")
         html_message = args[4] if len(args) > 4 else kwargs.get("html_message")
 
@@ -83,23 +86,17 @@ def task_send_whatsapp(request):
 
         # 1. Prepare Evolution API Payload
         url = f"{settings.EVOLUTION_BASE_URL}/message/sendText/{settings.EVOLUTION_INSTANCE_NAME}"
-        headers = {
-            "apikey": settings.EVOLUTION_API_KEY,
-            "Content-Type": "application/json"
-        }
-        payload = {
-            "number": phone,
-            "text": message
-        }
+        headers = {"apikey": settings.EVOLUTION_API_KEY, "Content-Type": "application/json"}
+        payload = {"number": phone, "text": message}
 
         # 2. Fire Request
         response = requests.post(url, json=payload, headers=headers)
-        
+
         # We don't fail the task if the user's number is invalid (400), but we log it.
         # If the Evolution API goes down (500), we raise an exception so QStash retries later.
         if response.status_code >= 500:
             response.raise_for_status()
-            
+
         logger.info(f"WhatsApp sent to {phone} | Evolution Status: {response.status_code}")
 
         # 3. PACING DELAY (Crucial for anti-ban)

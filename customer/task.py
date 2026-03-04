@@ -1,12 +1,12 @@
+from io import BytesIO
 import logging
 import os
-from io import BytesIO
 
+from PIL import Image, ImageDraw, ImageFont
 from django.conf import settings
 from django.core.files.base import ContentFile
 from django.core.files.storage import default_storage
 from django.core.mail import EmailMultiAlternatives, send_mail
-from PIL import Image, ImageDraw, ImageFont
 import qrcode
 
 from banas.async_helpers import async_task
@@ -19,6 +19,7 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------------
 # Async Task (triggered by signals)
 # -----------------------------------------------------------------------
+
 
 @async_task("/api/customer/tasks/send-email/", queue="send-email")
 def send_async_email(subject, message, sender, recipient_list, html_message):
@@ -59,6 +60,7 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     font_path = os.path.join(settings.BASE_DIR, font_filename)
     if not os.path.exists(font_path):
         import urllib.request
+
         logger.info(f"Downloading {font_filename} from Google Fonts...")
         # Direct link to Roboto Bold TTF
         url = "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Bold.ttf"
@@ -70,7 +72,7 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
 
     try:
         font_large = ImageFont.truetype(font_path, 180)  # Huge font for Name
-        font_medium = ImageFont.truetype(font_path, 140) # Large font for Footer
+        font_medium = ImageFont.truetype(font_path, 140)  # Large font for Footer
     except OSError:
         logger.warning(f"Could not load {font_filename}, falling back to default tiny font.")
         font_large = ImageFont.load_default()
@@ -95,7 +97,7 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     bbox_footer = draw.textbbox((0, 0), footer_text, font=font_medium)
     footer_w = bbox_footer[2] - bbox_footer[0]
     footer_x = (a4_width - footer_w) // 2
-    footer_y = qr_y + qr_size + 200 # 200px below the QR code image
+    footer_y = qr_y + qr_size + 200  # 200px below the QR code image
     draw.text((footer_x, footer_y), footer_text, font=font_medium, fill="black")
 
     # Render to in-memory buffer

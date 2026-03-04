@@ -1,6 +1,6 @@
 from django.urls import path
 
-from .views import BillDetailView, BillListView, GenerateBillView, run_monthly_bill_task, process_bill_batch, RenderBillView
+from .views import BillDetailView, BillListView, GenerateBillView, RenderBillView, process_bill_batch, run_monthly_bill_task
 
 urlpatterns = [
     path("bills/", BillListView.as_view(), name="get-bills"),

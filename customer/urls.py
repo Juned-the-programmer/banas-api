@@ -1,7 +1,7 @@
 from django.urls import path
 
 from . import views
-from .qstash import task_send_email, task_generate_qr, task_send_whatsapp
+from .qstash import task_generate_qr, task_send_email, task_send_whatsapp
 
 urlpatterns = [
     path("", views.CustomerListView.as_view()),

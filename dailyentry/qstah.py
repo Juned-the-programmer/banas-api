@@ -1,11 +1,14 @@
-from .task import verify_and_commit_pending_entries, bulk_import_daily_entries
+import logging
+
+from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-from rest_framework import status
-import logging
+
+from .task import bulk_import_daily_entries, verify_and_commit_pending_entries
 
 logger = logging.getLogger(__name__)
+
 
 # Verify Pending Daily Entries
 @api_view(["POST"])

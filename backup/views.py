@@ -10,11 +10,12 @@ ZIP layout:
         Alice_Smith_qr_code.png
         ...
 """
+
+from datetime import date
 import io
 import logging
 import os
 import zipfile
-from datetime import date
 
 from django.conf import settings
 from django.core.management import call_command
@@ -37,6 +38,7 @@ class BackupView(APIView):
       - db_dump.json  (full dumpdata with natural keys)
       - qr_codes/*.png
     """
+
     permission_classes = [IsAdminUser, IsAuthenticated]
 
     def get(self, request):
@@ -85,6 +87,7 @@ class RestoreView(APIView):
       3. Load db_dump.json via loaddata
       4. Overwrite media/qr_codes/ with images from the zip
     """
+
     # permission_classes = [IsAdminUser, IsAuthenticated]
     parser_classes = [MultiPartParser]
 
@@ -104,7 +107,9 @@ class RestoreView(APIView):
 
                 # Validate the zip has what we expect
                 if "db_dump.json" not in names:
-                    return Response({"error": "Invalid backup: db_dump.json not found in zip."}, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        {"error": "Invalid backup: db_dump.json not found in zip."}, status=status.HTTP_400_BAD_REQUEST
+                    )
 
                 # ── 1. Flush existing app data ─────────────────────────────
                 # Preserve contenttypes and auth.permission so Django stays healthy
@@ -121,6 +126,7 @@ class RestoreView(APIView):
 
                 # loaddata needs a real file; write to a temp location
                 import tempfile
+
                 with tempfile.NamedTemporaryFile(suffix=".json", delete=False, mode="wb") as tmp:
                     tmp.write(fixture_bytes)
                     tmp_path = tmp.name
@@ -150,8 +156,10 @@ class RestoreView(APIView):
             logger.error("Restore failed: %s", exc, exc_info=True)
             return Response({"error": f"Restore failed: {exc}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        return Response({
-            "status": "success",
-            "message": "Database and QR codes restored successfully.",
-            "qr_codes_restored": qr_count,
-        })
+        return Response(
+            {
+                "status": "success",
+                "message": "Database and QR codes restored successfully.",
+                "qr_codes_restored": qr_count,
+            }
+        )

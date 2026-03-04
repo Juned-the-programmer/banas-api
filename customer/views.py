@@ -50,6 +50,7 @@ class CustomerByRouteView(ListAPIView):
         # Use cached data to avoid DB hits
         return customer_cached_data().filter(route=route_id, active=True)
 
+
 class CustomerDetialUpdateView(RetrieveUpdateAPIView):
     serializer_class = CustomerUpdateSerializer
     permission_classes = [IsAdminUser, IsAuthenticated]
@@ -63,6 +64,7 @@ class CustomerDetialUpdateView(RetrieveUpdateAPIView):
         serializer.save(updatedby=self.request.user.username)
         cache.delete("Customer")
         customer_cached_data()
+
 
 class CustomerAccountUpdateView(RetrieveUpdateAPIView):
     serializer_class = CustomerAccountSerializer

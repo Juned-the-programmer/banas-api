@@ -1,10 +1,9 @@
-import uuid6
-
 from django.contrib.auth.models import User
 from django.core.validators import EmailValidator, RegexValidator
 from django.db import models
 from django.db.models import Sum
 from django.utils import timezone
+import uuid6
 
 from route.models import Route
 
@@ -38,9 +37,8 @@ class Customer(models.Model):
         indexes = [
             models.Index(fields=["route", "active"]),
             models.Index(fields=["first_name", "last_name"]),
-            models.Index(fields=["-date_added"])
+            models.Index(fields=["-date_added"]),
         ]
-
 
 
 class CustomerAccount(models.Model):
@@ -59,7 +57,7 @@ class CustomerAccount(models.Model):
 
     class Meta:
         indexes = [
-             models.Index(fields=["customer_name", "due"]),
+            models.Index(fields=["customer_name", "due"]),
         ]
 
     @classmethod

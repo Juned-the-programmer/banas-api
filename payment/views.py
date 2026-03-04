@@ -1,24 +1,23 @@
 import datetime
 from datetime import date, timedelta
-from django.utils import timezone
 
 from django.core.cache import cache
+from django.db import transaction
 from django.db.models import Sum
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
-from django.db import transaction
 
-from banas.cache_conf import customer_cached_data
+from banas.cache_conf import customer_cached_data, total_pending_due_cached
 from bills.models import CustomerBill
 from customer.models import Customer, CustomerAccount
+from customer.whatsapp import enqueue_whatsapp_message
 from exception.views import customer_not_found_exception, route_not_found_exception, serializer_errors
 from route.models import Route
-from banas.cache_conf import total_pending_due_cached
 
 from .models import CustomerPayment
 from .serializer import CustomerPaymentSerializer, CustomerPaymentSerializerGET
-from customer.whatsapp import enqueue_whatsapp_message
 
 
 # -------------------------------
@@ -31,12 +30,13 @@ class PaymentListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         today = timezone.localdate()
         first_day = today.replace(day=1)
-        
+
         # We query the range to use the index efficiently
-        return CustomerPayment.objects.select_related("customer_name").filter(
-            date__date__gte=first_day,
-            date__date__lte=today
-        ).order_by("-date")
+        return (
+            CustomerPayment.objects.select_related("customer_name")
+            .filter(date__date__gte=first_day, date__date__lte=today)
+            .order_by("-date")
+        )
 
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
@@ -100,6 +100,7 @@ class PaymentListCreateView(generics.ListCreateAPIView):
         except Exception as e:
             # We log it, but we DO NOT fail the view. Payment is already committed.
             import logging
+
             logging.error(f"Post-payment WhatsApp dispatch failed: {e}")
 
         # Invalidate the due cache — next dashboard call will recompute from DB
@@ -155,11 +156,11 @@ class PaymentListByRouteView(generics.ListAPIView):
         today = timezone.localdate()
         first_day = today.replace(day=1)
 
-        return CustomerPayment.objects.select_related("customer_name").filter(
-            customer_name__route_id=pk,
-            date__gte=first_day,
-            date__lte=today
-        ).order_by("-date")
+        return (
+            CustomerPayment.objects.select_related("customer_name")
+            .filter(customer_name__route_id=pk, date__gte=first_day, date__lte=today)
+            .order_by("-date")
+        )
 
     def list(self, request, *args, **kwargs):
         pk = self.kwargs.get("pk")
@@ -191,10 +192,11 @@ class DueListByRouteView(generics.ListAPIView):
         if not Route.objects.filter(pk=pk).exists():
             return route_not_found_exception(pk)
 
-        customer_accounts = CustomerAccount.objects.select_related("customer_name").filter(
-            customer_name__route_id=pk,
-            customer_name__active=True
-        ).order_by('customer_name__first_name')
+        customer_accounts = (
+            CustomerAccount.objects.select_related("customer_name")
+            .filter(customer_name__route_id=pk, customer_name__active=True)
+            .order_by("customer_name__first_name")
+        )
 
         data_list = [
             {
@@ -221,14 +223,11 @@ class DueListView(generics.ListAPIView):
     permission_classes = [IsAdminUser, IsAuthenticated]
 
     def list(self, request, *args, **kwargs):
-        customer_due_qs = CustomerAccount.objects.filter(
-            customer_name__active=True
-        ).values(
-            "customer_name__id", 
-            "customer_name__first_name", 
-            "customer_name__last_name", 
-            "due"
-        ).order_by("customer_name__first_name")
+        customer_due_qs = (
+            CustomerAccount.objects.filter(customer_name__active=True)
+            .values("customer_name__id", "customer_name__first_name", "customer_name__last_name", "due")
+            .order_by("customer_name__first_name")
+        )
 
         data_list = [
             {

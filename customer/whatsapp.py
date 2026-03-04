@@ -1,9 +1,12 @@
 import json
 import logging
+
 from django.conf import settings
+
 from banas.qstash import qstash_client
 
 logger = logging.getLogger(__name__)
+
 
 def format_phone_number(phone: str) -> str:
     """
@@ -12,17 +15,17 @@ def format_phone_number(phone: str) -> str:
     """
     if not phone:
         return ""
-        
-    cleaned = ''.join(filter(str.isdigit, phone))
-    
+
+    cleaned = "".join(filter(str.isdigit, phone))
+
     # If standard 10 digit Indian number, prefix with 91
     if len(cleaned) == 10:
         return f"91{cleaned}"
-    
+
     # If the user included 0 at the start of a 10 digit number
     if len(cleaned) == 11 and cleaned.startswith("0"):
         return f"91{cleaned[1:]}"
-        
+
     return cleaned
 
 
@@ -40,11 +43,8 @@ def enqueue_whatsapp_message(phone: str, message: str) -> None:
         logger.warning("Skipping WhatsApp enqueue: BASE_URL is not set")
         return
 
-    payload = {
-        "phone": formatted_phone,
-        "message": message
-    }
-    
+    payload = {"phone": formatted_phone, "message": message}
+
     webhook_url = f"{settings.BASE_URL.rstrip('/')}/api/customer/tasks/send-whatsapp/"
 
     try:
@@ -59,9 +59,9 @@ def enqueue_whatsapp_message(phone: str, message: str) -> None:
                 )
                 logger.info(f"Enqueued WhatsApp message to {formatted_phone}: {res.message_id}")
             except Exception as e:
-                 logger.error(f"Failed to enqueue WhatsApp message to QStash for {formatted_phone}: {str(e)}", exc_info=True)
+                logger.error(f"Failed to enqueue WhatsApp message to QStash for {formatted_phone}: {str(e)}", exc_info=True)
         else:
             logger.info(f"[LOCAL DEV] Enqueue WhatsApp message to {formatted_phone}: {message[:30]}...")
-            
+
     except Exception as e:
         logger.error(f"Failed to prep WhatsApp message for {formatted_phone}: {str(e)}", exc_info=True)

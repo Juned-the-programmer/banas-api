@@ -6,9 +6,10 @@ queue (if queue_name given) or as a plain message. Falls back to threading local
 
 In local development (no BASE_URL): falls back to Python threading.
 """
+
+from functools import wraps
 import logging
 import threading
-from functools import wraps
 
 logger = logging.getLogger(__name__)
 
@@ -33,11 +34,13 @@ def async_task(endpoint_path, queue=None):
         # Call it normally - returns immediately
         send_async_email("Hello", "World", ...)
     """
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             # Import here to avoid circular imports at module load time
             from django.conf import settings
+
             from banas.qstash import qstash_client
 
             base_url = getattr(settings, "BASE_URL", "").rstrip("/")
@@ -47,8 +50,8 @@ def async_task(endpoint_path, queue=None):
                 full_url = f"{base_url}{endpoint_path}"
                 # Serialize args/kwargs; UUIDs must be str
                 payload = {
-                    "args": [str(a) if hasattr(a, 'hex') else a for a in args],
-                    "kwargs": {k: str(v) if hasattr(v, 'hex') else v for k, v in kwargs.items()},
+                    "args": [str(a) if hasattr(a, "hex") else a for a in args],
+                    "kwargs": {k: str(v) if hasattr(v, "hex") else v for k, v in kwargs.items()},
                 }
                 try:
                     if queue:
@@ -77,11 +80,13 @@ def async_task(endpoint_path, queue=None):
                 _run_in_thread(func, args, kwargs)
 
         return wrapper
+
     return decorator
 
 
 def _run_in_thread(func, args, kwargs):
     """Helper to run a function in a daemon thread."""
+
     def run_task():
         try:
             logger.info(f"Starting async task in thread: {func.__name__}")

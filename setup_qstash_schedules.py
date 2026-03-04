@@ -4,9 +4,11 @@ Run this after deploying to configure recurring schedules in QStash.
 
 Usage: python setup_qstash_schedules.py
 """
+
 import os
-import django
 import sys
+
+import django
 
 # Setup Django environment
 sys.path.append(os.getcwd())
@@ -14,7 +16,9 @@ os.environ.setdefault("DJANGO_SETTINGS_MODULE", "banas.settings")
 django.setup()
 
 from django.conf import settings
+
 from banas.qstash import qstash_client
+
 
 def setup_schedules():
     if not qstash_client:
@@ -35,13 +39,9 @@ def setup_schedules():
         (
             f"{base_url}/api/bill/tasks/monthly-bill-check/",
             "0 23 28-31 * *",
-            "Monthly Bill Dispatcher (Days 28-31 at 23:00 — fans out to bill-batch queue)"
+            "Monthly Bill Dispatcher (Days 28-31 at 23:00 — fans out to bill-batch queue)",
         ),
-        (
-            f"{base_url}/api/dailyentry/tasks/reset-dashboard/",
-            "1 0 * * *",
-            "Reset Dashboard Counters (Daily at 00:01)"
-        ),
+        (f"{base_url}/api/dailyentry/tasks/reset-dashboard/", "1 0 * * *", "Reset Dashboard Counters (Daily at 00:01)"),
     ]
 
     print(f"📅 Configuring {len(schedules)} schedules...")
@@ -62,6 +62,7 @@ def setup_schedules():
             print(f"   ❌ Failed: {e}\n")
 
     print("✨ Setup complete!")
+
 
 if __name__ == "__main__":
     setup_schedules()

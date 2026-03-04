@@ -8,9 +8,9 @@ https://docs.djangoproject.com/en/4.0/howto/deployment/wsgi/
 """
 
 import os
-import newrelic.agent
 
 from django.core.wsgi import get_wsgi_application
+import newrelic.agent
 
 if os.environ.get("NEW_RELIC_LICENSE_KEY"):
     newrelic.agent.initialize()

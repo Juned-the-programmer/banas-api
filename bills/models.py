@@ -1,7 +1,7 @@
 import datetime
-import uuid6
 
 from django.db import models
+import uuid6
 
 from customer.models import Customer
 

@@ -64,7 +64,6 @@ def dashboard(request):
     )
 
 
-
 @api_view(["GET"])
 @permission_classes([IsAdminUser, IsAuthenticated])
 def get_profile(request):
@@ -82,4 +81,3 @@ def get_profile(request):
         },
         status=status.HTTP_200_OK,
     )
-

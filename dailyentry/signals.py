@@ -6,13 +6,12 @@ from .models import DailyEntry, DailyEntry_dashboard, customer_daily_entry_month
 
 @receiver(post_save, sender=DailyEntry)
 def update_customer_daily_entry(sender, instance, created, **kwargs):
-    if kwargs.get('raw'):
+    if kwargs.get("raw"):
         return
     if created and instance.customer:
         # Use get_or_create to handle cases where the record doesn't exist
         customer_detail, _ = customer_daily_entry_monthly.objects.get_or_create(
-            customer=instance.customer,
-            defaults={"coolers": 0}
+            customer=instance.customer, defaults={"coolers": 0}
         )
         customer_detail.coolers += int(instance.cooler)
         customer_detail.save()
@@ -25,10 +24,7 @@ def update_customer_daily_entry(sender, instance, created, **kwargs):
             dashboard_detail.save()
         else:
             # Create dashboard if it doesn't exist
-            DailyEntry_dashboard.objects.create(
-                customer_count=1,
-                coolers_count=int(instance.cooler)
-            )
+            DailyEntry_dashboard.objects.create(customer_count=1, coolers_count=int(instance.cooler))
 
 
 post_save.connect(update_customer_daily_entry, sender=DailyEntry)

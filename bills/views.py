@@ -1,14 +1,14 @@
 import datetime
 from datetime import timedelta
-from django.utils import timezone
-from django.db import transaction
 
+from django.db import transaction
+from django.utils import timezone
 from rest_framework import generics, status
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from customer.models import Customer, CustomerAccount
-from dailyentry.models import customer_daily_entry_monthly, DailyEntry
+from dailyentry.models import DailyEntry, customer_daily_entry_monthly
 from dailyentry.serializer import DailyEntrySerializerGETDashboard
 from exception.views import customer_not_found_exception
 
@@ -29,11 +29,12 @@ class BillListView(generics.ListAPIView):
         first_day_of_current_month = today.replace(day=1)
         last_day_of_prev_month = first_day_of_current_month - timedelta(days=1)
         first_day_of_prev_month = last_day_of_prev_month.replace(day=1)
-        
-        return CustomerBill.objects.select_related("customer_name").filter(
-            from_date__gte=first_day_of_prev_month,
-            to_date__lte=last_day_of_prev_month
-        ).order_by("customer_name__first_name")
+
+        return (
+            CustomerBill.objects.select_related("customer_name")
+            .filter(from_date__gte=first_day_of_prev_month, to_date__lte=last_day_of_prev_month)
+            .order_by("customer_name__first_name")
+        )
 
 
 # Retrieve a bill + its daily entries
@@ -46,27 +47,18 @@ class BillDetailView(generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         bill = self.get_object()
 
-        start_datetime = timezone.make_aware(
-            datetime.datetime.combine(bill.from_date, datetime.time.min)
-        )
+        start_datetime = timezone.make_aware(datetime.datetime.combine(bill.from_date, datetime.time.min))
 
-        end_datetime = timezone.make_aware(
-            datetime.datetime.combine(bill.to_date, datetime.time.max)
-        )
+        end_datetime = timezone.make_aware(datetime.datetime.combine(bill.to_date, datetime.time.max))
 
         daily_entries = DailyEntry.objects.filter(
-            customer=bill.customer_name,
-            date_added__gte=start_datetime,
-            date_added__lte=end_datetime
-        ).order_by('date_added')
+            customer=bill.customer_name, date_added__gte=start_datetime, date_added__lte=end_datetime
+        ).order_by("date_added")
 
         daily_entry_serializer = DailyEntrySerializerGETDashboard(daily_entries, many=True)
         bill_serializer = self.get_serializer(bill)
 
-        return Response({
-            "bill": bill_serializer.data, 
-            "daily_entry": daily_entry_serializer.data
-        })
+        return Response({"bill": bill_serializer.data, "daily_entry": daily_entry_serializer.data})
 
 
 # Generate a new bill for a customer
@@ -140,26 +132,17 @@ class RenderBillView(generics.RetrieveAPIView):
     def retrieve(self, request, *args, **kwargs):
         bill = self.get_object()
 
-        start_datetime = timezone.make_aware(
-            datetime.datetime.combine(bill.from_date, datetime.time.min)
-        )
+        start_datetime = timezone.make_aware(datetime.datetime.combine(bill.from_date, datetime.time.min))
 
-        end_datetime = timezone.make_aware(
-            datetime.datetime.combine(bill.to_date, datetime.time.max)
-        )
+        end_datetime = timezone.make_aware(datetime.datetime.combine(bill.to_date, datetime.time.max))
 
         daily_entries = DailyEntry.objects.filter(
-            customer=bill.customer_name,
-            date_added__gte=start_datetime,
-            date_added__lte=end_datetime
-        ).order_by('date_added')
+            customer=bill.customer_name, date_added__gte=start_datetime, date_added__lte=end_datetime
+        ).order_by("date_added")
 
         from django.shortcuts import render
 
-        context = {
-            "bill": bill,
-            "daily_entries": daily_entries
-        }
+        context = {"bill": bill, "daily_entries": daily_entries}
 
         return render(request, "bills/render_bill.html", context)
 

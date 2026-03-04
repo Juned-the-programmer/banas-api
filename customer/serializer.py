@@ -123,5 +123,5 @@ class CustomerDetailNestedSerializer(serializers.ModelSerializer):
         return getattr(obj.customer_daily_entry_monthly, "coolers", 0)
 
     def get_daily_entries(self, obj):
-        entries = obj.customer_daily_entry.all().order_by('-date_added')[:30]
+        entries = obj.customer_daily_entry.all().order_by("-date_added")[:30]
         return CustomerDailyEntryNestedSerializer(entries, many=True).data
