@@ -36,7 +36,7 @@ class Command(BaseCommand):
             )
 
             # Also enqueue it to test the QStash path (if tokens are valid locally)
-            self.stdout.write(self.style.WARNING(f"\nAlso enqueueing to QStash to test the delayed webhook path..."))
+            self.stdout.write(self.style.WARNING("\nAlso enqueueing to QStash to test the delayed webhook path..."))
             enqueue_whatsapp_message(phone_no, "(QStash Test) " + message)
 
         except Exception as e:

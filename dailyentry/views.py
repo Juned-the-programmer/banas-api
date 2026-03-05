@@ -1,18 +1,15 @@
 import datetime
 from datetime import time
 
-from django.db import connection
 from django.db.models import Count, Q
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import generics, status
-from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from banas.cache_conf import customer_cached_data
 from customer.models import Customer
 from dailyentry.task import bulk_import_daily_entries, verify_and_commit_pending_entries
 
@@ -20,7 +17,6 @@ from .models import DailyEntry, DailyEntry_dashboard, customer_qr_code, pending_
 from .serializer import (
     DailyEntryBulkImportSerializer,
     DailyEntrySerializer,
-    DailyEntrySerializerGETDashboard,
     DailyEntrySerializerGETSingle,
     DailyEntryVerifyResultSerializer,
     PendingDailyEntrySerializer,

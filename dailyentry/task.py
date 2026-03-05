@@ -1,22 +1,11 @@
-from io import BytesIO
 import logging
-import os
 
-from PIL import Image, ImageDraw, ImageFont
-from django.conf import settings
-from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.utils import timezone
-import qrcode
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
 
 from banas.async_helpers import async_task
 from customer.models import Customer
 
-from .models import DailyEntry_dashboard, customer_daily_entry_monthly, customer_qr_code
+from .models import DailyEntry_dashboard, customer_daily_entry_monthly
 
 logger = logging.getLogger(__name__)
 

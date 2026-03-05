@@ -122,7 +122,7 @@ class RestoreView(APIView):
 
                 # ── 2. Load database fixture ───────────────────────────────
                 fixture_bytes = zf.read("db_dump.json")
-                fixture_buffer = io.StringIO(fixture_bytes.decode("utf-8"))
+                # loaddata needs a real file; write to a temp location
 
                 # loaddata needs a real file; write to a temp location
                 import tempfile

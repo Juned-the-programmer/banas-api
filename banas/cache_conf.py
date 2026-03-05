@@ -1,5 +1,5 @@
 from django.core.cache import cache
-from django.db.models import Sum
+
 
 from customer.models import Customer, CustomerAccount
 

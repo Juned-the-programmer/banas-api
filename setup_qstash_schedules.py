@@ -57,7 +57,7 @@ def setup_schedules():
                 retries=3,
                 headers={"Upstash-Timezone": "Asia/Kolkata"},
             )
-            print(f"   ✅ Success\n")
+            print("   ✅ Success\n")
         except Exception as e:
             print(f"   ❌ Failed: {e}\n")
 

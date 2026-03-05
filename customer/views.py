@@ -1,7 +1,7 @@
 from django.core.cache import cache
 from rest_framework import generics
 from rest_framework.exceptions import NotFound
-from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView, UpdateAPIView
+from rest_framework.generics import ListAPIView, RetrieveAPIView, RetrieveUpdateAPIView
 from rest_framework.permissions import IsAdminUser, IsAuthenticated
 
 from banas.cache_conf import customer_cached_data

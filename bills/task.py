@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime
 import logging
 
 from django.conf import settings
@@ -14,7 +14,7 @@ from customer.models import Customer, CustomerAccount
 from customer.whatsapp import enqueue_whatsapp_message
 from dailyentry.models import customer_daily_entry_monthly
 
-from .models import Bill_number_generator, CustomerBill
+from .models import CustomerBill
 
 logger = logging.getLogger(__name__)
 

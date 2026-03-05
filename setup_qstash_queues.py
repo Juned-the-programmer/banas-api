@@ -47,7 +47,7 @@ def setup_queues():
                 queue=name,
                 parallelism=parallelism,
             )
-            print(f"   ✅ Success\n")
+            print("   ✅ Success\n")
         except Exception as e:
             print(f"   ❌ Failed: {e}\n")
 

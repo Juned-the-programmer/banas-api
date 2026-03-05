@@ -1,6 +1,6 @@
 import datetime
 
-from django.db import connection
+
 
 from .models import Bill_number_generator
 

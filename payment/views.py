@@ -1,4 +1,3 @@
-import datetime
 from datetime import date, timedelta
 
 from django.core.cache import cache
@@ -11,7 +10,7 @@ from rest_framework.response import Response
 
 from banas.cache_conf import customer_cached_data, total_pending_due_cached
 from bills.models import CustomerBill
-from customer.models import Customer, CustomerAccount
+from customer.models import CustomerAccount
 from customer.whatsapp import enqueue_whatsapp_message
 from exception.views import customer_not_found_exception, route_not_found_exception, serializer_errors
 from route.models import Route
