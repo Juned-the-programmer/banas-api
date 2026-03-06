@@ -1,6 +1,5 @@
 from django.core.cache import cache
 
-
 from customer.models import Customer, CustomerAccount
 
 

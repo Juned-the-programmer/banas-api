@@ -1,7 +1,5 @@
 import datetime
 
-
-
 from .models import Bill_number_generator
 
 
