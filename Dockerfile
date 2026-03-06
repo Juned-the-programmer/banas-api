@@ -23,13 +23,10 @@ WORKDIR /app
 # Copy Python packages AND binaries
 COPY --from=builder /usr/local/lib/python3.12/site-packages /usr/local/lib/python3.12/site-packages
 COPY --from=builder /usr/local/bin/gunicorn /usr/local/bin/gunicorn
-COPY --from=builder /usr/local/bin/newrelic-admin /usr/local/bin/newrelic-admin
 
 # Copy app code
 COPY . .
 
-# New Relic Environment Variables
-ENV NEW_RELIC_CONFIG_FILE=/app/newrelic.ini
 ENV PORT=8000
 
 # Create non-root user
@@ -41,8 +38,12 @@ RUN mkdir -p /media/qr_codes && chmod -R 777 /media/qr_codes
 
 USER appuser
 
-# Verify installations
+# Verify installations and pre-collect static files
 RUN python -c "import django; print(f'Django {django.__version__}')" && \
     gunicorn --version
+RUN DJANGO_SETTINGS_MODULE=banas.settings \
+    ENVIRONMENT=ci \
+    SECRET_KEY=build-time-only-fake-key \
+    python manage.py collectstatic --noinput --clear 2>/dev/null || true
 
 CMD ["gunicorn", "banas.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "90", "--max-requests", "1000", "--max-requests-jitter", "50", "--log-level", "info"]

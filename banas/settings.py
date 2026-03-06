@@ -353,9 +353,6 @@ EVOLUTION_BASE_URL = os.getenv("EVOLUTION_BASE_URL", "https://evolution-api-ypyb
 EVOLUTION_INSTANCE_NAME = os.getenv("EVOLUTION_INSTANCE_NAME", "")
 EVOLUTION_API_KEY = os.getenv("EVOLUTION_API_KEY", "")
 
-# New Relic
-NEW_RELIC_LICENSE_KEY = os.environ.get("NEW_RELIC_LICENSE_KEY")
-NEW_RELIC_APP_NAME = os.environ.get("NEW_RELIC_APP_NAME", "Banas-API")
 
 
 # -----------------------------------------------------------------------
