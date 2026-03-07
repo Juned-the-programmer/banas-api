@@ -9,9 +9,4 @@ class Migration(migrations.Migration):
         ('customer', '0009_customeraccount_total_paid'),
     ]
 
-    operations = [
-        migrations.AlterIndexTogether(
-            name='customeraccount',
-            index_together={('id', 'customer_name', 'due')},
-        ),
-    ]
+    operations = []

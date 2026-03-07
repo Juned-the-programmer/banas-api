@@ -9,15 +9,4 @@ class Migration(migrations.Migration):
         ('customer', '0011_customer_sequence_no'),
     ]
 
-    operations = [
-        migrations.RenameIndex(
-            model_name='customer',
-            new_name='customer_cu_id_5426ca_idx',
-            old_fields=('id',),
-        ),
-        migrations.RenameIndex(
-            model_name='customeraccount',
-            new_name='customer_cu_id_1ac322_idx',
-            old_fields=('id', 'customer_name', 'due'),
-        ),
-    ]
+    operations = []

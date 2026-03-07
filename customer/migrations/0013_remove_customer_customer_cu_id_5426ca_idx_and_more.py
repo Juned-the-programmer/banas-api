@@ -13,14 +13,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveIndex(
-            model_name='customer',
-            name='customer_cu_id_5426ca_idx',
-        ),
-        migrations.RemoveIndex(
-            model_name='customeraccount',
-            name='customer_cu_id_1ac322_idx',
-        ),
         migrations.AlterField(
             model_name='customer',
             name='date_updated',
