@@ -60,7 +60,7 @@ class Command(BaseCommand):
 
         self.stdout.write(f"Connecting to Evolution API at: {url}")
 
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
 
         if response.status_code >= 400:
             self.stdout.write(self.style.ERROR(f"Evolution API Error {response.status_code}: {response.text}"))

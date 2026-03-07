@@ -90,7 +90,7 @@ def task_send_whatsapp(request):
         payload = {"number": phone, "text": message}
 
         # 2. Fire Request
-        response = requests.post(url, json=payload, headers=headers)
+        response = requests.post(url, json=payload, headers=headers, timeout=10)
 
         # We don't fail the task if the user's number is invalid (400), but we log it.
         # If the Evolution API goes down (500), we raise an exception so QStash retries later.

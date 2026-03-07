@@ -59,13 +59,16 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     font_filename = "Roboto-Bold.ttf"
     font_path = os.path.join(settings.BASE_DIR, font_filename)
     if not os.path.exists(font_path):
-        import urllib.request
+        import requests
 
         logger.info(f"Downloading {font_filename} from Google Fonts...")
         # Direct link to Roboto Bold TTF
         url = "https://github.com/googlefonts/roboto/raw/main/src/hinted/Roboto-Bold.ttf"
         try:
-            urllib.request.urlretrieve(url, font_path)
+            response = requests.get(url, timeout=10)
+            response.raise_for_status()
+            with open(font_path, "wb") as f:
+                f.write(response.content)
             logger.info("Font downloaded successfully.")
         except Exception as e:
             logger.error(f"Failed to download font: {e}")
