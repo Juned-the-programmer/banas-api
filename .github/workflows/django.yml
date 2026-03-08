@@ -159,6 +159,7 @@ jobs:
         python -c "
         import os
         os.environ.setdefault('ENVIRONMENT', 'ci')
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'banas.settings')
         import django
         django.setup()
         from drf_yasg.generators import OpenAPISchemaGenerator
@@ -186,6 +187,7 @@ jobs:
         import os
         import django
         os.environ.setdefault('ENVIRONMENT', 'ci')
+        os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'banas.settings')
         django.setup()
         
         # Import all models from each app
