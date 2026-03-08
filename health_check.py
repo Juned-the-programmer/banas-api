@@ -15,7 +15,7 @@ import requests
 
 def setup_django():
     """Setup Django environment"""
-    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "banas.settings_docker")
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "banas.settings")
     django.setup()
 
 
