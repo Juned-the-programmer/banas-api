@@ -45,4 +45,4 @@ USER appuser
 RUN python -c "import django; print(f'Django {django.__version__}')" && \
     gunicorn --version
 
-CMD ["newrelic-admin", "run-program", "gunicorn", "banas.wsgi:application", "--bind", "0.0.0.0:8000", "--workers=2"]
+CMD ["gunicorn", "banas.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "90", "--max-requests", "1000", "--max-requests-jitter", "50", "--log-level", "info"]
