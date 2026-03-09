@@ -88,10 +88,19 @@ class RestoreView(APIView):
       4. Overwrite media/qr_codes/ with images from the zip
     """
 
-    # permission_classes = [IsAdminUser, IsAuthenticated]
     parser_classes = [MultiPartParser]
 
     def post(self, request):
+        # ── Secret token check ────────────────────────────────────────────
+        # Since no admin account exists during a fresh restore, we use an env-based
+        # token instead of JWT. Set RESTORE_SECRET in your .env and pass it as
+        # the X-Restore-Token header.
+        expected_secret = getattr(settings, "RESTORE_SECRET", "")
+        provided_secret = request.headers.get("X-Restore-Token", "")
+        if not expected_secret or provided_secret != expected_secret:
+            logger.warning("RestoreView: rejected request with invalid or missing token")
+            return Response({"error": "Forbidden"}, status=status.HTTP_403_FORBIDDEN)
+
         uploaded_file = request.FILES.get("file")
         if not uploaded_file:
             return Response({"error": "No file uploaded. Send the backup zip as 'file'."}, status=status.HTTP_400_BAD_REQUEST)

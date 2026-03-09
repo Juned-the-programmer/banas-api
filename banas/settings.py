@@ -39,10 +39,21 @@ SECRET_KEY = config(
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
 DEBUG = ENVIRONMENT != "production"
 
-# CORS and Allowed Hosts
-CORS_ORIGIN_ALLOW_ALL = DEBUG
+# CORS Configuration
+CORS_ALLOW_ALL_ORIGINS = False
+_cors_extra = [o for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o]
+CORS_ALLOWED_ORIGINS = [
+    os.getenv("BASE_URL", ""),
+    "http://localhost:8000",
+    "http://localhost:3000",
+] + _cors_extra
+CORS_ALLOWED_ORIGINS = [o for o in CORS_ALLOWED_ORIGINS if o]  # strip empty strings
+CORS_ALLOW_METHODS = ["DELETE", "GET", "OPTIONS", "PATCH", "POST", "PUT"]
+CORS_ALLOW_HEADERS = ["accept", "authorization", "content-type", "x-csrftoken", "x-restore-token"]
+# Expose the CSRF cookie to JS clients
+CORS_EXPOSE_HEADERS = ["Content-Type", "X-CSRFToken"]
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "*").split(",") if os.getenv("ALLOWED_HOSTS") else ["*"]
-CSRF_TRUSTED_ORIGINS = ["https://banas-api.onrender.com", "http://localhost:8000"]
+CSRF_TRUSTED_ORIGINS = [os.getenv("BASE_URL", ""), "http://localhost:8000"]
 
 # APPEND_SLASH=False
 # Application definition
@@ -86,7 +97,18 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = "banas.urls"
 
-REST_FRAMEWORK = {"DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",)}
+REST_FRAMEWORK = {
+    "DEFAULT_AUTHENTICATION_CLASSES": ("rest_framework_simplejwt.authentication.JWTAuthentication",),
+    "DEFAULT_THROTTLE_CLASSES": [
+        "rest_framework.throttling.AnonRateThrottle",
+        "rest_framework.throttling.UserRateThrottle",
+    ],
+    "DEFAULT_THROTTLE_RATES": {
+        "anon": "30/min",
+        "user": "1000/day",
+        "qstash_callback": "30/min",
+    },
+}
 
 TEMPLATES = [
     {
@@ -321,6 +343,10 @@ QSTASH_TOKEN = os.getenv("QSTASH_TOKEN", "")
 QSTASH_CURRENT_SIGNING_KEY = os.getenv("QSTASH_CURRENT_SIGNING_KEY", "")
 QSTASH_NEXT_SIGNING_KEY = os.getenv("QSTASH_NEXT_SIGNING_KEY", "")
 BASE_URL = os.getenv("BASE_URL", "")
+
+# Restore endpoint protection (no JWT needed — these are env-based secrets)
+RESTORE_PATH = os.getenv("RESTORE_PATH", "restore-db")
+RESTORE_SECRET = os.getenv("RESTORE_SECRET", "")
 
 # Evolution API / WhatsApp Config
 EVOLUTION_BASE_URL = os.getenv("EVOLUTION_BASE_URL", "https://evolution-api-ypyb.onrender.com")

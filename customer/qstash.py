@@ -4,9 +4,11 @@ import time
 from django.conf import settings
 import requests
 from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
+
+from banas.throttles import QStashCallbackThrottle
 
 from .task import generate_customer_qr_code_for_daily_entry_async, send_async_email
 
@@ -15,6 +17,7 @@ logger = logging.getLogger(__name__)
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([QStashCallbackThrottle])
 def task_send_email(request):
     """
     QStash callback: Send email.
@@ -45,6 +48,7 @@ def task_send_email(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([QStashCallbackThrottle])
 def task_generate_qr(request):
     """
     QStash callback: Generate QR code for a customer.
@@ -71,6 +75,7 @@ def task_generate_qr(request):
 
 @api_view(["POST"])
 @permission_classes([AllowAny])
+@throttle_classes([QStashCallbackThrottle])
 def task_send_whatsapp(request):
     """
     QStash callback: Sends a WhatsApp message via Evolution API.
