@@ -155,7 +155,6 @@ if ENVIRONMENT == "ci":
         }
     }
 else:
-    # Use PostgreSQL for development/production
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -164,12 +163,15 @@ else:
             "PASSWORD": os.getenv("DB_PASSWORD", ""),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
-            "CONN_MAX_AGE": 0,
-            "DISABLE_SERVER_SIDE_CURSORS": True,
+            "CONN_MAX_AGE": 600,
+            "CONN_HEALTH_CHECKS": True,
             "OPTIONS": {
                 "sslmode": "require",
-                "prepare_threshold": None,
-                "connect_timeout": 5,
+                "connect_timeout": 15,
+                "keepalives": 1,
+                "keepalives_idle": 60,
+                "keepalives_interval": 10,
+                "keepalives_count": 5,
             },
         }
     }
