@@ -164,10 +164,12 @@ else:
             "PASSWORD": os.getenv("DB_PASSWORD", ""),
             "HOST": os.getenv("DB_HOST", "localhost"),
             "PORT": os.getenv("DB_PORT", "5432"),
+            "CONN_MAX_AGE": 0,
             "DISABLE_SERVER_SIDE_CURSORS": True,
             "OPTIONS": {
                 "sslmode": "require",
                 "prepare_threshold": None,
+                "connect_timeout": 5,
             },
         }
     }
