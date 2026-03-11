@@ -8,12 +8,16 @@ def customer_cached_data():
     cache_customer_data = cache.get(cache_key)
 
     if cache_customer_data is None:
-        customer_data = Customer.objects.all()
-        cache.set(cache_key, customer_data, timeout=None)
-    else:
-        customer_data = cache_customer_data
+        # Force evaluation with list() so the cache stores actual data,
+        # not a lazy unevaluated QuerySet (which would hit the DB on every cache "hit").
+        cache_customer_data = list(Customer.objects.select_related("route").all())
+        cache.set(cache_key, cache_customer_data, timeout=None)
 
-    return customer_data
+    # Return a QuerySet filtered from the cached IDs so callers can still chain
+    # .filter(), .select_related(), etc. on the result.
+    cached_ids = [c.id for c in cache_customer_data]
+    return Customer.objects.filter(id__in=cached_ids)
+
 
 
 def total_pending_due_cached():

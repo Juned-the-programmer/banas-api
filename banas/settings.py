@@ -41,9 +41,9 @@ DEBUG = ENVIRONMENT != "production"
 
 # CORS Configuration
 CORS_ALLOW_ALL_ORIGINS = False
-_cors_extra = [o for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o]
+_cors_extra = [o.rstrip("/") for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o]
 CORS_ALLOWED_ORIGINS = [
-    os.getenv("BASE_URL", ""),
+    os.getenv("BASE_URL", "").rstrip("/"),
     "http://localhost:8000",
     "http://localhost:3000",
 ] + _cors_extra
@@ -155,6 +155,7 @@ if ENVIRONMENT == "ci":
         }
     }
 else:
+    # Render internal PostgreSQL — same network, no pooler, no SSL required.
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -165,14 +166,6 @@ else:
             "PORT": os.getenv("DB_PORT", "5432"),
             "CONN_MAX_AGE": 600,
             "CONN_HEALTH_CHECKS": True,
-            "OPTIONS": {
-                "sslmode": "require",
-                "connect_timeout": 15,
-                "keepalives": 1,
-                "keepalives_idle": 60,
-                "keepalives_interval": 10,
-                "keepalives_count": 5,
-            },
         }
     }
 
@@ -192,6 +185,10 @@ else:
             "LOCATION": os.getenv("UPSTASH_REDIS_URL", ""),
             "OPTIONS": {
                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
+                # Fail fast if Upstash Redis is cold/unavailable.
+                # Without these, a cold-start Redis hangs the request for 20+ seconds.
+                "SOCKET_CONNECT_TIMEOUT": 3,
+                "SOCKET_TIMEOUT": 3,
                 "CONNECTION_POOL_KWARGS": {"ssl_cert_reqs": None},
             },
         }
