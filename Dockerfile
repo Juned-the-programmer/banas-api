@@ -46,4 +46,4 @@ RUN DJANGO_SETTINGS_MODULE=banas.settings \
     SECRET_KEY=build-time-only-fake-key \
     python manage.py collectstatic --noinput --clear 2>/dev/null || true
 
-CMD ["gunicorn", "banas.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--threads", "4", "--timeout", "90", "--max-requests", "1000", "--max-requests-jitter", "50", "--log-level", "info"]
+CMD ["gunicorn", "banas.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4", "--preload",  "--timeout", "90", "--max-requests", "1000", "--max-requests-jitter", "50", "--log-level", "info"]
