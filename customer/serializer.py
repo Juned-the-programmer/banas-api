@@ -13,6 +13,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(), many=False)
     date_added = CustomeDateField()
     date_updated = CustomeDateField()
+    opening_balance = serializers.IntegerField(required=False, default=0, write_only=True)
 
     class Meta:
         model = Customer
@@ -31,10 +32,11 @@ class CustomerSerializerList(serializers.ModelSerializer):
 
 class CustomerUpdateSerializer(serializers.ModelSerializer):
     route = serializers.PrimaryKeyRelatedField(queryset=Route.objects.all(), many=False)
+    opening_balance = serializers.IntegerField(required=False, write_only=True)
 
     class Meta:
         model = Customer
-        fields = ["first_name", "last_name", "rate", "route", "phone_no", "email", "sequence_no", "active"]
+        fields = ["first_name", "last_name", "rate", "route", "phone_no", "email", "sequence_no", "active", "opening_balance"]
 
 
 ## Nested Serializers ##

@@ -30,7 +30,12 @@ class CustomerListView(generics.ListCreateAPIView):
         return CustomerSerializerList
 
     def perform_create(self, serializer):
-        serializer.save(addedby=self.request.user.username)
+        opening_balance = serializer.validated_data.pop("opening_balance", 0)
+        customer = serializer.save(addedby=self.request.user.username)
+        # Signal has already created CustomerAccount; set the opening balance on due
+        if opening_balance:
+            customer.customer_account.due = opening_balance
+            customer.customer_account.save()
         cache.delete("Customer")
         customer_cached_data()
 
@@ -61,7 +66,12 @@ class CustomerDetialUpdateView(RetrieveUpdateAPIView):
         return customer_cached_data()
 
     def perform_update(self, serializer):
-        serializer.save(updatedby=self.request.user.username)
+        opening_balance = serializer.validated_data.pop("opening_balance", None)
+        customer = serializer.save(updatedby=self.request.user.username)
+        # Only update the account balance if opening_balance was explicitly provided
+        if opening_balance is not None:
+            customer.customer_account.due = opening_balance
+            customer.customer_account.save()
         cache.delete("Customer")
         customer_cached_data()
 
