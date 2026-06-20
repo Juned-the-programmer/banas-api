@@ -111,7 +111,7 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
     file_name = f"{customer_detail.first_name}_{customer_detail.last_name}_qr_code.png"
     qr_codes_path = f"qr_codes/{file_name}"
 
-    # Upload directly to Supabase S3 via the configured default storage backend
+    # Save the file locally using the default storage backend (FileSystemStorage)
     saved_path = default_storage.save(qr_codes_path, ContentFile(buffer.getvalue()))
 
     # Persist the reference in DB (update if already exists)
@@ -120,4 +120,4 @@ def generate_customer_qr_code_for_daily_entry_async(customer_id):
         defaults={"qrcode": saved_path},
     )
 
-    logger.info("QR code uploaded to Supabase for customer %s → %s", customer_id, saved_path)
+    logger.info("QR code saved locally for customer %s → %s", customer_id, saved_path)

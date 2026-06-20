@@ -284,20 +284,13 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_USERNAME")
 
-# --- Supabase S3 storage ---
+# --- Local Media Storage ---
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / "media"
+
 STORAGES = {
     "default": {
-        "BACKEND": "banas.storage_backends.CustomS3Boto3Storage",
-        "OPTIONS": {
-            "access_key": config("SUPABASE_ACCESS_KEY_ID", default=""),
-            "secret_key": config("SUPABASE_SECRET_ACCESS_KEY", default=""),
-            "bucket_name": config("SUPABASE_STORAGE_BUCKET_NAME", default=""),
-            "region_name": config("SUPABASE_S3_REGION_NAME", default=""),
-            "endpoint_url": config("SUPABASE_S3_ENDPOINT_URL", default=""),
-            "file_overwrite": False,
-            "default_acl": None,
-            "querystring_auth": False,
-        },
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
     },
     "staticfiles": {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
