@@ -295,7 +295,7 @@ STORAGES = {
             "region_name": config("SUPABASE_S3_REGION_NAME", default=""),
             "endpoint_url": config("SUPABASE_S3_ENDPOINT_URL", default=""),
             "file_overwrite": False,
-            "default_acl": "public-read",
+            "default_acl": None,
             "querystring_auth": False,
         },
     },
