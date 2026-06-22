@@ -287,7 +287,7 @@ DEFAULT_FROM_EMAIL = os.getenv("EMAIL_USERNAME")
 # --- Supabase S3 storage ---
 STORAGES = {
     "default": {
-        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "BACKEND": "banas.storage_backends.CustomS3Boto3Storage",
         "OPTIONS": {
             "access_key": config("SUPABASE_ACCESS_KEY_ID", default=""),
             "secret_key": config("SUPABASE_SECRET_ACCESS_KEY", default=""),
