@@ -7,18 +7,18 @@ docker-compose up -> If there is no changes in the docker file.
 
 docker-compose down -> To stop the docker container.
 
-docker-compose run api python manage.py makemigrations -> To make the migrations.
-docker-compose run api python manage.py migrate -> To run the migrations.
-docker-compose run api python setup_qstash_schedules.py -> To setup the qstash schedules [Once].
-docker-compose run api python setup_qstash_queues.py -> To setup the qstash queues [Once].
-docker-compose run api python manage.py generate_qr <customer_uuid_here> -> To generate the qr code for the customer.
-docker-compose run api python manage.py test_whatsapp <phone_number_here> -> To test the Evolution API whatsapp messaging.
+docker-compose run web python manage.py makemigrations -> To make the migrations.
+docker-compose run web python manage.py migrate -> To run the migrations.
+docker-compose run web python setup_qstash_schedules.py -> To setup the qstash schedules [Once].
+docker-compose run web python setup_qstash_queues.py -> To setup the qstash queues [Once].
+docker-compose run web python manage.py generate_qr <customer_uuid_here> -> To generate the qr code for the customer.
+docker-compose run web python manage.py test_whatsapp <phone_number_here> -> To test the Evolution API whatsapp messaging.
 
-docker-compose run api python manage.py runserver 0.0.0.0:8000 -> To run the server.
+docker-compose run web python manage.py runserver 0.0.0.0:8000 -> To run the server.
 
-docker-compose run api python manage.py createsuperuser -> To create the superuser.
+docker-compose run web python manage.py createsuperuser -> To create the superuser.
 
-docker-compose run api python manage.py collectstatic -> To collect the static files.
+docker-compose run web python manage.py collectstatic -> To collect the static files.
 
 Steps to Resotre the Database :
 

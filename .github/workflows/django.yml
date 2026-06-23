@@ -252,8 +252,6 @@ jobs:
         SECRET_KEY=test-secret-key-for-docker-testing-only-not-real
         DEBUG=False
         DJANGO_SETTINGS_MODULE=banas.settings
-        NEW_RELIC_ENVIRONMENT=ci
-        NEW_RELIC_LICENSE_KEY=fake-license-key-for-ci-testing
         SUPABASE_ACCESS_KEY_ID=fake-key
         SUPABASE_SECRET_ACCESS_KEY=fake-secret
         SUPABASE_STORAGE_BUCKET_NAME=test-bucket
